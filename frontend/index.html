@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="id" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FIB Hybrid Bot — Sinyal Real-time</title>
+  <link rel="stylesheet" href="/style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📈</text></svg>" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">📈</span>
+      <div>
+        <h1>FIB Hybrid <span class="accent">Bot</span></h1>
+        <p class="tag">Self-learning · sinyal real-time · 2 mesin regime-switch</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <div id="regime-badge" class="regime neutral">MEMUAT…</div>
+      <div class="conn"><span id="conn-dot" class="dot"></span><span id="conn-text">menghubungkan</span></div>
+      <button id="scan-btn" class="btn" title="Pindai sekarang">↻ Scan</button>
+      <button id="theme-btn" class="btn icon" title="Mode siang/malam">🌙</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- KPI strip -->
+    <section class="kpis">
+      <div class="kpi"><span class="k-label">Win rate</span><span id="k-winrate" class="k-val">–</span></div>
+      <div class="kpi"><span class="k-label">Profit factor</span><span id="k-pf" class="k-val">–</span></div>
+      <div class="kpi"><span class="k-label">Trade selesai</span><span id="k-resolved" class="k-val">–</span></div>
+      <div class="kpi"><span class="k-label">Posisi terbuka</span><span id="k-open" class="k-val">–</span></div>
+      <div class="kpi"><span class="k-label">Trade hari ini</span><span id="k-today" class="k-val">–</span></div>
+      <div class="kpi"><span class="k-label">PnL hari ini</span><span id="k-pnl" class="k-val">–</span></div>
+    </section>
+
+    <div class="layout">
+      <!-- signals -->
+      <section class="panel signals">
+        <div class="panel-head">
+          <h2>Sinyal Live</h2>
+          <span id="last-scan" class="muted small">–</span>
+        </div>
+        <div id="signals" class="signal-grid"></div>
+        <p id="signals-empty" class="empty hidden">Belum ada sinyal. Bot sedang memindai pasar…</p>
+      </section>
+
+      <!-- sidebar -->
+      <aside class="side">
+        <section class="panel">
+          <div class="panel-head"><h2>Kondisi Pasar</h2></div>
+          <div id="market" class="market"></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head"><h2>Manajemen Risiko</h2></div>
+          <div id="risk" class="risk"></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h2>🧠 Yang Dipelajari Bot</h2>
+            <span id="lesson-count" class="pill">0</span>
+          </div>
+          <div id="lessons" class="lessons"></div>
+        </section>
+      </aside>
+    </div>
+
+    <!-- journal -->
+    <section class="panel">
+      <div class="panel-head"><h2>Jurnal Trade</h2></div>
+      <div class="table-wrap">
+        <table id="journal">
+          <thead><tr>
+            <th>Waktu</th><th>Simbol</th><th>Arah</th><th>Entry</th>
+            <th>Exit</th><th>Hasil</th><th>R</th><th>Conf</th><th>Status</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span>⚠️ Sinyal edukasi — bukan nasihat finansial. Selalu kelola risiko Anda.</span>
+    <span id="foot-src">data: Binance · CoinGecko (gratis)</span>
+  </footer>
+
+  <script src="/app.js"></script>
+</body>
+</html>
