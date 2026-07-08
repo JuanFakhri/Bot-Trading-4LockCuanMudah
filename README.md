@@ -22,8 +22,11 @@ UI real-time via WebSocket, dan tersedia **mode siang/malam**.
   win-rate per *pola* dan **otomatis memblokir pola yang berulang rugi** serta
   memprioritaskan pola yang menang. Karena tersimpan di database, **bot tidak
   pernah lupa** — pelajaran bertahan meski di-restart.
-- **UI real-time** — kartu sinyal, KPI (win rate, profit factor), panel pasar,
-  manajemen risiko, daftar pelajaran, jurnal trade. Mode siang/malam.
+- **UI real-time** — kartu sinyal + **grafik candlestick 4H** (golden zone,
+  garis Entry/SL/TP), KPI (win rate, profit factor), panel pasar, manajemen
+  risiko, daftar pelajaran, jurnal trade. Mode siang/malam.
+- **Deploy gratis** — siap untuk Render / Railway / Fly.io / Docker (lihat
+  [DEPLOY.md](DEPLOY.md)).
 
 ---
 

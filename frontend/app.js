@@ -11,8 +11,10 @@ function applyTheme(t) {
 }
 applyTheme(localStorage.getItem("fib-theme") ||
   (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark"));
-themeBtn.onclick = () =>
+themeBtn.onclick = () => {
   applyTheme(document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark");
+  if (lastSnap) renderSignals(lastSnap.signals || []); // redraw charts in new theme
+};
 
 /* ---------- manual scan ---------- */
 $("scan-btn").onclick = async () => {
@@ -48,7 +50,9 @@ function startPolling() {
 connect();
 
 /* ---------- render ---------- */
+let lastSnap = null;
 function render(s) {
+  lastSnap = s;
   renderRegime(s.regime);
   renderKpis(s.stats, s.risk);
   renderSignals(s.signals || []);
@@ -84,6 +88,76 @@ function renderSignals(list) {
   const shown = list.filter(x => x.state !== "WATCHING" || x.confidence >= 0.5).slice(0, 30);
   $("signals-empty").classList.toggle("hidden", shown.length > 0);
   grid.innerHTML = shown.map(cardHTML).join("");
+  // draw candlestick charts after the cards are in the DOM
+  requestAnimationFrame(() => shown.forEach(s => {
+    const cv = document.getElementById("chart-" + s.symbol);
+    if (cv && s.candles && s.candles.length) drawChart(cv, s);
+  }));
+}
+
+/* ---------- candlestick chart (dependency-free, theme-aware) ---------- */
+function cssVar(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+function drawChart(cv, s) {
+  const dpr = window.devicePixelRatio || 1;
+  const W = cv.clientWidth || 260, H = cv.clientHeight || 130;
+  cv.width = W * dpr; cv.height = H * dpr;
+  const ctx = cv.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+
+  const c = s.candles, p = s.plan || {}, fib = s.fib || {};
+  const padR = 52, padT = 6, padB = 6;
+  const plotW = W - padR, plotH = H - padT - padB;
+
+  // price range spans candles + key levels so all lines are visible
+  let lo = Infinity, hi = -Infinity;
+  for (const k of c) { lo = Math.min(lo, k[3]); hi = Math.max(hi, k[2]); }
+  [p.entry, p.sl, p.tp1, p.tp2, fib["0.5"], fib["0.618"]].forEach(v => {
+    if (v != null) { lo = Math.min(lo, v); hi = Math.max(hi, v); }
+  });
+  const pad = (hi - lo) * 0.06 || 1; lo -= pad; hi += pad;
+  const y = v => padT + plotH * (1 - (v - lo) / (hi - lo));
+  const green = cssVar("--green"), red = cssVar("--red"), muted = cssVar("--muted");
+  const accent = cssVar("--accent"), amber = cssVar("--amber");
+
+  // golden-zone band
+  if (fib["0.5"] != null && fib["0.618"] != null) {
+    ctx.fillStyle = "rgba(245,158,11,0.13)";
+    const y1 = y(fib["0.5"]), y2 = y(fib["0.618"]);
+    ctx.fillRect(0, Math.min(y1, y2), plotW, Math.abs(y2 - y1));
+  }
+
+  // candles
+  const n = c.length, cw = plotW / n, bw = Math.max(1.5, cw * 0.6);
+  c.forEach((k, i) => {
+    const [, o, h, l, cl] = k;
+    const x = i * cw + cw / 2;
+    const up = cl >= o;
+    ctx.strokeStyle = up ? green : red;
+    ctx.fillStyle = up ? green : red;
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x, y(h)); ctx.lineTo(x, y(l)); ctx.stroke();
+    const yo = y(o), yc = y(cl);
+    ctx.fillRect(x - bw / 2, Math.min(yo, yc), bw, Math.max(1, Math.abs(yc - yo)));
+  });
+
+  // level lines + right-edge labels
+  const lines = [
+    [p.entry, accent, "Entry"], [p.sl, red, "SL"],
+    [p.tp1, green, "TP1"], [p.tp2, green, "TP2"],
+  ];
+  ctx.font = "9px system-ui, sans-serif"; ctx.textBaseline = "middle";
+  lines.forEach(([v, col, lbl]) => {
+    if (v == null || v < lo || v > hi) return;
+    const yy = y(v);
+    ctx.strokeStyle = col; ctx.globalAlpha = 0.85; ctx.lineWidth = 1;
+    ctx.setLineDash([4, 3]); ctx.beginPath();
+    ctx.moveTo(0, yy); ctx.lineTo(plotW, yy); ctx.stroke();
+    ctx.setLineDash([]); ctx.globalAlpha = 1;
+    ctx.fillStyle = col; ctx.textAlign = "left";
+    ctx.fillText(lbl, plotW + 3, yy);
+  });
 }
 
 function cardHTML(s) {
@@ -106,6 +180,7 @@ function cardHTML(s) {
       <div class="conf-bar"><div class="conf-fill" style="width:${conf}%"></div></div>
       <div class="conf-row"><span>Keyakinan (belajar)</span><span>${conf}% · ${s.learn_reason || ""}</span></div>
     </div>
+    <canvas class="chart" id="chart-${s.symbol}"></canvas>
     <div class="levels">
       <div><span class="lbl">Harga</span><span>${fmt(s.price)}</span></div>
       <div><span class="lbl">Retrace</span><span>${fmt(s.retrace_ratio, 3)}</span></div>

@@ -64,10 +64,10 @@ def klines(symbol: str, interval: str, limit: int) -> pd.DataFrame:
         close[-1] += base * 0.015      # last candle bounces green
 
     close = np.abs(close) + 0.001
-    wig = np.abs(rng.normal(0, close * 0.004))
-    high = close + wig
-    low = np.clip(close - wig, 0.0001, None)
     op = np.concatenate([[close[0]], close[:-1]])
+    wig = np.abs(rng.normal(0, close * 0.004))
+    high = np.maximum(close, op) + wig
+    low = np.clip(np.minimum(close, op) - wig, 0.0001, None)
     # volume higher on up bars (helps A/D / OBV)
     up = np.concatenate([[1], np.sign(np.diff(close))])
     vol = np.abs(rng.normal(1000, 200, n)) * (1.6 * (up > 0) + 0.6)

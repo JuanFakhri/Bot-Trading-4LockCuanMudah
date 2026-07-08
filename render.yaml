@@ -1,0 +1,21 @@
+# Render.com Blueprint — deploy gratis 1-klik.
+# 1. Push repo ini ke GitHub.
+# 2. Buka https://render.com → New → Blueprint → pilih repo ini.
+# 3. Render membaca file ini otomatis. Selesai.
+services:
+  - type: web
+    name: fib-hybrid-bot
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+      - key: SCAN_INTERVAL_SEC
+        value: "60"
+      # Set BOT_DEMO=1 kalau mau pratinjau tanpa data live.
+      - key: BOT_DEMO
+        value: "0"

@@ -1,0 +1,23 @@
+# Fly.io — punya free allowance & volume persisten (pelajaran bot tidak hilang).
+# Langkah: install flyctl → `fly launch --no-deploy` (pakai file ini) →
+#   `fly volumes create botdata --size 1` → `fly deploy`.
+app = "fib-hybrid-bot"
+primary_region = "sin"          # ganti ke region terdekat (sin=Singapura)
+
+[build]
+
+[env]
+  PORT = "8000"
+  BOT_DB_PATH = "/data/bot.db"  # disimpan di volume -> persisten antar-deploy
+  SCAN_INTERVAL_SEC = "60"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = "suspend"
+  auto_start_machines = true
+  min_machines_running = 1       # jaga bot tetap jalan untuk tracking sinyal
+
+[[mounts]]
+  source = "botdata"
+  destination = "/data"

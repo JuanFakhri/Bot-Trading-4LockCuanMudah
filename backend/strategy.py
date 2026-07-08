@@ -229,6 +229,15 @@ def evaluate(symbol: str, htf: pd.DataFrame, dtf: pd.DataFrame, ltf: pd.DataFram
         "sar_confirm": bool(price < sar.iloc[-1]) if machine == "short" else None,
     }
 
+    # Last 40 HTF candles for the card chart: [ts, open, high, low, close].
+    tail = htf.tail(40)
+    candles = [
+        [int(ts.timestamp()), float(o), float(h), float(l), float(c)]
+        for ts, o, h, l, c in zip(
+            tail.index, tail["open"], tail["high"], tail["low"], tail["close"]
+        )
+    ]
+
     return {
         "symbol": symbol,
         "machine": machine,
@@ -245,6 +254,7 @@ def evaluate(symbol: str, htf: pd.DataFrame, dtf: pd.DataFrame, ltf: pd.DataFram
         "htf_ok": htf_ok,
         "golden_zone": bool(gz),
         "features": features,
+        "candles": candles,
         "ts": datetime.now(timezone.utc).isoformat(),
     }
 
