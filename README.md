@@ -45,6 +45,19 @@ uvicorn backend.main:app --host 0.0.0.0 --port 8000
 
 Variabel opsional: `PORT`, `SCAN_INTERVAL_SEC` (default 60), `BOT_DB_PATH`.
 
+### 🔍 Mode demo (pratinjau tanpa internet)
+
+Untuk melihat UI terisi penuh tanpa akses API (mis. di lingkungan yang memblokir
+Binance/CoinGecko), jalankan dengan data sintetis yang tetap melewati pipeline
+asli (regime → strategi → sinyal → pembelajaran):
+
+```bash
+BOT_DEMO=1 python -m backend.demo_seed        # (opsional) isi riwayat pembelajaran
+BOT_DEMO=1 uvicorn backend.main:app --port 8000
+```
+
+Mode ini murni untuk pratinjau; mode live memakai data Binance/CoinGecko nyata.
+
 ---
 
 ## 🧠 Bagaimana bot "belajar dari kesalahan"

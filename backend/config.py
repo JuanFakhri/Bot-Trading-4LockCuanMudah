@@ -27,6 +27,9 @@ KLIMIT = 400        # candles pulled per request
 
 SCAN_INTERVAL_SEC = int(os.getenv("SCAN_INTERVAL_SEC", "60"))
 
+# Demo mode: feed synthetic data through the real pipeline (no external API).
+DEMO = os.getenv("BOT_DEMO", "0") == "1"
+
 # --------------------------------------------------------------------------
 # Indicator parameters
 # --------------------------------------------------------------------------

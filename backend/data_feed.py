@@ -41,6 +41,10 @@ async def _binance_get(path: str, params: dict) -> Optional[list]:
 async def get_klines(symbol: str, interval: str, limit: int = config.KLIMIT,
                      max_age: float = 20.0) -> pd.DataFrame:
     """Return an OHLCV DataFrame indexed by close time (UTC)."""
+    if config.DEMO:
+        from . import demo
+        return demo.klines(symbol, interval, limit)
+
     key = f"{symbol}:{interval}:{limit}"
     now = time.time()
     cached = _kline_cache.get(key)
@@ -86,6 +90,10 @@ async def get_usdt_dominance() -> dict:
     ``pos`` is USDT.D position inside its 20-day range (0 = support, 1 = resistance).
     ``rising`` compares against ~1 day ago. Falls back to neutral values.
     """
+    if config.DEMO:
+        from . import demo
+        return demo.usdt_dominance()
+
     now = time.time()
     if _usdtd_cache and (now - float(_usdtd_cache.get("_ts", 0))) < 300:
         return _usdtd_cache["value"]  # type: ignore[return-value]
