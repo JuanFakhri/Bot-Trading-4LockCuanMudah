@@ -1,0 +1,58 @@
+"""One-shot scan for the GitHub-Actions runner (GitHub-only deployment).
+
+Flow each run:
+  1. restore the learning state from the committed ``data/state.json`` (so the
+     bot remembers past lessons even though the runner is ephemeral),
+  2. run exactly one strategy scan (regime → signals → track open trades →
+     learning),
+  3. write the dashboard snapshot to ``docs/data/snapshot.json`` (served by
+     GitHub Pages), and
+  4. export the updated learning state back to ``data/state.json``.
+
+The workflow then commits the two JSON files, so the site updates and the bot
+never forgets. No server, no paid host — everything lives in the repo.
+"""
+from __future__ import annotations
+
+import asyncio
+import json
+import os
+
+from backend import config, data_feed, database as db
+from backend.engine import engine
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+STATE_PATH = os.path.join(ROOT, "data", "state.json")
+SNAP_PATH = os.path.join(ROOT, "docs", "data", "snapshot.json")
+
+
+async def main():
+    os.makedirs(os.path.dirname(STATE_PATH), exist_ok=True)
+    os.makedirs(os.path.dirname(SNAP_PATH), exist_ok=True)
+
+    # 1. restore learning from committed JSON if the DB is fresh
+    if not os.path.exists(config.DB_PATH) and os.path.exists(STATE_PATH):
+        with open(STATE_PATH, encoding="utf-8") as f:
+            db.import_state(json.load(f))
+        print(f"[scan] restored state: {db.stats_summary()}")
+
+    # 2. one scan cycle
+    await engine.scan()
+    snap = engine.snapshot()
+
+    # 3. write dashboard snapshot for GitHub Pages
+    with open(SNAP_PATH, "w", encoding="utf-8") as f:
+        json.dump(snap, f, ensure_ascii=False, separators=(",", ":"))
+
+    # 4. persist learning back to JSON
+    with open(STATE_PATH, "w", encoding="utf-8") as f:
+        json.dump(db.export_state(), f, ensure_ascii=False, indent=0)
+
+    reg = snap["regime"].get("regime")
+    print(f"[scan] done: regime={reg} signals={len(snap['signals'])} "
+          f"lessons={len(snap['lessons'])} stats={snap['stats']} err={snap.get('error')}")
+    await data_feed.close()
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

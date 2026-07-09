@@ -9,7 +9,35 @@ Bot ini FastAPI + WebSocket, jadi bisa online 24/7 dan dibuka dari HP. Berikut
 
 ---
 
-## 1) Render.com — paling mudah (rekomendasi)
+## 0) GitHub saja (Actions + Pages) — tanpa daftar layanan lain 🟢
+
+Bot berjalan **100% di GitHub**: GitHub Actions memindai pasar terjadwal, lalu
+menyimpan sinyal + pelajaran ke repo, dan GitHub Pages menampilkannya. Pelajaran
+tersimpan permanen di repo (`data/state.json`) — bot tidak pernah lupa.
+**Trade-off:** update tiap ±15 menit (bukan real-time per detik).
+
+Langkah (sekali saja):
+
+1. Pastikan semua file ada di branch **default** (`main`). Cron GitHub Actions
+   hanya berjalan dari branch default → jadi branch ini harus di-merge ke `main`.
+2. Repo → **Settings → Pages** → *Build and deployment* → Source: **Deploy from a
+   branch** → Branch: **main** / folder: **`/docs`** → **Save**.
+3. Repo → **Settings → Actions → General** → *Workflow permissions* → pilih
+   **Read and write permissions** → **Save** (agar Actions bisa commit hasil).
+4. Repo → tab **Actions** → aktifkan workflow → buka **“FIB Hybrid scan”** →
+   **Run workflow** (untuk isi pertama kali; berikutnya otomatis tiap 15 menit).
+5. Buka situs di **`https://<username>.github.io/<repo>/`**.
+
+Workflow: [`.github/workflows/scan.yml`](.github/workflows/scan.yml) ·
+Skrip: [`scripts/github_scan.py`](scripts/github_scan.py).
+
+> Runner GitHub ber-IP US (Binance `api.binance.com` diblokir 451 di US), jadi
+> bot memakai `data-api.binance.vision` (mirror data publik Binance yang tidak
+> geo-block). CoinGecko untuk USDT.D tetap jalan.
+
+---
+
+## 1) Render.com — paling mudah (rekomendasi untuk real-time)
 
 1. Push repo ke GitHub (lihat langkah di bawah).
 2. Buka <https://render.com> → **New +** → **Blueprint**.

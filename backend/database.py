@@ -138,6 +138,38 @@ def lessons(limit: int = 30) -> list[dict]:
     return [dict(r) for r in q("SELECT * FROM lessons ORDER BY id DESC LIMIT ?", (limit,))]
 
 
+def export_state() -> dict:
+    """Dump the learning-relevant tables to a plain dict (for JSON persistence).
+
+    Used by the GitHub-Actions runner to commit state back to the repo so the
+    bot never forgets between scheduled runs, without committing a binary DB.
+    """
+    def rows(table: str) -> list[dict]:
+        return [dict(r) for r in q(f"SELECT * FROM {table}")]
+
+    return {
+        "trades": rows("trades"),
+        "pattern_stats": rows("pattern_stats"),
+        "lessons": rows("lessons"),
+    }
+
+
+def import_state(state: dict):
+    """Rebuild the DB from a dict produced by ``export_state``."""
+    with _lock:
+        conn = _connect()
+        for table in ("trades", "pattern_stats", "lessons"):
+            conn.execute(f"DELETE FROM {table}")
+            for row in state.get(table, []):
+                cols = list(row.keys())
+                ph = ",".join("?" * len(cols))
+                conn.execute(
+                    f"INSERT INTO {table} ({','.join(cols)}) VALUES ({ph})",
+                    [row[c] for c in cols],
+                )
+        conn.commit()
+
+
 def stats_summary() -> dict:
     rows = q("SELECT outcome, r_multiple FROM trades WHERE status='RESOLVED'")
     wins = sum(1 for r in rows if r["outcome"] == "WIN")

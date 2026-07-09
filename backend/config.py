@@ -84,8 +84,11 @@ DB_PATH = os.getenv("BOT_DB_PATH", os.path.join(os.path.dirname(__file__), "..",
 
 # Data sources (all free, no API key required)
 BINANCE_BASES = [
+    # data-api.binance.vision is Binance's public market-data mirror and is NOT
+    # geo-restricted, so it works from US-based GitHub Actions runners where
+    # api.binance.com returns HTTP 451. Tried first for that reason.
+    "https://data-api.binance.vision",
     "https://api.binance.com",
     "https://api1.binance.com",
-    "https://data-api.binance.vision",
 ]
 COINGECKO_BASE = "https://api.coingecko.com/api/v3"

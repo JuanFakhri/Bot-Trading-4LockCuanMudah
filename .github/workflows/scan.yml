@@ -1,0 +1,49 @@
+name: FIB Hybrid scan
+
+# Bot berjalan sepenuhnya di GitHub: pindai pasar terjadwal, simpan hasil +
+# pelajaran ke repo, lalu GitHub Pages menampilkannya. Tanpa server berbayar.
+on:
+  schedule:
+    - cron: "*/15 * * * *"      # tiap ~15 menit (interval minimum GitHub Actions)
+  workflow_dispatch:            # tombol "Run workflow" manual
+
+# Butuh izin menulis untuk commit snapshot + state pembelajaran kembali ke repo.
+permissions:
+  contents: write
+
+# Jangan jalankan dua scan bersamaan (hindari konflik commit).
+concurrency:
+  group: fib-hybrid-scan
+  cancel-in-progress: false
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run market scan
+        run: python -m scripts.github_scan
+
+      - name: Sync frontend to GitHub Pages folder
+        run: cp frontend/index.html frontend/style.css frontend/app.js docs/
+
+      - name: Commit results
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -f data/state.json docs/data/snapshot.json docs/index.html docs/style.css docs/app.js
+          if git diff --cached --quiet; then
+            echo "Tidak ada perubahan."
+          else
+            git commit -m "chore: pembaruan scan otomatis [skip ci]"
+            git push
+          fi
