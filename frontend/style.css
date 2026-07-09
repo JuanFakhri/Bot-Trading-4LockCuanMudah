@@ -200,6 +200,10 @@ main { max-width: 1320px; margin: 0 auto; padding: 20px; }
 table { width: 100%; border-collapse: collapse; font-size: 13px; }
 th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }
 th { color: var(--muted); font-weight: 600; font-size: 12px; }
+.src-tag { font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 999px; letter-spacing: .3px; }
+.src-tag.src-me { background: rgba(79,140,255,.18); color: var(--accent); }
+.src-tag.src-bot { background: var(--panel-2); color: var(--muted); }
+
 .o-win { color: var(--green); font-weight: 700; }
 .o-loss { color: var(--red); font-weight: 700; }
 .o-be { color: var(--amber); font-weight: 700; }

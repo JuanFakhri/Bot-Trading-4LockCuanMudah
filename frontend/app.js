@@ -38,6 +38,7 @@ $("signals").addEventListener("click", (e) => {
   if (!sig) return;
   addMyTrade(sig);
   renderMyTrades(lastSnap);
+  renderJournal(lastSnap ? lastSnap.recent_trades : []);   // jurnal ikut terupdate
   renderSignals(lastSnap.signals || []);
 });
 
@@ -277,6 +278,7 @@ function closeMT(id) {
   _finalize(t, r, cur);
   saveMT(list);
   renderMyTrades(lastSnap);
+  renderJournal(lastSnap ? lastSnap.recent_trades : []);   // jurnal ikut terupdate
   if (lastSnap) renderSignals(lastSnap.signals || []);
 }
 window.closeMT = closeMT;
@@ -540,14 +542,27 @@ function renderLessons(lessons, blocked) {
   }).join("");
 }
 
-function renderJournal(trades) {
+function renderJournal(botTrades) {
   const tb = document.querySelector("#journal tbody");
-  if (!trades.length) { tb.innerHTML = `<tr><td colspan="9" class="empty">Belum ada trade.</td></tr>`; return; }
-  tb.innerHTML = trades.map(t => {
+  // trade pribadi (Trade Saya) — muncul & terupdate otomatis saat entry/tutup
+  const mine = loadMT().map(t => ({
+    source: "Saya", created_ts: t.opened_ts, symbol: t.symbol, direction: t.direction,
+    entry: t.entry, exit_price: t.exit_price, outcome: t.outcome, r_multiple: t.r,
+    confidence: t.confidence, status: t.status === "CLOSED" ? "RESOLVED" : "OPEN",
+  }));
+  const bot = (botTrades || []).map(t => ({ ...t, source: "Bot" }));
+  const all = [...mine, ...bot]
+    .sort((a, b) => new Date(b.created_ts) - new Date(a.created_ts))
+    .slice(0, 50);
+
+  if (!all.length) { tb.innerHTML = `<tr><td colspan="10" class="empty">Belum ada trade.</td></tr>`; return; }
+  tb.innerHTML = all.map(t => {
     const o = (t.outcome || "").toLowerCase();
     const ocls = o === "win" ? "o-win" : o === "loss" ? "o-loss" : o ? "o-be" : "";
+    const srcCls = t.source === "Saya" ? "src-me" : "src-bot";
     return `<tr>
       <td>${new Date(t.created_ts).toLocaleString("id-ID", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</td>
+      <td><span class="src-tag ${srcCls}">${t.source}</span></td>
       <td>${t.symbol}</td>
       <td class="${t.direction === "LONG" ? "o-win" : "o-loss"}">${t.direction}</td>
       <td>${fmt(t.entry)}</td>
