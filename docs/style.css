@@ -132,6 +132,26 @@ main { max-width: 1320px; margin: 0 auto; padding: 20px; }
 .lv-sl { color: var(--red); }
 .lv-tp { color: var(--green); }
 
+.enter-btn { width: 100%; margin-top: 10px; padding: 9px; border-radius: 10px; cursor: pointer;
+  font-weight: 700; font-size: 13px; border: 1px solid var(--accent); background: var(--accent); color: #fff;
+  transition: transform .1s, opacity .2s; }
+.enter-btn:hover { opacity: .9; }
+.enter-btn:active { transform: scale(.97); }
+.enter-btn.taken { background: transparent; color: var(--green); border-color: var(--green); cursor: default; }
+
+.btn.tiny { padding: 4px 8px; font-size: 12px; }
+.mt-actions { display: flex; gap: 6px; }
+.mytrades { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; max-height: 420px; overflow-y: auto; }
+.mt { background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 9px 11px; font-size: 12.5px; }
+.mt-top { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+.mt-sym { font-weight: 800; }
+.mt-row { display: flex; justify-content: space-between; color: var(--muted); margin-top: 3px; }
+.mt-row b { color: var(--text); font-weight: 700; }
+.mt-close { border: 1px solid var(--border); background: var(--panel); color: var(--muted); border-radius: 8px;
+  padding: 3px 8px; font-size: 11px; cursor: pointer; }
+.mt-close:hover { color: var(--red); border-color: var(--red); }
+.mt-empty { color: var(--muted); font-size: 12px; }
+
 .gate { font-size: 12px; padding: 6px 10px; border-radius: 8px; background: var(--panel);
   color: var(--muted); margin-top: 8px; }
 .gate.ok { color: var(--green); background: rgba(34,197,94,.1); }

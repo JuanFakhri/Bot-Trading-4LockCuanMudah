@@ -28,6 +28,31 @@ $("scan-btn").onclick = async () => {
   $("scan-btn").textContent = "↻ Scan";
 };
 
+/* ---------- "Saya Entry" button (event delegation) ---------- */
+$("signals").addEventListener("click", (e) => {
+  const btn = e.target.closest(".enter-btn");
+  if (!btn || btn.classList.contains("taken")) return;
+  const sym = btn.dataset.symbol;
+  const sig = (lastSnap && lastSnap.signals || []).find(x => x.symbol === sym);
+  if (!sig) return;
+  addMyTrade(sig);
+  renderMyTrades(lastSnap);
+  renderSignals(lastSnap.signals || []);
+});
+
+/* ---------- backup / restore Trade Saya ---------- */
+$("mt-export").onclick = async () => {
+  const data = localStorage.getItem(MT_KEY) || "[]";
+  try { await navigator.clipboard.writeText(data); alert("Data trade disalin ke clipboard. Simpan sebagai cadangan."); }
+  catch (e) { prompt("Salin data cadangan ini:", data); }
+};
+$("mt-import").onclick = () => {
+  const s = prompt("Tempel data cadangan Trade Saya:");
+  if (!s) return;
+  try { JSON.parse(s); localStorage.setItem(MT_KEY, s); renderMyTrades(lastSnap); if (lastSnap) renderSignals(lastSnap.signals || []); }
+  catch (e) { alert("Data tidak valid."); }
+};
+
 /* ---------- websocket with polling fallback ---------- */
 function setConn(state) {
   const dot = $("conn-dot"), txt = $("conn-text");
@@ -73,10 +98,149 @@ function startPolling() {
 }
 connect();
 
+/* ============ TRADE SAYA (personal tracker, disimpan di perangkat) ============ */
+const MT_KEY = "fib-my-trades";
+let myOpenSymbols = new Set();
+
+const loadMT = () => { try { return JSON.parse(localStorage.getItem(MT_KEY)) || []; } catch (e) { return []; } };
+const saveMT = (l) => localStorage.setItem(MT_KEY, JSON.stringify(l));
+
+function addMyTrade(sig) {
+  const p = sig.plan || {};
+  if (!p.entry) return;
+  const list = loadMT();
+  if (list.some(t => t.symbol === sig.symbol && t.status === "OPEN")) return; // 1 posisi/simbol
+  // masuk di HARGA SEKARANG; SL & TP2 ikut rencana bot, TP1 = +1R dari entry
+  const cur = (lastSnap && lastSnap.prices && lastSnap.prices[sig.symbol]) ?? p.entry;
+  const entry = cur;
+  const risk = Math.abs(entry - p.sl) || 1e-9;
+  const tp1 = sig.direction === "LONG" ? entry + risk : entry - risk;
+  list.push({
+    id: Date.now(), symbol: sig.symbol, direction: sig.direction,
+    entry, sl: p.sl, tp1, tp2: p.tp2, rr: p.rr,
+    confidence: sig.confidence, size: p.position_size,
+    opened_ts: new Date().toISOString(), status: "OPEN", tp1_hit: false,
+  });
+  saveMT(list);
+}
+
+function _finalize(t, r, price) {
+  t.status = "CLOSED";
+  t.r = Math.round(r * 100) / 100;
+  t.outcome = r > 0.05 ? "WIN" : r < -0.05 ? "LOSS" : "BE";
+  t.exit_price = price;
+  t.closed_ts = new Date().toISOString();
+}
+
+// Lacak & selesaikan trade memakai harga terbaru dari snapshot (tiap refresh).
+function resolveMT(prices) {
+  if (!prices) return;
+  const list = loadMT();
+  let changed = false;
+  for (const t of list) {
+    if (t.status !== "OPEN") continue;
+    const cur = prices[t.symbol];
+    if (cur == null) continue;
+    // lewati jika setup tak konsisten (SL/TP di sisi yang salah dari entry)
+    const valid = t.direction === "LONG" ? (t.sl < t.entry && t.entry < t.tp2)
+                                         : (t.tp2 < t.entry && t.entry < t.sl);
+    if (!valid) continue;
+    const risk = Math.abs(t.entry - t.sl) || 1e-9;
+    if (t.direction === "LONG") {
+      const be = t.entry * 1.0015, stop = t.tp1_hit ? be : t.sl;
+      if (cur <= stop) { _finalize(t, t.tp1_hit ? 0.5 + 0.5 * (be - t.entry) / risk : -1, stop); changed = true; continue; }
+      if (!t.tp1_hit && cur >= t.tp1) { t.tp1_hit = true; changed = true; }
+      if (cur >= t.tp2) { _finalize(t, 0.5 + 0.5 * (t.tp2 - t.entry) / risk, t.tp2); changed = true; }
+    } else {
+      const be = t.entry * 0.9985, stop = t.tp1_hit ? be : t.sl;
+      if (cur >= stop) { _finalize(t, t.tp1_hit ? 0.5 + 0.5 * (t.entry - be) / risk : -1, stop); changed = true; continue; }
+      if (!t.tp1_hit && cur <= t.tp1) { t.tp1_hit = true; changed = true; }
+      if (cur <= t.tp2) { _finalize(t, 0.5 + 0.5 * (t.entry - t.tp2) / risk, t.tp2); changed = true; }
+    }
+  }
+  if (changed) saveMT(list);
+}
+
+function closeMT(id) {
+  const list = loadMT();
+  const t = list.find(x => x.id === id);
+  if (!t || t.status !== "OPEN") return;
+  const cur = (lastSnap && lastSnap.prices && lastSnap.prices[t.symbol]) || t.entry;
+  const risk = Math.abs(t.entry - t.sl) || 1e-9;
+  const r = t.direction === "LONG" ? (cur - t.entry) / risk : (t.entry - cur) / risk;
+  _finalize(t, r, cur);
+  saveMT(list);
+  renderMyTrades(lastSnap);
+  if (lastSnap) renderSignals(lastSnap.signals || []);
+}
+window.closeMT = closeMT;
+
+function renderMyTrades(snap) {
+  resolveMT(snap && snap.prices);
+  const list = loadMT();
+  const open = list.filter(t => t.status === "OPEN");
+  const closed = list.filter(t => t.status === "CLOSED").sort((a, b) => b.id - a.id);
+  myOpenSymbols = new Set(open.map(t => t.symbol));
+  const prices = (snap && snap.prices) || {};
+
+  // ringkasan risiko pribadi
+  const today = new Date().toDateString();
+  const todayCount = list.filter(t => new Date(t.opened_ts).toDateString() === today).length;
+  const wins = closed.filter(t => t.outcome === "WIN").length;
+  const wr = closed.length ? Math.round(wins / closed.length * 100) : 0;
+  const sumR = closed.reduce((a, t) => a + (t.r || 0), 0);
+  const overLimit = todayCount > 3;
+  $("my-risk").innerHTML = [
+    ["Trade hari ini", `${todayCount} / 3${overLimit ? " ⚠️" : ""}`],
+    ["Posisi terbuka", `${open.length}`],
+    ["Menang / Kalah", `${wins} / ${closed.length - wins} (${wr}%)`],
+    ["Total R (real.)", `${sumR >= 0 ? "+" : ""}${sumR.toFixed(2)}R`],
+  ].map(([k, v]) => `<div class="row"><span class="muted">${k}</span><span class="v">${v}</span></div>`).join("");
+
+  const openHTML = open.map(t => {
+    const cur = prices[t.symbol];
+    const risk = Math.abs(t.entry - t.sl) || 1e-9;
+    let pnl = "–", cls = "";
+    if (cur != null) {
+      const r = t.direction === "LONG" ? (cur - t.entry) / risk : (t.entry - cur) / risk;
+      cls = r >= 0 ? "o-win" : "o-loss";
+      pnl = `${r >= 0 ? "+" : ""}${r.toFixed(2)}R`;
+    }
+    return `<div class="mt">
+      <div class="mt-top">
+        <span><span class="mt-sym">${t.symbol}</span> <span class="badge ${t.direction.toLowerCase()}">${t.direction}</span></span>
+        <span class="${cls}">${pnl}${t.tp1_hit ? " · TP1✓" : ""}</span>
+      </div>
+      <div class="mt-row"><span>Entry ${fmt(t.entry)}</span><span>now ${cur != null ? fmt(cur) : "–"}</span></div>
+      <div class="mt-row"><span class="lv-sl">SL ${fmt(t.sl)}</span><span class="lv-tp">TP2 ${fmt(t.tp2)}</span></div>
+      <div class="mt-row"><span>${new Date(t.opened_ts).toLocaleString("id-ID", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</span>
+        <button class="mt-close" onclick="closeMT(${t.id})">Tutup</button></div>
+    </div>`;
+  }).join("");
+
+  const closedHTML = closed.slice(0, 8).map(t => {
+    const oc = (t.outcome || "").toLowerCase();
+    const cls = oc === "win" ? "o-win" : oc === "loss" ? "o-loss" : "o-be";
+    return `<div class="mt">
+      <div class="mt-top">
+        <span><span class="mt-sym">${t.symbol}</span> <span class="badge ${t.direction.toLowerCase()}">${t.direction}</span></span>
+        <span class="${cls}">${t.outcome} ${t.r >= 0 ? "+" : ""}${t.r}R</span>
+      </div>
+      <div class="mt-row"><span>Entry ${fmt(t.entry)} → ${fmt(t.exit_price)}</span>
+        <span>${new Date(t.closed_ts).toLocaleDateString("id-ID")}</span></div>
+    </div>`;
+  }).join("");
+
+  $("my-trades").innerHTML = (open.length || closed.length)
+    ? (openHTML + closedHTML)
+    : `<p class="mt-empty">Belum ada trade. Tekan "✅ Saya Entry" di kartu sinyal saat Anda mengambil posisi — trade dicatat & dilacak di sini (tersimpan di perangkat Anda).</p>`;
+}
+
 /* ---------- render ---------- */
 let lastSnap = null;
 function render(s) {
   lastSnap = s;
+  renderMyTrades(s);
   renderRegime(s.regime);
   renderKpis(s.stats, s.risk);
   renderSignals(s.signals || []);
@@ -191,6 +355,7 @@ function cardHTML(s) {
   const conf = Math.round((s.confidence || 0) * 100);
   const gateCls = !s.allowed ? "blocked" : s.actionable ? "ok" : "";
   const checks = (s.checklist || []).concat(s.trigger || []);
+  const taken = myOpenSymbols.has(s.symbol);
   return `
   <div class="card ${s.state.toLowerCase()}">
     <div class="card-top">
@@ -222,6 +387,8 @@ function cardHTML(s) {
         <span class="mk">${c.ok ? "✔" : "✘"}</span><span>${c.rule}</span>
         ${c.detail ? `<span class="dt">${c.detail}</span>` : ""}</div>`).join("")}
     </details>
+    ${p.entry ? `<button class="enter-btn ${taken ? "taken" : ""}" data-symbol="${s.symbol}" ${taken ? "disabled" : ""}>
+      ${taken ? "✔ Sudah dientry" : "✅ Saya Entry (catat ke risiko)"}</button>` : ""}
   </div>`;
 }
 
