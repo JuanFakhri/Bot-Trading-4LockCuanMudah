@@ -1,0 +1,56 @@
+name: FIB Hybrid backtest
+
+# Jalankan manual (atau mingguan) untuk membacktest strategi FIB pada data
+# historis Binance. Hasilnya ditampilkan di tab "Backtest" web, DAN bot belajar
+# dari hasilnya (pola rugi diblokir, pola menang diprioritaskan) — pelajaran
+# disimpan ke data/state.json sehingga dipakai di sinyal live.
+on:
+  workflow_dispatch:
+    inputs:
+      days:
+        description: "Berapa hari data historis di-backtest"
+        required: false
+        default: "180"
+  schedule:
+    - cron: "0 3 * * 0"          # tiap Minggu 03:00 UTC
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fib-hybrid-backtest
+  cancel-in-progress: false
+
+jobs:
+  backtest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run backtest (and learn from it)
+        env:
+          BACKTEST_DAYS: ${{ github.event.inputs.days || '180' }}
+        run: python -m scripts.run_backtest
+
+      - name: Sync frontend to GitHub Pages folder
+        run: cp frontend/index.html frontend/style.css frontend/app.js docs/
+
+      - name: Commit results
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -f data/state.json docs/data/backtest.json docs/index.html docs/style.css docs/app.js
+          if git diff --cached --quiet; then
+            echo "Tidak ada perubahan."
+          else
+            git commit -m "chore: hasil backtest + pembelajaran [skip ci]"
+            git push
+          fi

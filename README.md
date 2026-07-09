@@ -25,8 +25,12 @@ UI real-time via WebSocket, dan tersedia **mode siang/malam**.
 - **UI real-time** — kartu sinyal + **grafik candlestick 4H** (golden zone,
   garis Entry/SL/TP), KPI (win rate, profit factor), panel pasar, manajemen
   risiko, daftar pelajaran, jurnal trade. Mode siang/malam.
-- **Deploy gratis** — siap untuk Render / Railway / Fly.io / Docker (lihat
-  [DEPLOY.md](DEPLOY.md)).
+- **🔬 Backtest + belajar dari sejarah** — tab **Backtest** menjalankan strategi
+  pada data historis Binance (via GitHub Actions), menampilkan Win Rate/PF/kurva
+  ekuitas, dan **men-feed hasilnya ke mesin pembelajaran** sehingga pola yang
+  terbukti rugi di masa lalu langsung diblokir untuk sinyal live.
+- **Deploy gratis** — GitHub Actions + Pages (tanpa server), atau Render /
+  Railway / Fly.io / Docker (lihat [DEPLOY.md](DEPLOY.md)).
 
 ---
 

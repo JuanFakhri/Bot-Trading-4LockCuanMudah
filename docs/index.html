@@ -25,6 +25,12 @@
   </header>
 
   <main>
+    <div class="tabs">
+      <button class="tab active" data-view="live">📡 Live</button>
+      <button class="tab" data-view="backtest">🔬 Backtest</button>
+    </div>
+
+    <div id="view-live">
     <!-- KPI strip -->
     <section class="kpis">
       <div class="kpi"><span class="k-label">Win rate</span><span id="k-winrate" class="k-val">–</span></div>
@@ -93,6 +99,58 @@
         </table>
       </div>
     </section>
+    </div><!-- /view-live -->
+
+    <div id="view-backtest" class="hidden">
+      <div class="bt-intro panel">
+        <h2>🔬 Backtest strategi FIB pada data historis</h2>
+        <p class="muted small">Menguji strategi pada data masa lalu Binance. <b>Dari hasil ini bot belajar</b>:
+          pola yang berulang rugi otomatis diblokir, pola yang menang diprioritaskan — dan pelajaran itu
+          dipakai di sinyal live. Jalankan backtest baru lewat <b>GitHub → Actions → "FIB Hybrid backtest" → Run workflow</b>.</p>
+        <p id="bt-meta" class="muted small"></p>
+      </div>
+
+      <section class="kpis" id="bt-kpis">
+        <div class="kpi"><span class="k-label">Win rate</span><span id="bt-winrate" class="k-val">–</span></div>
+        <div class="kpi"><span class="k-label">Profit factor</span><span id="bt-pf" class="k-val">–</span></div>
+        <div class="kpi"><span class="k-label">Total trade</span><span id="bt-trades" class="k-val">–</span></div>
+        <div class="kpi"><span class="k-label">Ekspektasi/trade</span><span id="bt-exp" class="k-val">–</span></div>
+        <div class="kpi"><span class="k-label">Total R</span><span id="bt-totalr" class="k-val">–</span></div>
+        <div class="kpi"><span class="k-label">Max drawdown</span><span id="bt-dd" class="k-val">–</span></div>
+      </section>
+
+      <div class="layout">
+        <section class="panel">
+          <div class="panel-head"><h2>Kurva Ekuitas (kumulatif R)</h2></div>
+          <canvas id="bt-equity" class="equity"></canvas>
+          <p id="bt-empty" class="empty">Belum ada hasil backtest. Jalankan workflow "FIB Hybrid backtest" di GitHub Actions.</p>
+        </section>
+        <aside class="side">
+          <section class="panel">
+            <div class="panel-head"><h2>Per Simbol</h2></div>
+            <div class="table-wrap"><table id="bt-symbols">
+              <thead><tr><th>Simbol</th><th>Trade</th><th>Win%</th><th>Total R</th></tr></thead>
+              <tbody></tbody>
+            </table></div>
+          </section>
+          <section class="panel">
+            <div class="panel-head"><h2>🧠 Pelajaran dari Backtest</h2><span id="bt-lesson-count" class="pill">0</span></div>
+            <div id="bt-lessons" class="lessons"></div>
+          </section>
+        </aside>
+      </div>
+
+      <section class="panel">
+        <div class="panel-head"><h2>Trade Backtest Terakhir</h2></div>
+        <div class="table-wrap">
+          <table id="bt-journal">
+            <thead><tr><th>Masuk</th><th>Keluar</th><th>Simbol</th><th>Arah</th>
+              <th>Entry</th><th>Exit</th><th>RR</th><th>Hasil</th><th>R</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+    </div><!-- /view-backtest -->
   </main>
 
   <footer class="foot">

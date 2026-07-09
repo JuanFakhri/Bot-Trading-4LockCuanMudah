@@ -57,6 +57,14 @@ async def api_snapshot():
     return JSONResponse(engine.snapshot())
 
 
+@app.get("/api/backtest")
+async def api_backtest():
+    path = os.path.join(FRONTEND_DIR, "..", "docs", "data", "backtest.json")
+    if os.path.exists(path):
+        return FileResponse(path, media_type="application/json")
+    return JSONResponse({"summary": {}, "error": "Belum ada hasil backtest."})
+
+
 @app.get("/api/health")
 async def api_health():
     return {"ok": True, "last_scan": engine.last_scan, "scanning": engine.scanning}

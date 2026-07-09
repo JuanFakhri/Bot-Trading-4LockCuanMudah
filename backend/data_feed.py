@@ -74,6 +74,57 @@ async def get_klines(symbol: str, interval: str, limit: int = config.KLIMIT,
     return df
 
 
+async def get_klines_history(symbol: str, interval: str, days: int) -> pd.DataFrame:
+    """Paginated historical OHLCV covering roughly the last ``days`` days.
+
+    Binance caps klines at 1000 per request, so we walk forward from the start
+    time. Used by the backtester. In demo mode a synthetic long series is
+    generated instead.
+    """
+    if config.DEMO:
+        from . import demo
+        bars = {"15m": 96, "1h": 24, "4h": 6, "1d": 1}.get(interval, 6) * days
+        return demo.klines(symbol, interval, min(bars, 4000))
+
+    ms_per = {"15m": 900_000, "1h": 3_600_000, "4h": 14_400_000, "1d": 86_400_000}[interval]
+    end = int(time.time() * 1000)
+    start = end - days * 86_400_000
+    frames = []
+    cursor = start
+    guard = 0
+    while cursor < end and guard < 60:
+        guard += 1
+        raw = await _binance_get(
+            "/api/v3/klines",
+            {"symbol": symbol, "interval": interval, "startTime": cursor,
+             "endTime": end, "limit": 1000},
+        )
+        if not raw:
+            break
+        frames.append(raw)
+        last_open = raw[-1][0]
+        nxt = last_open + ms_per
+        if nxt <= cursor or len(raw) < 1000:
+            cursor = nxt
+            if len(raw) < 1000:
+                break
+        else:
+            cursor = nxt
+
+    if not frames:
+        return pd.DataFrame()
+    rows = [r for chunk in frames for r in chunk]
+    df = pd.DataFrame(rows, columns=[
+        "open_time", "open", "high", "low", "close", "volume",
+        "close_time", "qav", "trades", "tbav", "tbqv", "ignore"])
+    for col in ("open", "high", "low", "close", "volume"):
+        df[col] = pd.to_numeric(df[col], errors="coerce")
+    df["time"] = pd.to_datetime(df["close_time"], unit="ms", utc=True)
+    df = df[["time", "open", "high", "low", "close", "volume"]].set_index("time")
+    df = df[~df.index.duplicated(keep="first")].dropna().sort_index()
+    return df
+
+
 async def get_price(symbol: str) -> Optional[float]:
     raw = await _binance_get("/api/v3/ticker/price", {"symbol": symbol})
     if raw and "price" in raw:

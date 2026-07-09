@@ -14,6 +14,7 @@ applyTheme(localStorage.getItem("fib-theme") ||
 themeBtn.onclick = () => {
   applyTheme(document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark");
   if (lastSnap) renderSignals(lastSnap.signals || []); // redraw charts in new theme
+  if (lastBacktest && !$("view-backtest").classList.contains("hidden")) renderBacktest(lastBacktest);
 };
 
 /* ---------- manual scan ---------- */
@@ -97,6 +98,111 @@ function startPolling() {
   pollTimer = setInterval(tick, staticMode ? 30000 : 5000);
 }
 connect();
+
+/* ============ TABS: Live / Backtest ============ */
+let lastBacktest = null;
+document.querySelectorAll(".tab").forEach(t => {
+  t.onclick = () => {
+    document.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
+    t.classList.add("active");
+    const v = t.dataset.view;
+    $("view-live").classList.toggle("hidden", v !== "live");
+    $("view-backtest").classList.toggle("hidden", v !== "backtest");
+    if (v === "backtest") loadBacktest();
+  };
+});
+
+async function loadBacktest() {
+  let rep = null;
+  for (const url of ["data/backtest.json", "/api/backtest"]) {
+    try { const r = await fetch(url, { cache: "no-store" }); if (r.ok) { rep = await r.json(); break; } }
+    catch (e) { /* try next */ }
+  }
+  if (rep) renderBacktest(rep);
+}
+
+function renderBacktest(rep) {
+  lastBacktest = rep;
+  const s = rep.summary || {};
+  const has = (s.trades || 0) > 0;
+  $("bt-empty").classList.toggle("hidden", has);
+  $("bt-winrate").textContent = (s.win_rate ?? 0) + "%";
+  $("bt-pf").textContent = s.profit_factor ?? "–";
+  $("bt-trades").textContent = s.trades ?? 0;
+  $("bt-exp").textContent = (s.expectancy_r >= 0 ? "+" : "") + (s.expectancy_r ?? 0) + "R";
+  $("bt-totalr").textContent = (s.total_r >= 0 ? "+" : "") + (s.total_r ?? 0) + "R";
+  $("bt-dd").textContent = (s.max_drawdown_r ?? 0) + "R";
+  const p = rep.params || {};
+  $("bt-meta").textContent = `Periode ${p.lookback_days || "?"} hari · ${p.symbols || "?"} simbol · TF ${p.htf || "?"}`
+    + (rep.generated_ts ? ` · dibuat ${new Date(rep.generated_ts).toLocaleString("id-ID")}` : "")
+    + (p.demo ? " · (DEMO)" : "");
+
+  drawEquity($("bt-equity"), s.equity_curve || []);
+
+  const sym = s.per_symbol || {};
+  document.querySelector("#bt-symbols tbody").innerHTML = Object.keys(sym).length
+    ? Object.entries(sym).map(([k, v]) => `<tr><td>${k}</td><td>${v.n}</td>
+        <td class="${v.win_rate >= 50 ? "o-win" : "o-loss"}">${v.win_rate}%</td>
+        <td class="${v.total_r >= 0 ? "o-win" : "o-loss"}">${v.total_r >= 0 ? "+" : ""}${v.total_r}R</td></tr>`).join("")
+    : `<tr><td colspan="4" class="empty">–</td></tr>`;
+
+  const lessons = (rep.learned && rep.learned.lessons) || [];
+  $("bt-lesson-count").textContent = lessons.length;
+  $("bt-lessons").innerHTML = lessons.length
+    ? lessons.map(l => `<div class="lesson ${(l.kind || "").toLowerCase()}">${l.text}
+        <div class="meta">win ${Math.round((l.win_rate || 0) * 100)}% · ${l.samples} sampel</div></div>`).join("")
+    : `<p class="muted small">Belum ada pelajaran (butuh ≥5 sampel per pola).</p>`;
+
+  const tr = rep.recent_trades || [];
+  document.querySelector("#bt-journal tbody").innerHTML = tr.length
+    ? tr.map(t => {
+        const oc = (t.outcome || "").toLowerCase();
+        const cls = oc === "win" ? "o-win" : oc === "loss" ? "o-loss" : "o-be";
+        return `<tr>
+          <td>${new Date(t.entry_ts).toLocaleDateString("id-ID", { day: "2-digit", month: "short" })}</td>
+          <td>${new Date(t.exit_ts).toLocaleDateString("id-ID", { day: "2-digit", month: "short" })}</td>
+          <td>${t.symbol}</td>
+          <td class="${t.direction === "LONG" ? "o-win" : "o-loss"}">${t.direction}</td>
+          <td>${fmt(t.entry)}</td><td>${fmt(t.exit_price)}</td><td>${t.rr}</td>
+          <td class="${cls}">${t.outcome}</td><td class="${cls}">${t.r >= 0 ? "+" : ""}${t.r}</td>
+        </tr>`;
+      }).join("")
+    : `<tr><td colspan="9" class="empty">Belum ada trade backtest.</td></tr>`;
+}
+
+function drawEquity(cv, curve) {
+  const dpr = window.devicePixelRatio || 1;
+  const W = cv.clientWidth || 600, H = cv.clientHeight || 240;
+  cv.width = W * dpr; cv.height = H * dpr;
+  const ctx = cv.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+  if (!curve.length) return;
+  const padL = 44, padB = 22, padT = 12, padR = 12;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const rs = curve.map(p => p.r);
+  let lo = Math.min(0, ...rs), hi = Math.max(0, ...rs);
+  if (hi === lo) hi = lo + 1;
+  const x = i => padL + plotW * (i / Math.max(1, curve.length - 1));
+  const y = v => padT + plotH * (1 - (v - lo) / (hi - lo));
+  const muted = cssVar("--muted"), accent = cssVar("--accent"), green = cssVar("--green"), red = cssVar("--red");
+  // zero line
+  ctx.strokeStyle = muted; ctx.globalAlpha = 0.4; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(padL, y(0)); ctx.lineTo(W - padR, y(0)); ctx.stroke();
+  ctx.globalAlpha = 1;
+  // axis labels
+  ctx.fillStyle = muted; ctx.font = "10px system-ui"; ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  ctx.fillText(hi.toFixed(0) + "R", padL - 5, y(hi));
+  ctx.fillText(lo.toFixed(0) + "R", padL - 5, y(lo));
+  // area + line
+  const end = rs[rs.length - 1];
+  const col = end >= 0 ? green : red;
+  ctx.beginPath();
+  curve.forEach((p, i) => { const px = x(i), py = y(p.r); i ? ctx.lineTo(px, py) : ctx.moveTo(px, py); });
+  ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.stroke();
+  ctx.lineTo(x(curve.length - 1), y(0)); ctx.lineTo(x(0), y(0)); ctx.closePath();
+  ctx.fillStyle = col; ctx.globalAlpha = 0.12; ctx.fill(); ctx.globalAlpha = 1;
+}
 
 /* ============ TRADE SAYA (personal tracker, disimpan di perangkat) ============ */
 const MT_KEY = "fib-my-trades";
