@@ -28,6 +28,7 @@ class Engine:
         self.last_scan: str | None = None
         self.scanning = False
         self.error: str | None = None
+        self.prices: dict[str, float] = {}   # last price per symbol (for user-trade tracking)
 
     # ------------------------------------------------------------------ scan
     async def scan(self):
@@ -65,6 +66,10 @@ class Engine:
         ltf = await data_feed.get_klines(symbol, config.LTF, 200)
         if htf.empty or dtf.empty or ltf.empty:
             return None
+
+        # record latest price for every scanned symbol (used to track the
+        # trades a user manually marks as taken, even if no signal fires)
+        self.prices[symbol] = float(ltf["close"].iloc[-1])
 
         sig = strategy.evaluate(symbol, htf, dtf, ltf, self.regime)
         if sig is None:
@@ -170,6 +175,7 @@ class Engine:
             "lessons": db.lessons(20),
             "blocked": learning.blocked_patterns(),
             "recent_trades": db.recent_trades(30),
+            "prices": self.prices,
             "last_scan": self.last_scan,
             "error": self.error,
             "config": {
