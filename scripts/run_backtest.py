@@ -29,6 +29,10 @@ OUT_PATH = os.path.join(ROOT, "docs", "data", "backtest.json")
 
 LOOKBACK_DAYS = int(os.getenv("BACKTEST_DAYS", "180"))
 
+# Optional symbol override (comma-separated, e.g. "ETHUSDT,SOLUSDT"). Empty = all.
+_env_syms = os.getenv("BACKTEST_SYMBOLS", "").strip()
+SYMBOLS = [s.strip().upper() for s in _env_syms.split(",") if s.strip()] or config.WATCHLIST
+
 
 async def _regime_timeline() -> pd.Series:
     btc = await data_feed.get_klines_history("BTCUSDT", "1d", LOOKBACK_DAYS + 60)
@@ -67,7 +71,7 @@ async def main():
     os.makedirs(os.path.dirname(OUT_PATH), exist_ok=True)
     os.makedirs(os.path.dirname(STATE_PATH), exist_ok=True)
 
-    print(f"[backtest] lookback={LOOKBACK_DAYS}d, symbols={len(config.WATCHLIST)}")
+    print(f"[backtest] lookback={LOOKBACK_DAYS}d, symbols={len(SYMBOLS)}")
     regime_daily = await _regime_timeline()
     if regime_daily.empty:
         print("[backtest] no BTC data — aborting")
@@ -75,7 +79,7 @@ async def main():
     usdtd_daily = await _usdtd_timeline(regime_daily.index)
 
     all_trades: list[dict] = []
-    for sym in config.WATCHLIST:
+    for sym in SYMBOLS:
         try:
             htf = await data_feed.get_klines_history(sym, config.HTF, LOOKBACK_DAYS)
             dtf = await data_feed.get_klines_history(sym, config.DTF, LOOKBACK_DAYS + 60)
@@ -102,7 +106,7 @@ async def main():
     report = {
         "generated_ts": pd.Timestamp.utcnow().isoformat(),
         "params": {"lookback_days": LOOKBACK_DAYS, "htf": config.HTF,
-                   "symbols": len(config.WATCHLIST), "demo": config.DEMO},
+                   "symbols": len(SYMBOLS), "demo": config.DEMO},
         "summary": summary,
         "recent_trades": [
             {k: t[k] for k in ("symbol", "direction", "entry", "exit_price",

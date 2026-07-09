@@ -134,8 +134,13 @@
         <h2>🔬 Backtest strategi FIB pada data historis</h2>
         <p class="muted small">Menguji strategi pada data masa lalu Binance. <b>Dari hasil ini bot belajar</b>:
           pola yang berulang rugi otomatis diblokir, pola yang menang diprioritaskan — dan pelajaran itu
-          dipakai di sinyal live. Jalankan backtest baru lewat <b>GitHub → Actions → "FIB Hybrid backtest" → Run workflow</b>.</p>
+          dipakai di sinyal live. Jalankan backtest baru lewat tombol di bawah (atur <b>days</b> mis. 365 &
+          <b>symbols</b> mis. ETHUSDT,SOLUSDT di form GitHub), lalu <b>↻ Muat ulang hasil</b>.</p>
         <p id="bt-meta" class="muted small"></p>
+        <div class="bt-controls">
+          <a id="bt-run" class="btn" target="_blank" rel="noopener">▶ Jalankan backtest baru</a>
+          <button id="bt-refresh" class="btn tiny">↻ Muat ulang hasil</button>
+        </div>
       </div>
 
       <section class="kpis" id="bt-kpis">

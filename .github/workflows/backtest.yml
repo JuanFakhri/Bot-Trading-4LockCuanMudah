@@ -8,9 +8,13 @@ on:
   workflow_dispatch:
     inputs:
       days:
-        description: "Berapa hari data historis di-backtest"
+        description: "Berapa hari data historis di-backtest (mis. 180, 365)"
         required: false
         default: "180"
+      symbols:
+        description: "Simbol dipisah koma (kosongkan = semua). Contoh: ETHUSDT,SOLUSDT"
+        required: false
+        default: ""
   schedule:
     - cron: "0 3 * * 0"          # tiap Minggu 03:00 UTC
 
@@ -38,6 +42,7 @@ jobs:
       - name: Run backtest (and learn from it)
         env:
           BACKTEST_DAYS: ${{ github.event.inputs.days || '180' }}
+          BACKTEST_SYMBOLS: ${{ github.event.inputs.symbols || '' }}
         run: python -m scripts.run_backtest
 
       - name: Sync frontend to GitHub Pages folder

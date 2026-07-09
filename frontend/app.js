@@ -113,6 +113,22 @@ document.querySelectorAll(".tab").forEach(t => {
   };
 });
 
+// Build a deep link to this repo's backtest workflow (works on GitHub Pages).
+(function setupBacktestControls() {
+  const run = $("bt-run");
+  const host = location.hostname;           // e.g. juanfakhri.github.io
+  const seg = location.pathname.split("/").filter(Boolean)[0]; // repo name
+  if (run && host.endsWith("github.io") && seg) {
+    const user = host.split(".")[0];
+    run.href = `https://github.com/${user}/${seg}/actions/workflows/backtest.yml`;
+  } else if (run) {
+    run.href = "https://github.com";
+    run.textContent = "▶ Jalankan backtest (buka GitHub Actions)";
+  }
+  const ref = $("bt-refresh");
+  if (ref) ref.onclick = () => loadBacktest();
+})();
+
 async function loadBacktest() {
   let rep = null;
   for (const url of ["data/backtest.json", "/api/backtest"]) {
