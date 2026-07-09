@@ -1,20 +1,5 @@
 {
 "trades": [],
-"pattern_stats": [
-{
-"signature": "L|fib=0.55-0.618|ad=True|dow=6",
-"wins": 0,
-"losses": 1,
-"sum_r": -1.0,
-"updated_ts": "2026-07-09T19:29:25.545646+00:00"
-},
-{
-"signature": "long|reg=BULL|fib=0.55-0.618|rH=50-60|rL=50-60|ud=85+|ad=True|sar=None|dow=6",
-"wins": 0,
-"losses": 1,
-"sum_r": -1.0,
-"updated_ts": "2026-07-09T19:29:25.545646+00:00"
-}
-],
+"pattern_stats": [],
 "lessons": []
 }
