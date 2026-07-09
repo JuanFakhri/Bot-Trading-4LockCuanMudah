@@ -265,7 +265,15 @@ function resolveMT(prices) {
       if (cur <= t.tp2) { _finalize(t, 0.5 + 0.5 * (t.entry - t.tp2) / risk, t.tp2); changed = true; }
     }
   }
-  if (changed) saveMT(list);
+  if (changed) {
+    saveMT(list);
+    list.filter(t => t.status === "CLOSED" && !t._notified).forEach(t => {
+      t._notified = true;
+      notify(`${t.symbol} ${t.outcome} ${t.r >= 0 ? "+" : ""}${t.r}R`,
+             `Trade ${t.direction} Anda ditutup di ${fmt(t.exit_price)}`);
+    });
+    saveMT(list);
+  }
 }
 
 function closeMT(id) {
@@ -335,13 +343,26 @@ function renderMyTrades(snap) {
         <span class="${cls}">${t.outcome} ${t.r >= 0 ? "+" : ""}${t.r}R</span>
       </div>
       <div class="mt-row"><span>Entry ${fmt(t.entry)} → ${fmt(t.exit_price)}</span>
-        <span>${new Date(t.closed_ts).toLocaleDateString("id-ID")}</span></div>
+        <span>${new Date(t.closed_ts).toLocaleDateString("id-ID")}
+          <button class="mt-del" title="Hapus" onclick="deleteMT(${t.id})">🗑</button></span></div>
     </div>`;
   }).join("");
 
   $("my-trades").innerHTML = (open.length || closed.length)
     ? (openHTML + closedHTML)
     : `<p class="mt-empty">Belum ada trade. Tekan "✅ Saya Entry" di kartu sinyal saat Anda mengambil posisi — trade dicatat & dilacak di sini (tersimpan di perangkat Anda).</p>`;
+
+  // kurva ekuitas pribadi (kumulatif R dari trade yang selesai)
+  const eqCv = $("my-equity");
+  const cl = closed.slice().sort((a, b) => new Date(a.closed_ts) - new Date(b.closed_ts));
+  if (cl.length >= 2) {
+    eqCv.classList.remove("hidden");
+    let cum = 0;
+    const curve = cl.map(t => ({ ts: t.closed_ts, r: (cum += (t.r || 0)) }));
+    drawEquity(eqCv, curve);
+  } else {
+    eqCv.classList.add("hidden");
+  }
 }
 
 /* ---------- render ---------- */
@@ -352,6 +373,7 @@ function render(s) {
   renderRegime(s.regime);
   renderKpis(s.stats, s.risk);
   renderSignals(s.signals || []);
+  checkSignalNotifs(s.signals || []);
   renderMarket(s.regime);
   renderRisk(s.risk);
   renderLessons(s.lessons || [], s.blocked || []);
@@ -367,16 +389,49 @@ function renderRegime(r = {}) {
   b.textContent = map[reg] || reg;
 }
 
+let kpiMode = localStorage.getItem("fib-kpi") || "bot";
 function renderKpis(st = {}, risk = {}) {
-  $("k-winrate").textContent = (st.win_rate ?? 0) + "%";
-  $("k-pf").textContent = st.profit_factor ?? "–";
-  $("k-resolved").textContent = st.resolved ?? 0;
-  $("k-open").textContent = st.open ?? 0;
-  $("k-today").textContent = `${risk.trades_today ?? 0}/${risk.max_trades ?? 3}`;
-  const pnl = risk.pnl_today_pct ?? 0;
   const el = $("k-pnl");
-  el.textContent = (pnl >= 0 ? "+" : "") + pnl + "%";
-  el.style.color = pnl > 0 ? "var(--green)" : pnl < 0 ? "var(--red)" : "var(--text)";
+  if (kpiMode === "saya") {
+    const m = computeMyStats();
+    $("kl-pnl").textContent = "Total R";
+    $("k-winrate").textContent = m.win_rate + "%";
+    $("k-pf").textContent = m.pf || 0;
+    $("k-resolved").textContent = m.resolved;
+    $("k-open").textContent = m.open;
+    $("k-today").textContent = `${m.today}/3`;
+    el.textContent = (m.total_r >= 0 ? "+" : "") + m.total_r + "R";
+    el.style.color = m.total_r > 0 ? "var(--green)" : m.total_r < 0 ? "var(--red)" : "var(--text)";
+  } else {
+    $("kl-pnl").textContent = "PnL hari ini";
+    $("k-winrate").textContent = (st.win_rate ?? 0) + "%";
+    $("k-pf").textContent = st.profit_factor ?? "–";
+    $("k-resolved").textContent = st.resolved ?? 0;
+    $("k-open").textContent = st.open ?? 0;
+    $("k-today").textContent = `${risk.trades_today ?? 0}/${risk.max_trades ?? 3}`;
+    const pnl = risk.pnl_today_pct ?? 0;
+    el.textContent = (pnl >= 0 ? "+" : "") + pnl + "%";
+    el.style.color = pnl > 0 ? "var(--green)" : pnl < 0 ? "var(--red)" : "var(--text)";
+  }
+}
+
+function computeMyStats() {
+  const list = loadMT();
+  const open = list.filter(t => t.status === "OPEN");
+  const closed = list.filter(t => t.status === "CLOSED");
+  const wins = closed.filter(t => t.outcome === "WIN").length;
+  const losses = closed.filter(t => t.outcome === "LOSS").length;
+  const gw = closed.filter(t => t.r > 0).reduce((a, t) => a + t.r, 0);
+  const gl = -closed.filter(t => t.r < 0).reduce((a, t) => a + t.r, 0);
+  const pf = gl > 0 ? gw / gl : gw;
+  const today = new Date().toDateString();
+  const todayCount = list.filter(t => new Date(t.opened_ts).toDateString() === today).length;
+  const totalR = closed.reduce((a, t) => a + (t.r || 0), 0);
+  return {
+    win_rate: closed.length ? Math.round(wins / closed.length * 100) : 0,
+    pf: Math.round(pf * 100) / 100, resolved: closed.length, open: open.length,
+    today: todayCount, total_r: Math.round(totalR * 100) / 100, wins, losses,
+  };
 }
 
 function renderSignals(list) {
@@ -542,24 +597,40 @@ function renderLessons(lessons, blocked) {
   }).join("");
 }
 
-function renderJournal(botTrades) {
-  const tb = document.querySelector("#journal tbody");
-  // trade pribadi (Trade Saya) — muncul & terupdate otomatis saat entry/tutup
+function buildJournalRows(botTrades) {
   const mine = loadMT().map(t => ({
-    source: "Saya", created_ts: t.opened_ts, symbol: t.symbol, direction: t.direction,
+    id: t.id, source: "Saya", created_ts: t.opened_ts, symbol: t.symbol, direction: t.direction,
     entry: t.entry, exit_price: t.exit_price, outcome: t.outcome, r_multiple: t.r,
     confidence: t.confidence, status: t.status === "CLOSED" ? "RESOLVED" : "OPEN",
   }));
   const bot = (botTrades || []).map(t => ({ ...t, source: "Bot" }));
-  const all = [...mine, ...bot]
-    .sort((a, b) => new Date(b.created_ts) - new Date(a.created_ts))
-    .slice(0, 50);
+  return [...mine, ...bot].sort((a, b) => new Date(b.created_ts) - new Date(a.created_ts));
+}
 
-  if (!all.length) { tb.innerHTML = `<tr><td colspan="10" class="empty">Belum ada trade.</td></tr>`; return; }
+function applyJournalFilter(rows) {
+  const sym = ($("f-symbol").value || "").toUpperCase();
+  const src = $("f-source").value;
+  const out = $("f-outcome").value;
+  return rows.filter(t => {
+    if (sym && !t.symbol.includes(sym)) return false;
+    if (src && t.source !== src) return false;
+    if (out === "OPEN" && t.status !== "OPEN") return false;
+    if ((out === "WIN" || out === "LOSS") && t.outcome !== out) return false;
+    return true;
+  });
+}
+
+let lastBotTrades = [];
+function renderJournal(botTrades) {
+  lastBotTrades = botTrades || lastBotTrades;
+  const tb = document.querySelector("#journal tbody");
+  const all = applyJournalFilter(buildJournalRows(lastBotTrades)).slice(0, 80);
+  if (!all.length) { tb.innerHTML = `<tr><td colspan="11" class="empty">Belum ada trade.</td></tr>`; return; }
   tb.innerHTML = all.map(t => {
     const o = (t.outcome || "").toLowerCase();
     const ocls = o === "win" ? "o-win" : o === "loss" ? "o-loss" : o ? "o-be" : "";
     const srcCls = t.source === "Saya" ? "src-me" : "src-bot";
+    const del = t.source === "Saya" ? `<button class="row-del" title="Hapus" onclick="deleteMT(${t.id})">🗑</button>` : "";
     return `<tr>
       <td>${new Date(t.created_ts).toLocaleString("id-ID", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</td>
       <td><span class="src-tag ${srcCls}">${t.source}</span></td>
@@ -571,6 +642,120 @@ function renderJournal(botTrades) {
       <td>${t.r_multiple != null ? t.r_multiple : "–"}</td>
       <td>${Math.round((t.confidence || 0) * 100)}%</td>
       <td>${t.status}</td>
+      <td>${del}</td>
     </tr>`;
   }).join("");
+}
+
+/* ============ COMPLETENESS FEATURES ============ */
+
+// Re-render everything that depends on local (personal) data.
+function refreshAll() {
+  renderMyTrades(lastSnap);
+  renderJournal(lastSnap ? lastSnap.recent_trades : lastBotTrades);
+  renderKpis(lastSnap ? lastSnap.stats : {}, lastSnap ? lastSnap.risk : {});
+  if (lastSnap) renderSignals(lastSnap.signals || []);
+}
+
+// ---- delete / clear personal trades ----
+function deleteMT(id) {
+  saveMT(loadMT().filter(t => t.id !== id));
+  refreshAll();
+}
+window.deleteMT = deleteMT;
+
+$("mt-clear").onclick = () => {
+  const closed = loadMT().filter(t => t.status === "CLOSED").length;
+  if (!closed) { alert("Tidak ada trade selesai untuk dihapus."); return; }
+  if (!confirm(`Hapus ${closed} trade yang sudah selesai?`)) return;
+  saveMT(loadMT().filter(t => t.status === "OPEN"));
+  refreshAll();
+};
+
+// ---- KPI Bot/Saya toggle ----
+document.querySelectorAll("#kpi-toggle button").forEach(b => {
+  if (b.dataset.src === kpiMode) b.classList.add("active"); else b.classList.remove("active");
+  b.onclick = () => {
+    kpiMode = b.dataset.src;
+    localStorage.setItem("fib-kpi", kpiMode);
+    document.querySelectorAll("#kpi-toggle button").forEach(x => x.classList.toggle("active", x === b));
+    renderKpis(lastSnap ? lastSnap.stats : {}, lastSnap ? lastSnap.risk : {});
+  };
+});
+
+// ---- journal filters ----
+["f-symbol", "f-source", "f-outcome"].forEach(id => {
+  const ev = id === "f-symbol" ? "input" : "change";
+  $(id).addEventListener(ev, () => renderJournal(lastBotTrades));
+});
+
+// ---- CSV export ----
+$("csv-btn").onclick = () => {
+  const rows = applyJournalFilter(buildJournalRows(lastBotTrades));
+  const head = ["Waktu", "Sumber", "Simbol", "Arah", "Entry", "Exit", "Hasil", "R", "Conf", "Status"];
+  const lines = [head.join(",")].concat(rows.map(t => [
+    new Date(t.created_ts).toISOString(), t.source, t.symbol, t.direction,
+    t.entry, t.exit_price ?? "", t.outcome ?? "", t.r_multiple ?? "",
+    Math.round((t.confidence || 0) * 100) + "%", t.status,
+  ].join(",")));
+  const blob = new Blob([lines.join("\n")], { type: "text/csv" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `jurnal-fib-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+};
+
+// ---- browser notifications ----
+let notifOn = localStorage.getItem("fib-notif") === "1";
+function updateNotifBtn() {
+  const b = $("notif-btn");
+  b.textContent = notifOn ? "🔔" : "🔕";
+  b.title = notifOn ? "Notifikasi aktif" : "Notifikasi mati";
+}
+updateNotifBtn();
+$("notif-btn").onclick = async () => {
+  if (!("Notification" in window)) { alert("Browser tidak mendukung notifikasi."); return; }
+  if (Notification.permission !== "granted") {
+    const p = await Notification.requestPermission();
+    if (p !== "granted") { notifOn = false; localStorage.setItem("fib-notif", "0"); updateNotifBtn(); return; }
+  }
+  notifOn = !notifOn;
+  localStorage.setItem("fib-notif", notifOn ? "1" : "0");
+  updateNotifBtn();
+  if (notifOn) notify("Notifikasi aktif", "Anda akan diberi tahu saat ada sinyal ENTRY & saat trade Anda kena TP/SL.");
+};
+function notify(title, body) {
+  if (!notifOn || !("Notification" in window) || Notification.permission !== "granted") return;
+  try { new Notification(title, { body, icon: "icon-192.png" }); } catch (e) { /* ignore */ }
+}
+const _entryState = {};
+function checkSignalNotifs(signals) {
+  signals.forEach(s => {
+    const prev = _entryState[s.symbol];
+    if (s.state === "ENTRY" && s.actionable && prev !== "ENTRY") {
+      const p = s.plan || {};
+      notify(`🎯 ENTRY ${s.direction} ${s.symbol}`,
+             `Entry ${fmt(s.price)} · SL ${fmt(p.sl)} · TP2 ${fmt(p.tp2)} · RR ${p.rr}`);
+    }
+    _entryState[s.symbol] = s.state;
+  });
+}
+
+// ---- PWA: install prompt + service worker ----
+let deferredPrompt = null;
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  $("install-btn").classList.remove("hidden");
+});
+$("install-btn").onclick = async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  $("install-btn").classList.add("hidden");
+};
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
 }

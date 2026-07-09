@@ -104,6 +104,11 @@ main { max-width: 1320px; margin: 0 auto; padding: 20px; }
   background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; }
 
 /* ============ KPI ============ */
+.kpi-head { display: flex; justify-content: flex-end; margin-bottom: 10px; }
+.seg { display: inline-flex; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+.seg button { background: transparent; border: none; color: var(--muted); padding: 7px 16px; cursor: pointer; font-weight: 700; font-size: 13px; }
+.seg button.active { background: var(--accent); color: #fff; }
+
 .kpis { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
 @media (max-width: 760px) { .kpis { grid-template-columns: repeat(3, 1fr); } }
 .kpi {
@@ -200,6 +205,17 @@ main { max-width: 1320px; margin: 0 auto; padding: 20px; }
 table { width: 100%; border-collapse: collapse; font-size: 13px; }
 th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }
 th { color: var(--muted); font-weight: 600; font-size: 12px; }
+.filters { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.f-input { background: var(--panel-2); border: 1px solid var(--border); color: var(--text);
+  padding: 7px 11px; border-radius: 9px; font-size: 13px; }
+.f-input::placeholder { color: var(--muted); }
+.row-del { background: transparent; border: none; color: var(--muted); cursor: pointer; font-size: 14px; padding: 2px 6px; }
+.row-del:hover { color: var(--red); }
+.equity-mini { width: 100%; height: 90px; display: block; margin: 6px 0 4px;
+  background: var(--panel); border: 1px solid var(--border); border-radius: 10px; }
+.mt-del { border: none; background: transparent; color: var(--muted); cursor: pointer; font-size: 13px; padding: 0 4px; }
+.mt-del:hover { color: var(--red); }
+
 .src-tag { font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 999px; letter-spacing: .3px; }
 .src-tag.src-me { background: rgba(79,140,255,.18); color: var(--accent); }
 .src-tag.src-bot { background: var(--panel-2); color: var(--muted); }

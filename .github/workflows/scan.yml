@@ -34,7 +34,7 @@ jobs:
         run: python -m scripts.github_scan
 
       - name: Sync frontend to GitHub Pages folder
-        run: cp frontend/index.html frontend/style.css frontend/app.js docs/
+        run: cp frontend/index.html frontend/style.css frontend/app.js frontend/manifest.webmanifest frontend/sw.js frontend/icon-192.png frontend/icon-512.png docs/
 
       - name: Commit results
         run: |

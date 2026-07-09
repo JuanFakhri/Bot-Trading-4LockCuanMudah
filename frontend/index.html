@@ -6,6 +6,11 @@
   <title>FIB Hybrid Bot — Sinyal Real-time</title>
   <link rel="stylesheet" href="style.css" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📈</text></svg>" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="theme-color" content="#0b1020" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="FIB Bot" />
 </head>
 <body>
   <header class="topbar">
@@ -20,6 +25,8 @@
       <div id="regime-badge" class="regime neutral">MEMUAT…</div>
       <div class="conn"><span id="conn-dot" class="dot"></span><span id="conn-text">menghubungkan</span></div>
       <button id="scan-btn" class="btn" title="Pindai sekarang">↻ Scan</button>
+      <button id="notif-btn" class="btn icon" title="Notifikasi sinyal">🔔</button>
+      <button id="install-btn" class="btn icon hidden" title="Pasang aplikasi">⬇️</button>
       <button id="theme-btn" class="btn icon" title="Mode siang/malam">🌙</button>
     </div>
   </header>
@@ -32,13 +39,19 @@
 
     <div id="view-live">
     <!-- KPI strip -->
+    <div class="kpi-head">
+      <div class="seg" id="kpi-toggle">
+        <button data-src="bot" class="active">🤖 Bot</button>
+        <button data-src="saya">👤 Saya</button>
+      </div>
+    </div>
     <section class="kpis">
-      <div class="kpi"><span class="k-label">Win rate</span><span id="k-winrate" class="k-val">–</span></div>
-      <div class="kpi"><span class="k-label">Profit factor</span><span id="k-pf" class="k-val">–</span></div>
-      <div class="kpi"><span class="k-label">Trade selesai</span><span id="k-resolved" class="k-val">–</span></div>
-      <div class="kpi"><span class="k-label">Posisi terbuka</span><span id="k-open" class="k-val">–</span></div>
-      <div class="kpi"><span class="k-label">Trade hari ini</span><span id="k-today" class="k-val">–</span></div>
-      <div class="kpi"><span class="k-label">PnL hari ini</span><span id="k-pnl" class="k-val">–</span></div>
+      <div class="kpi"><span class="k-label" id="kl-winrate">Win rate</span><span id="k-winrate" class="k-val">–</span></div>
+      <div class="kpi"><span class="k-label" id="kl-pf">Profit factor</span><span id="k-pf" class="k-val">–</span></div>
+      <div class="kpi"><span class="k-label" id="kl-resolved">Trade selesai</span><span id="k-resolved" class="k-val">–</span></div>
+      <div class="kpi"><span class="k-label" id="kl-open">Posisi terbuka</span><span id="k-open" class="k-val">–</span></div>
+      <div class="kpi"><span class="k-label" id="kl-today">Trade hari ini</span><span id="k-today" class="k-val">–</span></div>
+      <div class="kpi"><span class="k-label" id="kl-pnl">PnL hari ini</span><span id="k-pnl" class="k-val">–</span></div>
     </section>
 
     <div class="layout">
@@ -68,11 +81,13 @@
           <div class="panel-head">
             <h2>📋 Trade Saya</h2>
             <div class="mt-actions">
+              <button id="mt-clear" class="btn tiny" title="Hapus yang selesai">🧹</button>
               <button id="mt-export" class="btn tiny" title="Cadangkan (backup)">⭳</button>
               <button id="mt-import" class="btn tiny" title="Pulihkan (restore)">⭱</button>
             </div>
           </div>
           <div id="my-risk" class="risk"></div>
+          <canvas id="my-equity" class="equity-mini hidden"></canvas>
           <div id="my-trades" class="mytrades"></div>
         </section>
 
@@ -88,12 +103,25 @@
 
     <!-- journal -->
     <section class="panel">
-      <div class="panel-head"><h2>Jurnal Trade</h2></div>
+      <div class="panel-head">
+        <h2>Jurnal Trade</h2>
+        <button id="csv-btn" class="btn tiny" title="Ekspor CSV">⭳ CSV</button>
+      </div>
+      <div class="filters">
+        <input id="f-symbol" class="f-input" placeholder="Cari simbol…" />
+        <select id="f-source" class="f-input">
+          <option value="">Semua sumber</option><option value="Saya">Saya</option><option value="Bot">Bot</option>
+        </select>
+        <select id="f-outcome" class="f-input">
+          <option value="">Semua hasil</option><option value="WIN">WIN</option>
+          <option value="LOSS">LOSS</option><option value="OPEN">Terbuka</option>
+        </select>
+      </div>
       <div class="table-wrap">
         <table id="journal">
           <thead><tr>
             <th>Waktu</th><th>Sumber</th><th>Simbol</th><th>Arah</th><th>Entry</th>
-            <th>Exit</th><th>Hasil</th><th>R</th><th>Conf</th><th>Status</th>
+            <th>Exit</th><th>Hasil</th><th>R</th><th>Conf</th><th>Status</th><th></th>
           </tr></thead>
           <tbody></tbody>
         </table>
