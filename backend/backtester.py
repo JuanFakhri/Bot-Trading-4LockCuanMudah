@@ -180,9 +180,9 @@ def backtest_symbol(symbol: str, htf: pd.DataFrame, dtf: pd.DataFrame,
                          and (ad[i] > ad[i - 3] or not p_require_ad)
                          and not (config.SKIP_FRIDAY_LONG and dow == 4))
         else:
-            # regime BEAR already means USDT.D favours short (heading to/at
-            # resistance) — no separate pos>0.7 gate needed here.
+            # short trigger only at EXTREME USDT.D resistance (edge from 365d bt)
             structure = (c[i] < ema200[i] and ema50[i] < ema200[i]
+                         and (pos_usdtd > config.USDTD_SHORT_POS)
                          and (c[i] < sar[i]))
 
         if structure:
@@ -417,7 +417,8 @@ def _backtest_1h(symbol, htf, dtf, ltf, regime_daily, usdtd_daily,
             if a_swLb[i] <= a_swHb[i] or (a_swH[i] - a_swL[i]) < config.IMPULSE_MIN_ATR * atr_i:
                 continue
             start_p, end_p = a_swH[i], a_swL[i]
-            struct = bool(a_stS[i])
+            ud = usdtd.iloc[i]
+            struct = bool(a_stS[i]) and (not np.isnan(ud)) and (ud > config.USDTD_SHORT_POS)
 
         ratio = _retrace_ratio(c1[i], start_p, end_p, machine)
         if not (config.FIB_ZONE_LO <= ratio <= config.FIB_ZONE_HI and ratio < config.FIB_INVALID):

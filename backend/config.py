@@ -50,6 +50,10 @@ FIB_EXTENSION = 1.272   # TP2 projection
 
 # USDT.D resistance threshold (20-day range position) for the short machine
 USDTD_POS_HI = 0.7
+# Extreme-resistance gate: the 365d backtest showed shorts only have an edge
+# (~67% win) when USDT.D is deep at resistance; below this shorts lose. The
+# short TRIGGER is only allowed at/above this position.
+USDTD_SHORT_POS = 0.85
 USDTD_LOOKBACK = 20
 
 # RSI trigger zones on the LTF

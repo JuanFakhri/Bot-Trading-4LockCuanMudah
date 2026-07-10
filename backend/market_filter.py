@@ -121,5 +121,6 @@ async def compute_regime() -> dict:
         "usdtd_bias": usdtd_bias,
         "usdtd_at_support": bool(usdtd.get("ok") and usdtd["pos"] < (1 - config.USDTD_POS_HI)),
         "usdtd_at_resistance": bool(usdtd.get("ok") and usdtd["pos"] > config.USDTD_POS_HI),
+        "usdtd_at_extreme": bool(usdtd.get("ok") and usdtd["pos"] > config.USDTD_SHORT_POS),
         "usdtd_ok": bool(usdtd.get("ok")),
     }
