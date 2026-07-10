@@ -50,40 +50,18 @@ def _dir_series(df: pd.Series | None, idx: pd.Index, invert: bool = False) -> pd
 
 
 async def _regime_timeline(usdtd: pd.Series) -> pd.Series:
-    """Same decision as live: USDT.D primary; when USDT.D consolidates, fall back
-    to the BTC + BTC.D dominance matrix."""
+    """Canonical spec (Section A): regime from BTC EMA50 1D — rising = BULL
+    (long machine), falling = BEAR (short machine). USDT.D (passed separately to
+    the backtester) gates the short trigger at resistance."""
     idx = usdtd.index
     btc = await data_feed.get_klines_history("BTCUSDT", "1d", LOOKBACK_DAYS + 80)
-    ethbtc = await data_feed.get_klines_history("ETHBTC", "1d", LOOKBACK_DAYS + 80)
-    btc_dir = _dir_series(btc, idx).to_numpy()
-    btcd_dir = _dir_series(ethbtc, idx, invert=True).to_numpy()   # ETH/BTC up -> BTC.D down
-
-    hi = config.USDTD_POS_HI
-    lo = 1 - hi
-    diff = usdtd.diff().fillna(0.0).to_numpy()
-    consol = ((usdtd.rolling(7, min_periods=4).max()
-               - usdtd.rolling(7, min_periods=4).min()) < 0.2).to_numpy()
-    pos = usdtd.to_numpy()
-
-    def _matrix(i):
-        alt = market_filter._ALT_MATRIX.get((btcd_dir[i], btc_dir[i]), "STABIL")
-        return "BULL" if alt == "NAIK" else "BEAR" if alt == "TURUN" else "NEUTRAL"
-
-    out = []
-    for i in range(len(idx)):
-        if np.isnan(pos[i]):        # no USDT.D data (older than ~365d) -> BTC.D matrix
-            out.append(_matrix(i))
-        elif pos[i] > hi:
-            out.append("BEAR")
-        elif pos[i] < lo:
-            out.append("BULL")
-        elif consol[i]:
-            out.append(_matrix(i))
-        elif diff[i] > 0:
-            out.append("BEAR")
-        else:
-            out.append("BULL")
-    return pd.Series(out, index=idx)
+    if btc.empty:
+        return pd.Series("BULL", index=idx)
+    ema50 = indicators.ema(btc["close"], config.EMA_FAST)
+    reg = (ema50 > ema50.shift(3)).map(lambda x: "BULL" if x else "BEAR")
+    reg.index = reg.index.normalize()
+    reg = reg[~reg.index.duplicated(keep="last")]
+    return reg.reindex(idx, method="ffill").fillna("BULL")
 
 
 async def _usdtd_timeline() -> pd.Series:

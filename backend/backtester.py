@@ -205,12 +205,11 @@ def _open_trade(symbol, machine, i, c, start_p, end_p, atr, rsi, ad, sar, dow,
                 liq_levels=None):
     """Construct an open-position dict for an entry at bar ``i``.
 
-    TP2 targets the nearest opposing liquidity (swing) that meets RR, falling
-    back to the fib 1.272 extension.
+    TP2 = fib 1.272 extension (canonical spec D.3).
     """
-    liq_levels = liq_levels or []
     fib = _fib_levels(start_p, end_p, machine)
     entry = c[i]
+    tp_source = "fib-ext"
     if machine == "long":
         raw_sl = min(start_p, entry) - sl_atr * atr[i]
         sl = max(raw_sl, entry * (1 - config.SL_CAP_PCT))
@@ -218,8 +217,7 @@ def _open_trade(symbol, machine, i, c, start_p, end_p, atr, rsi, ad, sar, dow,
         if risk <= 0:
             return None
         tp1 = entry + risk
-        tp2, tp_source = _liquidity_tp(liq_levels, entry, risk, min_rr, machine,
-                                       fib.get("ext_1.272", entry + 2 * risk))
+        tp2 = fib.get("ext_1.272", entry + 2 * risk)
     else:
         raw_sl = max(start_p, entry) + sl_atr * atr[i]
         sl = min(raw_sl, entry * (1 + config.SL_CAP_PCT))
@@ -227,8 +225,7 @@ def _open_trade(symbol, machine, i, c, start_p, end_p, atr, rsi, ad, sar, dow,
         if risk <= 0:
             return None
         tp1 = entry - risk
-        tp2, tp_source = _liquidity_tp(liq_levels, entry, risk, min_rr, machine,
-                                       fib.get("ext_1.272", entry - 2 * risk))
+        tp2 = fib.get("ext_1.272", entry - 2 * risk)
 
     rr = abs(tp2 - entry) / risk if risk else 0
     if rr < min_rr:

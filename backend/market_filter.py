@@ -71,47 +71,44 @@ async def compute_regime() -> dict:
         ethbtc_dir = _direction(eth_ema)
         btcd_dir = {"NAIK": "TURUN", "TURUN": "NAIK", "STABIL": "STABIL"}[ethbtc_dir]
 
-    alt_pred = _ALT_MATRIX.get((btcd_dir, btc_dir), "STABIL")  # info only now
+    alt_pred = _ALT_MATRIX.get((btcd_dir, btc_dir), "STABIL")  # info only
 
-    # ---- DECISION ----
-    # Primary: USDT.D. Heading to support (falling) -> LONG; to resistance
-    # (rising) -> SHORT. BUT if USDT.D is CONSOLIDATING (sideways, no clear
-    # target), fall back to the BTC + BTC.D dominance matrix.
-    at_support = at_resistance = consolidating = False
-    usdtd_target = "–"
-    decider = "USDT.D"
-    alt_bias, regime = "NEUTRAL", "NEUTRAL"
+    # ---- DECISION (canonical spec) ----
+    # Section A: BTC EMA50 1D is the MAIN market direction — rising = BULL (long
+    # machine), falling = BEAR (short machine). USDT.D is confirmation/leading
+    # signal (support = risk-on for longs, resistance = risk-off for shorts);
+    # the short machine additionally requires USDT.D at resistance (pos>0.7, C.4).
+    btc_rising = None
+    regime = "NEUTRAL"
+    if btc_ema50 is not None and len(btc) > config.EMA_FAST + 5:
+        ema50 = indicators.ema(btc["close"], config.EMA_FAST)
+        btc_rising = bool(ema50.iloc[-1] > ema50.iloc[-4])
+        regime = "BULL" if btc_rising else "BEAR"
+
+    alt_bias = "LONG" if regime == "BULL" else "SHORT" if regime == "BEAR" else "NEUTRAL"
+    decider = "BTC EMA50 1D"
+
+    at_support = at_resistance = False
+    usdtd_bias = "NEUTRAL"
     if usdtd.get("ok"):
-        at_support = usdtd["pos"] < (1 - config.USDTD_POS_HI)   # pos < 0.3
-        at_resistance = usdtd["pos"] > config.USDTD_POS_HI       # pos > 0.7
-        consolidating = bool(usdtd.get("consolidating")) and not at_support and not at_resistance
-
-        if at_resistance:
-            alt_bias, regime, usdtd_target = "SHORT", "BEAR", "di resistance"
-        elif at_support:
-            alt_bias, regime, usdtd_target = "LONG", "BULL", "di support"
-        elif consolidating:
-            # USDT.D ranging -> use BTC.D matrix (image rules)
-            decider = "Matriks BTC.D"
-            usdtd_target = "konsolidasi"
-            alt_bias = {"NAIK": "LONG", "TURUN": "SHORT", "STABIL": "NEUTRAL"}[alt_pred]
-            regime = {"LONG": "BULL", "SHORT": "BEAR", "NEUTRAL": "NEUTRAL"}[alt_bias]
-        elif usdtd["rising"]:
-            alt_bias, regime, usdtd_target = "SHORT", "BEAR", "menuju resistance"
+        at_support = usdtd["pos"] < (1 - config.USDTD_POS_HI)
+        at_resistance = usdtd["pos"] > config.USDTD_POS_HI
+        if at_resistance or usdtd["rising"]:
+            usdtd_bias = "SHORT"
         else:
-            alt_bias, regime, usdtd_target = "LONG", "BULL", "menuju support"
-
-    usdtd_bias = alt_bias
+            usdtd_bias = "LONG"
+    usdtd_target = ("di resistance" if at_resistance else "di support" if at_support
+                    else "menuju resistance" if usdtd.get("rising") else "menuju support")
 
     return {
         "regime": regime,
         "alt_bias": alt_bias,
         "alt_prediction": alt_pred,
         "usdtd_target": usdtd_target,
-        "usdtd_consolidating": consolidating,
+        "usdtd_consolidating": False,
         "decider": decider,
         "btc_ema50": btc_ema50,
-        "btc_ema50_rising": (btc_dir == "NAIK") if btc_dir != "STABIL" else None,
+        "btc_ema50_rising": btc_rising,
         "btc_dir": btc_dir,
         "btcd_value": btcd.get("value"),
         "btcd_dir": btcd_dir,

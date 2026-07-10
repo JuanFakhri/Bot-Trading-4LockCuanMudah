@@ -169,9 +169,8 @@ def evaluate(symbol: str, htf: pd.DataFrame, dtf: pd.DataFrame, ltf: pd.DataFram
         check("close < EMA200 4H & EMA50 < EMA200 4H",
               price < ema200.iloc[-1] and ema50.iloc[-1] < ema200.iloc[-1])
         check("RSI 4H < 50", h_rsi.iloc[-1] < 50, f"rsi={h_rsi.iloc[-1]:.1f}")
-        # Short trigger only at EXTREME USDT.D resistance (pos > 0.85) — that is
-        # where the backtest found the short edge (~67% win); below it shorts lose.
-        check("USDT.D di resistance ekstrem (pos>0.85)", bool(regime.get("usdtd_at_extreme")),
+        # Section C.4: short requires USDT.D at resistance (pos > 0.7).
+        check("USDT.D di resistance (pos>0.7)", bool(regime.get("usdtd_at_resistance")),
               f"pos={regime.get('usdtd_pos')}")
         check("Parabolic SAR (close < SAR 4H)", price < sar.iloc[-1])
 

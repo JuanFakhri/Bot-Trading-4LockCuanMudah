@@ -43,9 +43,7 @@ def build_trade_plan(signal: dict, equity: float = 1000.0) -> dict | None:
         if risk <= 0:
             return None
         tp1 = entry + risk
-        fib_ext = fib.get("ext_1.272", entry + 2 * risk)
-        tp2, tp_source = _liquidity_tp(signal.get("swing_highs", []), entry, risk,
-                                       min_rr, "LONG", fib_ext)
+        tp2, tp_source = fib.get("ext_1.272", entry + 2 * risk), "fib-ext"
     else:
         swing = signal["impulse_start"]  # swing high of the impulse
         raw_sl = max(swing, entry) + sl_atr * atr
@@ -54,9 +52,7 @@ def build_trade_plan(signal: dict, equity: float = 1000.0) -> dict | None:
         if risk <= 0:
             return None
         tp1 = entry - risk
-        fib_ext = fib.get("ext_1.272", entry - 2 * risk)
-        tp2, tp_source = _liquidity_tp(signal.get("swing_lows", []), entry, risk,
-                                       min_rr, "SHORT", fib_ext)
+        tp2, tp_source = fib.get("ext_1.272", entry - 2 * risk), "fib-ext"
 
     reward = abs(tp2 - entry)
     rr = reward / risk if risk else 0.0
