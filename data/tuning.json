@@ -1,7 +1,7 @@
 {
-"sl_atr": 1.0,
-"min_rr": 2.0,
+"sl_atr": 0.5,
+"min_rr": 1.5,
 "require_ad": true,
-"accepted": false,
-"updated_ts": "2026-07-10T11:38:43.942115+00:00"
+"accepted": true,
+"updated_ts": "2026-07-10T11:50:36.669361+00:00"
 }
