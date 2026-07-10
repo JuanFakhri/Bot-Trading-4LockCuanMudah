@@ -595,7 +595,7 @@ function cardHTML(s) {
       <div><span class="lbl">Entry</span><span>${fmt(p.entry)}</span></div>
       <div><span class="lbl lv-sl">SL</span><span class="lv-sl">${fmt(p.sl)}</span></div>
       <div><span class="lbl lv-tp">TP1</span><span class="lv-tp">${fmt(p.tp1)}</span></div>
-      <div><span class="lbl lv-tp">TP2</span><span class="lv-tp">${fmt(p.tp2)}</span></div>
+      <div><span class="lbl lv-tp">TP2 ${p.tp_source === "likuiditas" ? "💧" : ""}</span><span class="lv-tp">${fmt(p.tp2)}</span></div>
       <div><span class="lbl">RR</span><span>${p.rr ?? "–"}${p.rr_ok ? " ✓" : ""}</span></div>
       <div><span class="lbl">Ukuran</span><span>${fmt(p.position_size, 4)}</span></div>
     </div>

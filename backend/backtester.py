@@ -135,9 +135,17 @@ def backtest_symbol(symbol: str, htf: pd.DataFrame, dtf: pd.DataFrame,
                                 and rsi[i] < rsi[i - 1] and obv[i] < obv[i - 2]
                                 and rsi[i] < 50)
                     if conf:
+                        # opposing liquidity levels from confirmed pivots
+                        conf_lim = i - pl_
+                        if machine == "long":
+                            liq = sorted(float(h[k]) for k in range(conf_lim + 1)
+                                         if piv_hi[k] and h[k] > c[i])
+                        else:
+                            liq = sorted((float(l[k]) for k in range(conf_lim + 1)
+                                          if piv_lo[k] and l[k] < c[i]), reverse=True)
                         pos = _open_trade(symbol, machine, i, c, start_p, end_p, atr,
                                           rsi, ad, sar, dow, pos_usdtd, ratio_now, ts,
-                                          p_sl_atr, p_min_rr)
+                                          p_sl_atr, p_min_rr, liq)
                         armed = None
                         continue
             # (fall through to allow re-arming on the same bar)
@@ -178,9 +186,23 @@ def backtest_symbol(symbol: str, htf: pd.DataFrame, dtf: pd.DataFrame,
     return trades
 
 
+def _liquidity_tp(levels, entry, risk, min_rr, machine, fib_ext):
+    for lvl in levels:
+        beyond = lvl > entry if machine == "long" else lvl < entry
+        if beyond and (abs(lvl - entry) / risk) >= min_rr:
+            return lvl, "likuiditas"
+    return fib_ext, "fib-ext"
+
+
 def _open_trade(symbol, machine, i, c, start_p, end_p, atr, rsi, ad, sar, dow,
-                pos_usdtd, ratio, ts, sl_atr=config.SL_ATR_MULT, min_rr=config.MIN_RR):
-    """Construct an open-position dict for an entry at bar ``i``."""
+                pos_usdtd, ratio, ts, sl_atr=config.SL_ATR_MULT, min_rr=config.MIN_RR,
+                liq_levels=None):
+    """Construct an open-position dict for an entry at bar ``i``.
+
+    TP2 targets the nearest opposing liquidity (swing) that meets RR, falling
+    back to the fib 1.272 extension.
+    """
+    liq_levels = liq_levels or []
     fib = _fib_levels(start_p, end_p, machine)
     entry = c[i]
     if machine == "long":
@@ -190,7 +212,8 @@ def _open_trade(symbol, machine, i, c, start_p, end_p, atr, rsi, ad, sar, dow,
         if risk <= 0:
             return None
         tp1 = entry + risk
-        tp2 = fib.get("ext_1.272", entry + 2 * risk)
+        tp2, tp_source = _liquidity_tp(liq_levels, entry, risk, min_rr, machine,
+                                       fib.get("ext_1.272", entry + 2 * risk))
     else:
         raw_sl = max(start_p, entry) + sl_atr * atr[i]
         sl = min(raw_sl, entry * (1 + config.SL_CAP_PCT))
@@ -198,7 +221,8 @@ def _open_trade(symbol, machine, i, c, start_p, end_p, atr, rsi, ad, sar, dow,
         if risk <= 0:
             return None
         tp1 = entry - risk
-        tp2 = fib.get("ext_1.272", entry - 2 * risk)
+        tp2, tp_source = _liquidity_tp(liq_levels, entry, risk, min_rr, machine,
+                                       fib.get("ext_1.272", entry - 2 * risk))
 
     rr = abs(tp2 - entry) / risk if risk else 0
     if rr < min_rr:
@@ -219,7 +243,7 @@ def _open_trade(symbol, machine, i, c, start_p, end_p, atr, rsi, ad, sar, dow,
         "symbol": symbol, "direction": "LONG" if machine == "long" else "SHORT",
         "machine": machine, "entry": float(entry), "sl": float(sl),
         "tp1": float(tp1), "tp2": float(tp2), "rr": round(rr, 2),
-        "risk": float(risk), "tp1_hit": False,
+        "risk": float(risk), "tp1_hit": False, "tp_source": tp_source,
         "entry_ts": ts[i].isoformat(), "features": features,
     }
 

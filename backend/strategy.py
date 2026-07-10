@@ -235,6 +235,16 @@ def evaluate(symbol: str, htf: pd.DataFrame, dtf: pd.DataFrame, ltf: pd.DataFram
         "sar_confirm": bool(price < sar.iloc[-1]) if machine == "short" else None,
     }
 
+    # Opposing liquidity levels (swing highs above / swing lows below the price)
+    # used to place TP at the nearest liquidity pool instead of only a fib ext.
+    piv_hi_b, piv_lo_b = indicators.find_pivots(htf, config.PIVOT_LEN)
+    highs_arr = htf["high"].to_numpy()
+    lows_arr = htf["low"].to_numpy()
+    swing_highs = sorted(float(highs_arr[k]) for k in range(len(htf))
+                         if piv_hi_b.iloc[k] and highs_arr[k] > price)
+    swing_lows = sorted((float(lows_arr[k]) for k in range(len(htf))
+                         if piv_lo_b.iloc[k] and lows_arr[k] < price), reverse=True)
+
     # Last 40 HTF candles for the card chart: [ts, open, high, low, close].
     tail = htf.tail(40)
     candles = [
@@ -255,6 +265,8 @@ def evaluate(symbol: str, htf: pd.DataFrame, dtf: pd.DataFrame, ltf: pd.DataFram
         "impulse_end": end_p,
         "retrace_ratio": round(ratio, 3),
         "fib": {k: round(v, 8) for k, v in fib.items()},
+        "swing_highs": [round(x, 8) for x in swing_highs[:6]],
+        "swing_lows": [round(x, 8) for x in swing_lows[:6]],
         "checklist": checklist,
         "trigger": trigger,
         "htf_ok": htf_ok,

@@ -4,6 +4,20 @@ from __future__ import annotations
 from . import config, tuning
 
 
+def _liquidity_tp(levels, entry, risk, min_rr, direction, fib_ext):
+    """Pick the nearest opposing liquidity (swing) that still yields RR >= min_rr.
+
+    ``levels`` are ordered from nearest to farthest in the target direction
+    (swing highs ascending for longs, swing lows descending for shorts).
+    Falls back to the fib 1.272 extension when no swing qualifies.
+    """
+    for lvl in levels:
+        beyond = lvl > entry if direction == "LONG" else lvl < entry
+        if beyond and (abs(lvl - entry) / risk) >= min_rr:
+            return lvl, "likuiditas"
+    return fib_ext, "fib-ext"
+
+
 def build_trade_plan(signal: dict, equity: float = 1000.0) -> dict | None:
     """Compute SL / TP1 / TP2 / size for an ENTRY signal.
 
@@ -29,7 +43,9 @@ def build_trade_plan(signal: dict, equity: float = 1000.0) -> dict | None:
         if risk <= 0:
             return None
         tp1 = entry + risk
-        tp2 = fib.get("ext_1.272", entry + 2 * risk)
+        fib_ext = fib.get("ext_1.272", entry + 2 * risk)
+        tp2, tp_source = _liquidity_tp(signal.get("swing_highs", []), entry, risk,
+                                       min_rr, "LONG", fib_ext)
     else:
         swing = signal["impulse_start"]  # swing high of the impulse
         raw_sl = max(swing, entry) + sl_atr * atr
@@ -38,7 +54,9 @@ def build_trade_plan(signal: dict, equity: float = 1000.0) -> dict | None:
         if risk <= 0:
             return None
         tp1 = entry - risk
-        tp2 = fib.get("ext_1.272", entry - 2 * risk)
+        fib_ext = fib.get("ext_1.272", entry - 2 * risk)
+        tp2, tp_source = _liquidity_tp(signal.get("swing_lows", []), entry, risk,
+                                       min_rr, "SHORT", fib_ext)
 
     reward = abs(tp2 - entry)
     rr = reward / risk if risk else 0.0
@@ -56,6 +74,7 @@ def build_trade_plan(signal: dict, equity: float = 1000.0) -> dict | None:
         "risk_per_unit": round(risk, 8),
         "rr": round(rr, 2),
         "rr_ok": rr >= min_rr,
+        "tp_source": tp_source,
         "position_size": round(qty, 6),
         "risk_pct": config.RISK_PER_TRADE,
         "sl_pct": round(abs(entry - sl) / entry, 4),
