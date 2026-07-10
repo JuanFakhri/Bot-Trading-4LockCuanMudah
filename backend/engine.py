@@ -15,7 +15,7 @@ import asyncio
 import json
 from datetime import datetime, timezone
 
-from . import config, data_feed, database as db, learning, market_filter, risk, strategy
+from . import config, data_feed, database as db, learning, market_filter, risk, strategy, tuning
 
 _BAR_SEC = {"15m": 900, "1h": 3600, "4h": 14400, "1d": 86400}
 
@@ -36,6 +36,7 @@ class Engine:
             return
         self.scanning = True
         try:
+            tuning.reload()  # pick up latest optimizer-tuned params each scan
             self.regime = await market_filter.compute_regime()
             await self._update_open_trades()
 

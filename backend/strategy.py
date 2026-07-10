@@ -19,7 +19,7 @@ from datetime import datetime, timezone
 import numpy as np
 import pandas as pd
 
-from . import config, indicators
+from . import config, indicators, tuning
 
 
 # ----------------------------------------------------------------------------
@@ -154,7 +154,10 @@ def evaluate(symbol: str, htf: pd.DataFrame, dtf: pd.DataFrame, ltf: pd.DataFram
               price > ema200.iloc[-1] and ema50.iloc[-1] > ema200.iloc[-1])
         check("close > EMA200 1D", d_close.iloc[-1] > d_ema200.iloc[-1])
         check("RSI 4H > 50", h_rsi.iloc[-1] > 50, f"rsi={h_rsi.iloc[-1]:.1f}")
-        check("A/D Line naik (akumulasi)", indicators.slope_rising(ad, 3))
+        ad_required = bool(tuning.get("require_ad", True))
+        check("A/D Line naik (akumulasi)",
+              indicators.slope_rising(ad, 3) or not ad_required,
+              "" if ad_required else "tidak diwajibkan (tuning)")
         is_friday = datetime.now(timezone.utc).weekday() == 4
         check("Skip Jumat", not (config.SKIP_FRIDAY_LONG and is_friday),
               "hari Jumat" if is_friday else "")

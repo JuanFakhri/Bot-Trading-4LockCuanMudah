@@ -25,8 +25,20 @@ def _align_daily(series: pd.Series, htf_index: pd.Index) -> pd.Series:
 
 
 def backtest_symbol(symbol: str, htf: pd.DataFrame, dtf: pd.DataFrame,
-                    regime_daily: pd.Series, usdtd_daily: pd.Series) -> list[dict]:
-    """Return a list of resolved trade dicts for one symbol."""
+                    regime_daily: pd.Series, usdtd_daily: pd.Series,
+                    params: dict | None = None) -> list[dict]:
+    """Return a list of resolved trade dicts for one symbol.
+
+    ``params`` optionally overrides tunable settings (sl_atr, min_rr,
+    confirm_bars, require_ad) so the optimizer can search for settings that turn
+    losing setups into winners.
+    """
+    params = params or {}
+    p_sl_atr = float(params.get("sl_atr", config.SL_ATR_MULT))
+    p_min_rr = float(params.get("min_rr", config.MIN_RR))
+    p_confirm = int(params.get("confirm_bars", config.CONFIRM_MAX_BARS))
+    p_require_ad = bool(params.get("require_ad", True))
+
     if len(htf) < config.EMA_SLOW + 30 or len(dtf) < 30:
         return []
 
@@ -124,7 +136,8 @@ def backtest_symbol(symbol: str, htf: pd.DataFrame, dtf: pd.DataFrame,
                                 and rsi[i] < 50)
                     if conf:
                         pos = _open_trade(symbol, machine, i, c, start_p, end_p, atr,
-                                          rsi, ad, sar, dow, pos_usdtd, ratio_now, ts)
+                                          rsi, ad, sar, dow, pos_usdtd, ratio_now, ts,
+                                          p_sl_atr, p_min_rr)
                         armed = None
                         continue
             # (fall through to allow re-arming on the same bar)
@@ -150,7 +163,7 @@ def backtest_symbol(symbol: str, htf: pd.DataFrame, dtf: pd.DataFrame,
         if machine == "long":
             structure = (c[i] > ema200[i] and ema50[i] > ema200[i]
                          and c[i] > d_ema200[i]
-                         and (ad[i] > ad[i - 3])
+                         and (ad[i] > ad[i - 3] or not p_require_ad)
                          and not (config.SKIP_FRIDAY_LONG and dow == 4))
         else:
             structure = (c[i] < ema200[i] and ema50[i] < ema200[i]
@@ -159,18 +172,18 @@ def backtest_symbol(symbol: str, htf: pd.DataFrame, dtf: pd.DataFrame,
 
         if structure:
             armed = {"machine": machine, "start": start_p, "end": end_p,
-                     "expire": i + config.CONFIRM_MAX_BARS}
+                     "expire": i + p_confirm}
 
     return trades
 
 
 def _open_trade(symbol, machine, i, c, start_p, end_p, atr, rsi, ad, sar, dow,
-                pos_usdtd, ratio, ts):
+                pos_usdtd, ratio, ts, sl_atr=config.SL_ATR_MULT, min_rr=config.MIN_RR):
     """Construct an open-position dict for an entry at bar ``i``."""
     fib = _fib_levels(start_p, end_p, machine)
     entry = c[i]
     if machine == "long":
-        raw_sl = min(start_p, entry) - config.SL_ATR_MULT * atr[i]
+        raw_sl = min(start_p, entry) - sl_atr * atr[i]
         sl = max(raw_sl, entry * (1 - config.SL_CAP_PCT))
         risk = entry - sl
         if risk <= 0:
@@ -178,7 +191,7 @@ def _open_trade(symbol, machine, i, c, start_p, end_p, atr, rsi, ad, sar, dow,
         tp1 = entry + risk
         tp2 = fib.get("ext_1.272", entry + 2 * risk)
     else:
-        raw_sl = max(start_p, entry) + config.SL_ATR_MULT * atr[i]
+        raw_sl = max(start_p, entry) + sl_atr * atr[i]
         sl = min(raw_sl, entry * (1 + config.SL_CAP_PCT))
         risk = sl - entry
         if risk <= 0:
@@ -187,7 +200,7 @@ def _open_trade(symbol, machine, i, c, start_p, end_p, atr, rsi, ad, sar, dow,
         tp2 = fib.get("ext_1.272", entry - 2 * risk)
 
     rr = abs(tp2 - entry) / risk if risk else 0
-    if rr < config.MIN_RR:
+    if rr < min_rr:
         return None
 
     features = {
@@ -262,6 +275,30 @@ def summarize(trades: list[dict]) -> dict:
         s["w"] += 1 if t["r"] > 0.05 else 0
         s["r"] += t["r"]
 
+    # per-direction win rate
+    def _dir(d):
+        sub = [t for t in trades if t["direction"] == d]
+        w = sum(1 for t in sub if t["r"] > 0.05)
+        return {"n": len(sub), "win_rate": round(w / len(sub) * 100, 1) if sub else 0.0,
+                "total_r": round(sum(t["r"] for t in sub), 2)}
+
+    # average trade duration in 4H bars
+    durs = []
+    for t in trades:
+        try:
+            dt = (pd.Timestamp(t["exit_ts"]) - pd.Timestamp(t["entry_ts"])).total_seconds()
+            durs.append(dt / 14400.0)
+        except Exception:
+            pass
+    avg_dur = round(sum(durs) / len(durs), 1) if durs else 0.0
+
+    # R distribution histogram
+    edges = [(-99, -1), (-1, 0), (0, 1), (1, 2), (2, 3), (3, 99)]
+    labels = ["≤-1", "-1..0", "0..1", "1..2", "2..3", ">3"]
+    hist = []
+    for (lo, hi), lab in zip(edges, labels):
+        hist.append({"label": lab, "count": sum(1 for t in trades if lo < t["r"] <= hi)})
+
     return {
         "trades": total,
         "wins": len(wins),
@@ -271,6 +308,10 @@ def summarize(trades: list[dict]) -> dict:
         "expectancy_r": round(sum(t["r"] for t in trades) / total, 3) if total else 0.0,
         "total_r": round(sum(t["r"] for t in trades), 2),
         "max_drawdown_r": round(max_dd, 2),
+        "avg_duration_bars": avg_dur,
+        "long": _dir("LONG"),
+        "short": _dir("SHORT"),
+        "r_histogram": hist,
         "equity_curve": curve,
         "per_symbol": {
             k: {"n": v["n"], "win_rate": round(v["w"] / v["n"] * 100, 1),

@@ -167,11 +167,26 @@
             </table></div>
           </section>
           <section class="panel">
+            <div class="panel-head"><h2>⚙️ Optimasi (kekalahan → kemenangan)</h2></div>
+            <div id="bt-opt"></div>
+          </section>
+          <section class="panel">
             <div class="panel-head"><h2>🧠 Pelajaran dari Backtest</h2><span id="bt-lesson-count" class="pill">0</span></div>
             <div id="bt-lessons" class="lessons"></div>
           </section>
         </aside>
       </div>
+
+      <section class="panel">
+        <div class="panel-head"><h2>Metrik Lanjutan</h2></div>
+        <div class="metrics-grid">
+          <div class="metric"><span class="m-label">Win rate LONG</span><span id="m-long" class="m-val">–</span></div>
+          <div class="metric"><span class="m-label">Win rate SHORT</span><span id="m-short" class="m-val">–</span></div>
+          <div class="metric"><span class="m-label">Durasi rata-rata</span><span id="m-dur" class="m-val">–</span></div>
+        </div>
+        <div class="panel-head" style="margin-top:14px"><h2 class="small">Distribusi hasil (R)</h2></div>
+        <div id="bt-hist" class="hist"></div>
+      </section>
 
       <section class="panel">
         <div class="panel-head"><h2>Trade Backtest Terakhir</h2></div>

@@ -29,6 +29,10 @@ UI real-time via WebSocket, dan tersedia **mode siang/malam**.
   pada data historis Binance (via GitHub Actions), menampilkan Win Rate/PF/kurva
   ekuitas, dan **men-feed hasilnya ke mesin pembelajaran** sehingga pola yang
   terbukti rugi di masa lalu langsung diblokir untuk sinyal live.
+- **⚙️ Optimasi otomatis (kekalahan → kemenangan)** — selain memblokir pola rugi,
+  backtest mencari parameter (jarak SL, RR minimal, syarat A/D) yang meningkatkan
+  ekspektasi, **memvalidasinya out-of-sample** (train/test) agar tidak overfit,
+  lalu **menerapkannya otomatis ke sinyal live** via `data/tuning.json`.
 - **Deploy gratis** — GitHub Actions + Pages (tanpa server), atau Render /
   Railway / Fly.io / Docker (lihat [DEPLOY.md](DEPLOY.md)).
 

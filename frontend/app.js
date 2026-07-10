@@ -170,6 +170,9 @@ function renderBacktest(rep) {
         <div class="meta">win ${Math.round((l.win_rate || 0) * 100)}% · ${l.samples} sampel</div></div>`).join("")
     : `<p class="muted small">Belum ada pelajaran (butuh ≥5 sampel per pola).</p>`;
 
+  renderOptimization(rep.optimization);
+  renderBtMetrics(s);
+
   const tr = rep.recent_trades || [];
   document.querySelector("#bt-journal tbody").innerHTML = tr.length
     ? tr.map(t => {
@@ -185,6 +188,43 @@ function renderBacktest(rep) {
         </tr>`;
       }).join("")
     : `<tr><td colspan="9" class="empty">Belum ada trade backtest.</td></tr>`;
+}
+
+function renderOptimization(opt) {
+  const el = $("bt-opt");
+  if (!el) return;
+  if (!opt) { el.innerHTML = `<p class="muted small">Belum ada data optimasi.</p>`; return; }
+  const p = opt.params || {};
+  const on = opt.accepted;
+  const cmp = (opt.baseline && opt.tuned) ? `
+    <div class="opt-cmp">
+      <span class="h"></span><span class="h">Baseline</span><span class="h">Setelah optimasi</span>
+      <span class="h">Win (uji)</span><span>${opt.baseline.test.win_rate}%</span><span class="${opt.tuned.test.win_rate >= opt.baseline.test.win_rate ? "o-win" : ""}">${opt.tuned.test.win_rate}%</span>
+      <span class="h">Ekspektasi (uji)</span><span>${opt.baseline.test.expectancy_r}R</span><span class="${opt.tuned.test.expectancy_r >= opt.baseline.test.expectancy_r ? "o-win" : "o-loss"}">${opt.tuned.test.expectancy_r}R</span>
+    </div>` : "";
+  el.innerHTML = `
+    <div class="opt-box ${on ? "on" : "off"}">
+      ${on ? "✅ <b>Diterapkan ke sinyal live</b>" : "ℹ️ Tetap pakai setelan default"} — ${opt.reason || ""}
+      <div class="opt-params">
+        <span class="opt-chip">SL ${p.sl_atr}×ATR</span>
+        <span class="opt-chip">RR≥${p.min_rr}</span>
+        <span class="opt-chip">A/D ${p.require_ad ? "wajib" : "opsional"}</span>
+      </div>
+      ${cmp}
+    </div>`;
+}
+
+function renderBtMetrics(s) {
+  const L = s.long || {}, S = s.short || {};
+  $("m-long").textContent = (L.n ? `${L.win_rate}%` : "–") + (L.n ? ` (${L.n})` : "");
+  $("m-short").textContent = (S.n ? `${S.win_rate}%` : "–") + (S.n ? ` (${S.n})` : "");
+  $("m-dur").textContent = s.avg_duration_bars ? `${s.avg_duration_bars} bar 4H` : "–";
+  const hist = s.r_histogram || [];
+  const max = Math.max(1, ...hist.map(h => h.count));
+  $("bt-hist").innerHTML = hist.map(h =>
+    `<div class="hist-row"><span class="muted">${h.label}</span>
+      <span class="hist-bar" style="width:${Math.round(h.count / max * 100)}%"></span>
+      <span>${h.count}</span></div>`).join("");
 }
 
 function drawEquity(cv, curve) {

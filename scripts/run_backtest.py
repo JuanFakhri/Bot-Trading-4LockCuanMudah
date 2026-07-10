@@ -21,10 +21,11 @@ import os
 import numpy as np
 import pandas as pd
 
-from backend import backtester, config, data_feed, database as db, indicators, learning
+from backend import backtester, config, data_feed, database as db, indicators, learning, optimizer
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STATE_PATH = os.path.join(ROOT, "data", "state.json")
+TUNING_PATH = os.path.join(ROOT, "data", "tuning.json")
 OUT_PATH = os.path.join(ROOT, "docs", "data", "backtest.json")
 
 LOOKBACK_DAYS = int(os.getenv("BACKTEST_DAYS", "180"))
@@ -79,6 +80,7 @@ async def main():
     usdtd_daily = await _usdtd_timeline(regime_daily.index)
 
     all_trades: list[dict] = []
+    symbol_data: dict = {}
     for sym in SYMBOLS:
         try:
             htf = await data_feed.get_klines_history(sym, config.HTF, LOOKBACK_DAYS)
@@ -86,6 +88,7 @@ async def main():
             if htf.empty or dtf.empty:
                 print(f"[backtest] {sym}: no data")
                 continue
+            symbol_data[sym] = (htf, dtf)
             trades = backtester.backtest_symbol(sym, htf, dtf, regime_daily, usdtd_daily)
             all_trades.extend(trades)
             print(f"[backtest] {sym}: {len(trades)} trades")
@@ -93,6 +96,15 @@ async def main():
             print(f"[backtest] {sym} error: {exc}")
 
     summary = backtester.summarize(all_trades)
+
+    # ---- optimize: search for settings that turn losses into wins ----
+    opt = optimizer.optimize(symbol_data, regime_daily, usdtd_daily)
+    tuned = {"sl_atr": opt["params"]["sl_atr"], "min_rr": opt["params"]["min_rr"],
+             "require_ad": opt["params"].get("require_ad", True),
+             "accepted": opt["accepted"], "updated_ts": pd.Timestamp.utcnow().isoformat()}
+    with open(TUNING_PATH, "w", encoding="utf-8") as f:
+        json.dump(tuned, f, ensure_ascii=False, indent=0)
+    print(f"[backtest] optimize: accepted={opt['accepted']} params={opt['params']} — {opt['reason']}")
 
     # ---- REBUILD the learning brain from the backtest ----
     db.execute("DELETE FROM pattern_stats")
@@ -118,6 +130,7 @@ async def main():
             "favored_count": len(favored),
             "lessons": db.lessons(40),
         },
+        "optimization": opt,
     }
     with open(OUT_PATH, "w", encoding="utf-8") as f:
         json.dump(report, f, ensure_ascii=False, separators=(",", ":"))
