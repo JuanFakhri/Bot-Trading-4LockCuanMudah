@@ -6,293 +6,293 @@
 "wins": 14,
 "losses": 8,
 "sum_r": 2.5010000000000003,
-"updated_ts": "2026-07-10T12:58:52.637888+00:00"
+"updated_ts": "2026-07-10T13:13:52.108337+00:00"
 },
 {
 "signature": "short|reg=BEAR|fib=0.5-0.55|rH=50-60|rL=50-60|ud=85+|ad=None|sar=True|dow=1",
 "wins": 1,
 "losses": 3,
 "sum_r": -1.346,
-"updated_ts": "2026-07-10T12:58:52.591321+00:00"
+"updated_ts": "2026-07-10T13:13:52.073625+00:00"
 },
 {
 "signature": "S|fib=0.5-0.55|usdtd=85+|sar=False",
 "wins": 7,
 "losses": 8,
 "sum_r": -3.3049999999999997,
-"updated_ts": "2026-07-10T12:58:52.635963+00:00"
+"updated_ts": "2026-07-10T13:13:52.107078+00:00"
 },
 {
 "signature": "short|reg=BEAR|fib=0.5-0.55|rH=40-50|rL=40-50|ud=85+|ad=None|sar=False|dow=6",
 "wins": 1,
 "losses": 1,
 "sum_r": -0.488,
-"updated_ts": "2026-07-10T12:58:52.560388+00:00"
+"updated_ts": "2026-07-10T13:13:52.049022+00:00"
 },
 {
 "signature": "short|reg=BEAR|fib=0.5-0.55|rH=40-50|rL=40-50|ud=85+|ad=None|sar=False|dow=5",
 "wins": 1,
 "losses": 2,
 "sum_r": -1.488,
-"updated_ts": "2026-07-10T12:58:52.593555+00:00"
+"updated_ts": "2026-07-10T13:13:52.075463+00:00"
 },
 {
 "signature": "short|reg=BEAR|fib=0.5-0.55|rH=50-60|rL=50-60|ud=85+|ad=None|sar=True|dow=6",
 "wins": 0,
 "losses": 1,
 "sum_r": -1.0,
-"updated_ts": "2026-07-10T12:58:52.565113+00:00"
+"updated_ts": "2026-07-10T13:13:52.052866+00:00"
 },
 {
 "signature": "S|fib=0.55-0.618|usdtd=85+|sar=False",
 "wins": 0,
 "losses": 1,
 "sum_r": -1.0,
-"updated_ts": "2026-07-10T12:58:52.566771+00:00"
+"updated_ts": "2026-07-10T13:13:52.054101+00:00"
 },
 {
 "signature": "short|reg=BEAR|fib=0.55-0.618|rH=-inf-40|rL=-inf-30|ud=85+|ad=None|sar=False|dow=6",
 "wins": 0,
 "losses": 1,
 "sum_r": -1.0,
-"updated_ts": "2026-07-10T12:58:52.566771+00:00"
+"updated_ts": "2026-07-10T13:13:52.054101+00:00"
 },
 {
 "signature": "short|reg=BEAR|fib=0.5-0.55|rH=-inf-40|rL=-inf-30|ud=85+|ad=None|sar=True|dow=5",
 "wins": 0,
 "losses": 1,
 "sum_r": -1.0,
-"updated_ts": "2026-07-10T12:58:52.568391+00:00"
+"updated_ts": "2026-07-10T13:13:52.055502+00:00"
 },
 {
 "signature": "S|fib=0.55-0.618|usdtd=85+|sar=True",
 "wins": 1,
 "losses": 3,
 "sum_r": -2.488,
-"updated_ts": "2026-07-10T12:58:52.628066+00:00"
+"updated_ts": "2026-07-10T13:13:52.100904+00:00"
 },
 {
 "signature": "short|reg=BEAR|fib=0.55-0.618|rH=-inf-40|rL=-inf-30|ud=85+|ad=None|sar=True|dow=5",
 "wins": 0,
 "losses": 2,
 "sum_r": -2.0,
-"updated_ts": "2026-07-10T12:58:52.572414+00:00"
+"updated_ts": "2026-07-10T13:13:52.058668+00:00"
 },
 {
 "signature": "short|reg=BEAR|fib=0.55-0.618|rH=-inf-40|rL=-inf-30|ud=85+|ad=None|sar=True|dow=6",
 "wins": 0,
 "losses": 1,
 "sum_r": -1.0,
-"updated_ts": "2026-07-10T12:58:52.573971+00:00"
+"updated_ts": "2026-07-10T13:13:52.059994+00:00"
 },
 {
 "signature": "short|reg=BEAR|fib=0.5-0.55|rH=40-50|rL=40-50|ud=85+|ad=None|sar=True|dow=1",
 "wins": 2,
 "losses": 1,
 "sum_r": 0.02400000000000002,
-"updated_ts": "2026-07-10T12:58:52.637888+00:00"
+"updated_ts": "2026-07-10T13:13:52.108337+00:00"
 },
 {
 "signature": "short|reg=BEAR|fib=0.5-0.55|rH=50-60|rL=50-60|ud=85+|ad=None|sar=True|dow=3",
 "wins": 0,
 "losses": 1,
 "sum_r": -1.0,
-"updated_ts": "2026-07-10T12:58:52.580517+00:00"
+"updated_ts": "2026-07-10T13:13:52.065297+00:00"
 },
 {
 "signature": "short|reg=BEAR|fib=0.5-0.55|rH=40-50|rL=40-50|ud=85+|ad=None|sar=False|dow=4",
 "wins": 0,
 "losses": 3,
 "sum_r": -3.0,
-"updated_ts": "2026-07-10T12:58:52.635963+00:00"
+"updated_ts": "2026-07-10T13:13:52.107078+00:00"
 },
 {
 "signature": "short|reg=BEAR|fib=0.5-0.55|rH=50-60|rL=50-60|ud=85+|ad=None|sar=False|dow=2",
 "wins": 2,
 "losses": 0,
 "sum_r": 2.1340000000000003,
-"updated_ts": "2026-07-10T12:58:52.587851+00:00"
+"updated_ts": "2026-07-10T13:13:52.071090+00:00"
 },
 {
 "signature": "S|fib=deep|usdtd=85+|sar=True",
 "wins": 0,
 "losses": 2,
 "sum_r": -2.0,
-"updated_ts": "2026-07-10T12:58:52.618714+00:00"
+"updated_ts": "2026-07-10T13:13:52.093727+00:00"
 },
 {
 "signature": "short|reg=BEAR|fib=deep|rH=50-60|rL=50-60|ud=85+|ad=None|sar=True|dow=6",
 "wins": 0,
 "losses": 1,
 "sum_r": -1.0,
-"updated_ts": "2026-07-10T12:58:52.589331+00:00"
+"updated_ts": "2026-07-10T13:13:52.072296+00:00"
 },
 {
 "signature": "short|reg=BEAR|fib=0.5-0.55|rH=40-50|rL=40-50|ud=85+|ad=None|sar=True|dow=6",
 "wins": 5,
 "losses": 0,
 "sum_r": 3.564,
-"updated_ts": "2026-07-10T12:58:52.616226+00:00"
+"updated_ts": "2026-07-10T13:13:52.091914+00:00"
 },
 {
 "signature": "short|reg=BEAR|fib=0.5-0.55|rH=60-70|rL=60-70|ud=85+|ad=None|sar=False|dow=6",
 "wins": 0,
 "losses": 1,
 "sum_r": -1.0,
-"updated_ts": "2026-07-10T12:58:52.601451+00:00"
+"updated_ts": "2026-07-10T13:13:52.081610+00:00"
 },
 {
 "signature": "short|reg=BEAR|fib=0.5-0.55|rH=50-60|rL=50-60|ud=85+|ad=None|sar=False|dow=6",
 "wins": 1,
 "losses": 1,
 "sum_r": -0.487,
-"updated_ts": "2026-07-10T12:58:52.622148+00:00"
+"updated_ts": "2026-07-10T13:13:52.096494+00:00"
 },
 {
 "signature": "short|reg=BEAR|fib=0.5-0.55|rH=-inf-40|rL=30-40|ud=85+|ad=None|sar=False|dow=4",
 "wins": 1,
 "losses": 0,
 "sum_r": 0.512,
-"updated_ts": "2026-07-10T12:58:52.604479+00:00"
+"updated_ts": "2026-07-10T13:13:52.084170+00:00"
 },
 {
 "signature": "short|reg=BEAR|fib=0.5-0.55|rH=40-50|rL=40-50|ud=85+|ad=None|sar=True|dow=5",
 "wins": 1,
 "losses": 0,
 "sum_r": 1.692,
-"updated_ts": "2026-07-10T12:58:52.607917+00:00"
+"updated_ts": "2026-07-10T13:13:52.085385+00:00"
 },
 {
 "signature": "short|reg=BEAR|fib=0.5-0.55|rH=-inf-40|rL=30-40|ud=85+|ad=None|sar=False|dow=2",
 "wins": 1,
 "losses": 0,
 "sum_r": 0.512,
-"updated_ts": "2026-07-10T12:58:52.609822+00:00"
+"updated_ts": "2026-07-10T13:13:52.086661+00:00"
 },
 {
 "signature": "short|reg=BEAR|fib=0.5-0.55|rH=-inf-40|rL=30-40|ud=85+|ad=None|sar=True|dow=2",
 "wins": 1,
 "losses": 0,
 "sum_r": 0.512,
-"updated_ts": "2026-07-10T12:58:52.611473+00:00"
+"updated_ts": "2026-07-10T13:13:52.087954+00:00"
 },
 {
 "signature": "short|reg=BEAR|fib=0.5-0.55|rH=50-60|rL=50-60|ud=85+|ad=None|sar=True|dow=0",
 "wins": 2,
 "losses": 0,
 "sum_r": 1.026,
-"updated_ts": "2026-07-10T12:58:52.614705+00:00"
+"updated_ts": "2026-07-10T13:13:52.090584+00:00"
 },
 {
 "signature": "short|reg=BEAR|fib=deep|rH=40-50|rL=40-50|ud=85+|ad=None|sar=True|dow=0",
 "wins": 0,
 "losses": 1,
 "sum_r": -1.0,
-"updated_ts": "2026-07-10T12:58:52.618714+00:00"
+"updated_ts": "2026-07-10T13:13:52.093727+00:00"
 },
 {
 "signature": "S|fib=0.55-0.618|usdtd=70-85|sar=True",
 "wins": 0,
 "losses": 1,
 "sum_r": -1.0,
-"updated_ts": "2026-07-10T12:58:52.620232+00:00"
+"updated_ts": "2026-07-10T13:13:52.095119+00:00"
 },
 {
 "signature": "short|reg=BEAR|fib=0.55-0.618|rH=40-50|rL=40-50|ud=70-85|ad=None|sar=True|dow=1",
 "wins": 0,
 "losses": 1,
 "sum_r": -1.0,
-"updated_ts": "2026-07-10T12:58:52.620232+00:00"
+"updated_ts": "2026-07-10T13:13:52.095119+00:00"
 },
 {
 "signature": "short|reg=BEAR|fib=0.5-0.55|rH=50-60|rL=50-60|ud=85+|ad=None|sar=True|dow=4",
 "wins": 2,
 "losses": 0,
 "sum_r": 1.029,
-"updated_ts": "2026-07-10T12:58:52.629693+00:00"
+"updated_ts": "2026-07-10T13:13:52.102134+00:00"
 },
 {
 "signature": "L|fib=0.5-0.55|ad=True|dow=0",
 "wins": 1,
 "losses": 0,
 "sum_r": 0.523,
-"updated_ts": "2026-07-10T12:58:52.626451+00:00"
+"updated_ts": "2026-07-10T13:13:52.099571+00:00"
 },
 {
 "signature": "long|reg=BULL|fib=0.5-0.55|rH=50-60|rL=50-60|ud=-inf-30|ad=True|sar=None|dow=0",
 "wins": 1,
 "losses": 0,
 "sum_r": 0.523,
-"updated_ts": "2026-07-10T12:58:52.626451+00:00"
+"updated_ts": "2026-07-10T13:13:52.099571+00:00"
 },
 {
 "signature": "short|reg=BEAR|fib=0.55-0.618|rH=50-60|rL=50-60|ud=85+|ad=None|sar=True|dow=3",
 "wins": 1,
 "losses": 0,
 "sum_r": 0.512,
-"updated_ts": "2026-07-10T12:58:52.628066+00:00"
+"updated_ts": "2026-07-10T13:13:52.100904+00:00"
 },
 {
 "signature": "short|reg=BEAR|fib=0.5-0.55|rH=40-50|rL=40-50|ud=85+|ad=None|sar=True|dow=4",
 "wins": 0,
 "losses": 1,
 "sum_r": -1.0,
-"updated_ts": "2026-07-10T12:58:52.632026+00:00"
+"updated_ts": "2026-07-10T13:13:52.104001+00:00"
 },
 {
 "signature": "L|fib=0.5-0.55|ad=False|dow=3",
 "wins": 1,
 "losses": 1,
 "sum_r": 0.575,
-"updated_ts": "2026-07-10T12:58:52.643201+00:00"
+"updated_ts": "2026-07-10T13:13:52.112931+00:00"
 },
 {
 "signature": "long|reg=BULL|fib=0.5-0.55|rH=50-60|rL=50-60|ud=50-70|ad=False|sar=None|dow=3",
 "wins": 0,
 "losses": 1,
 "sum_r": -1.0,
-"updated_ts": "2026-07-10T12:58:52.639545+00:00"
+"updated_ts": "2026-07-10T13:13:52.109615+00:00"
 },
 {
 "signature": "L|fib=0.5-0.55|ad=False|dow=5",
 "wins": 0,
 "losses": 1,
 "sum_r": -1.0,
-"updated_ts": "2026-07-10T12:58:52.641570+00:00"
+"updated_ts": "2026-07-10T13:13:52.111427+00:00"
 },
 {
 "signature": "long|reg=BULL|fib=0.5-0.55|rH=40-50|rL=40-50|ud=-inf-30|ad=False|sar=None|dow=5",
 "wins": 0,
 "losses": 1,
 "sum_r": -1.0,
-"updated_ts": "2026-07-10T12:58:52.641570+00:00"
+"updated_ts": "2026-07-10T13:13:52.111427+00:00"
 },
 {
 "signature": "long|reg=BULL|fib=0.5-0.55|rH=40-50|rL=40-50|ud=-inf-30|ad=False|sar=None|dow=3",
 "wins": 1,
 "losses": 0,
 "sum_r": 1.575,
-"updated_ts": "2026-07-10T12:58:52.643201+00:00"
+"updated_ts": "2026-07-10T13:13:52.112931+00:00"
 },
 {
 "signature": "L|fib=0.55-0.618|ad=False|dow=3",
 "wins": 0,
 "losses": 1,
 "sum_r": -1.0,
-"updated_ts": "2026-07-10T12:58:52.644907+00:00"
+"updated_ts": "2026-07-10T13:13:52.114178+00:00"
 },
 {
 "signature": "long|reg=BULL|fib=0.55-0.618|rH=40-50|rL=40-50|ud=-inf-30|ad=False|sar=None|dow=3",
 "wins": 0,
 "losses": 1,
 "sum_r": -1.0,
-"updated_ts": "2026-07-10T12:58:52.644907+00:00"
+"updated_ts": "2026-07-10T13:13:52.114178+00:00"
 }
 ],
 "lessons": [
 {
-"id": 1,
-"ts": "2026-07-10T12:58:52.591321+00:00",
+"id": 4,
+"ts": "2026-07-10T13:13:52.073625+00:00",
 "signature": "S|fib=0.5-0.55|usdtd=85+|sar=True",
 "kind": "BLOCK",
 "text": "❌ Diblokir: sinyal SHORT pola [fib 0.5-0.55, USDT.D 85+, SAR ok] hanya menang 3/9 (33%). Pola ini dihindari.",
@@ -300,8 +300,8 @@
 "samples": 9
 },
 {
-"id": 2,
-"ts": "2026-07-10T12:58:52.585486+00:00",
+"id": 5,
+"ts": "2026-07-10T13:13:52.069169+00:00",
 "signature": "S|fib=0.5-0.55|usdtd=85+|sar=False",
 "kind": "BLOCK",
 "text": "❌ Diblokir: sinyal SHORT pola [fib 0.5-0.55, USDT.D 85+, SAR no] hanya menang 2/6 (33%). Pola ini dihindari.",
@@ -309,8 +309,8 @@
 "samples": 6
 },
 {
-"id": 3,
-"ts": "2026-07-10T12:58:52.632026+00:00",
+"id": 6,
+"ts": "2026-07-10T13:13:52.104001+00:00",
 "signature": "S|fib=0.5-0.55|usdtd=85+|sar=True",
 "kind": "FAVOR",
 "text": "✅ Diutamakan: sinyal SHORT pola [fib 0.5-0.55, USDT.D 85+, SAR ok] menang 14/21 (67%). Diberi prioritas.",
