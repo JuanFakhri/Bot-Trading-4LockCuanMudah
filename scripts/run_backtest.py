@@ -65,15 +65,20 @@ async def _regime_timeline(usdtd: pd.Series) -> pd.Series:
                - usdtd.rolling(7, min_periods=4).min()) < 0.2).to_numpy()
     pos = usdtd.to_numpy()
 
+    def _matrix(i):
+        alt = market_filter._ALT_MATRIX.get((btcd_dir[i], btc_dir[i]), "STABIL")
+        return "BULL" if alt == "NAIK" else "BEAR" if alt == "TURUN" else "NEUTRAL"
+
     out = []
     for i in range(len(idx)):
-        if pos[i] > hi:
+        if np.isnan(pos[i]):        # no USDT.D data (older than ~365d) -> BTC.D matrix
+            out.append(_matrix(i))
+        elif pos[i] > hi:
             out.append("BEAR")
         elif pos[i] < lo:
             out.append("BULL")
         elif consol[i]:
-            alt = market_filter._ALT_MATRIX.get((btcd_dir[i], btc_dir[i]), "STABIL")
-            out.append("BULL" if alt == "NAIK" else "BEAR" if alt == "TURUN" else "NEUTRAL")
+            out.append(_matrix(i))
         elif diff[i] > 0:
             out.append("BEAR")
         else:
@@ -101,10 +106,14 @@ async def _usdtd_timeline() -> pd.Series:
                 lo = s.rolling(config.USDTD_LOOKBACK, min_periods=5).min()
                 hi = s.rolling(config.USDTD_LOOKBACK, min_periods=5).max()
                 pos = ((s - lo) / (hi - lo).replace(0, np.nan)).clip(0, 1).fillna(0.5)
-                return pos
+                # CoinGecko free only covers ~365d; span the full backtest index
+                # (NaN before that -> the older period falls back to the BTC.D matrix)
+                pos.index = pos.index.normalize()
+                pos = pos[~pos.index.duplicated(keep="last")]
+                return pos.reindex(idx)
     except Exception as exc:
         print(f"[backtest] usdtd history failed: {exc}")
-    return pd.Series(0.5, index=idx)
+    return pd.Series(np.nan, index=idx)
 
 
 async def main():
