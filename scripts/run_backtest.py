@@ -21,7 +21,7 @@ import os
 import numpy as np
 import pandas as pd
 
-from backend import backtester, config, data_feed, database as db, learning, optimizer
+from backend import backtester, config, data_feed, database as db, indicators, learning, market_filter, optimizer
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STATE_PATH = os.path.join(ROOT, "data", "state.json")
@@ -35,23 +35,50 @@ _env_syms = os.getenv("BACKTEST_SYMBOLS", "").strip()
 SYMBOLS = [s.strip().upper() for s in _env_syms.split(",") if s.strip()] or config.WATCHLIST
 
 
-def _regime_from_usdtd(usdtd: pd.Series) -> pd.Series:
-    """Regime driven solely by USDT.D (same rule as live):
-    heading to / at support -> BULL (long), heading to / at resistance -> BEAR."""
+def _dir_series(df: pd.Series | None, idx: pd.Index, invert: bool = False) -> pd.Series:
+    """Per-day NAIK/TURUN/STABIL from an EMA50 slope (deadband 0.5%), aligned to idx."""
+    if df is None or df.empty:
+        return pd.Series("STABIL", index=idx)
+    ema = indicators.ema(df["close"], config.EMA_FAST)
+    pct = (ema - ema.shift(3)) / ema.shift(3).abs()
+    d = pd.Series("STABIL", index=ema.index)
+    d[pct > 0.005] = "NAIK"
+    d[pct < -0.005] = "TURUN"
+    if invert:
+        d = d.map({"NAIK": "TURUN", "TURUN": "NAIK", "STABIL": "STABIL"})
+    return d.reindex(idx, method="ffill").fillna("STABIL")
+
+
+async def _regime_timeline(usdtd: pd.Series) -> pd.Series:
+    """Same decision as live: USDT.D primary; when USDT.D consolidates, fall back
+    to the BTC + BTC.D dominance matrix."""
+    idx = usdtd.index
+    btc = await data_feed.get_klines_history("BTCUSDT", "1d", LOOKBACK_DAYS + 80)
+    ethbtc = await data_feed.get_klines_history("ETHBTC", "1d", LOOKBACK_DAYS + 80)
+    btc_dir = _dir_series(btc, idx).to_numpy()
+    btcd_dir = _dir_series(ethbtc, idx, invert=True).to_numpy()   # ETH/BTC up -> BTC.D down
+
     hi = config.USDTD_POS_HI
     lo = 1 - hi
-    diff = usdtd.diff().fillna(0.0)
+    diff = usdtd.diff().fillna(0.0).to_numpy()
+    consol = ((usdtd.rolling(7, min_periods=4).max()
+               - usdtd.rolling(7, min_periods=4).min()) < 0.2).to_numpy()
+    pos = usdtd.to_numpy()
+
     out = []
-    for pos, dv in zip(usdtd, diff):
-        if pos > hi:
+    for i in range(len(idx)):
+        if pos[i] > hi:
             out.append("BEAR")
-        elif pos < lo:
+        elif pos[i] < lo:
             out.append("BULL")
-        elif dv > 0:            # rising -> toward resistance
+        elif consol[i]:
+            alt = market_filter._ALT_MATRIX.get((btcd_dir[i], btc_dir[i]), "STABIL")
+            out.append("BULL" if alt == "NAIK" else "BEAR" if alt == "TURUN" else "NEUTRAL")
+        elif diff[i] > 0:
             out.append("BEAR")
-        else:                   # falling/flat -> toward support
+        else:
             out.append("BULL")
-    return pd.Series(out, index=usdtd.index)
+    return pd.Series(out, index=idx)
 
 
 async def _usdtd_timeline() -> pd.Series:
@@ -89,7 +116,7 @@ async def main():
     if usdtd_daily.empty:
         print("[backtest] no USDT.D data — aborting")
         return
-    regime_daily = _regime_from_usdtd(usdtd_daily)   # regime driven by USDT.D (same as live)
+    regime_daily = await _regime_timeline(usdtd_daily)   # USDT.D + BTC.D matrix on consolidation (same as live)
 
     all_trades: list[dict] = []
     symbol_data: dict = {}
