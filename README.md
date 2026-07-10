@@ -11,7 +11,10 @@ UI real-time via WebSocket, dan tersedia **mode siang/malam**.
 
 ## ✨ Fitur
 
-- **Filter market (Bagian A)** — regime dari BTC EMA50 1D + posisi USDT.D.
+- **Filter market (Bagian A)** — bias ALT dibaca berurutan: **① USDT.D**
+  (support = risk-on) → **② arah BTC + BTC.D** via matriks dominance (BTC.D turun
+  + BTC naik = alt naik) → **③ bias akhir** menentukan mesin LONG/SHORT. SL/TP
+  lalu diambil dari likuiditas (swing ±ATR).
 - **Mesin BULL (fib-long)** & **Mesin BEAR (fib-short)** lengkap dengan seluruh
   aturan checklist (golden zone 0.5–0.618, EMA200 4H/1D, RSI, A/D line, Parabolic
   SAR, USDT.D di resistance, skip Jumat, trigger ARM→konfirmasi 15M/1H).

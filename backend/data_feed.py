@@ -183,5 +183,36 @@ async def get_usdt_dominance() -> dict:
     return result
 
 
+_btcd_cache: dict[str, object] = {}
+
+
+async def get_btc_dominance() -> dict:
+    """Return {'value': pct, 'ok': bool} — current BTC dominance from CoinGecko.
+
+    Direction is derived elsewhere (via the ETH/BTC ratio proxy) since free
+    historical dominance is not readily available.
+    """
+    if config.DEMO:
+        return {"value": 54.0, "ok": True}
+
+    now = time.time()
+    if _btcd_cache and (now - float(_btcd_cache.get("_ts", 0))) < 300:
+        return _btcd_cache["value"]  # type: ignore[return-value]
+
+    result = {"value": None, "ok": False}
+    try:
+        g = await _client.get(config.COINGECKO_BASE + "/global")
+        if g.status_code == 200:
+            btc = g.json().get("data", {}).get("market_cap_percentage", {}).get("btc")
+            if btc is not None:
+                result = {"value": round(btc, 2), "ok": True}
+    except Exception as exc:
+        print(f"[data_feed] btc.d failed: {exc}")
+
+    _btcd_cache["_ts"] = now
+    _btcd_cache["value"] = result
+    return result
+
+
 async def close():
     await _client.aclose()
