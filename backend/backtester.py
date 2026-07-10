@@ -166,8 +166,9 @@ def backtest_symbol(symbol: str, htf: pd.DataFrame, dtf: pd.DataFrame,
                          and (ad[i] > ad[i - 3] or not p_require_ad)
                          and not (config.SKIP_FRIDAY_LONG and dow == 4))
         else:
+            # regime BEAR already means USDT.D favours short (heading to/at
+            # resistance) — no separate pos>0.7 gate needed here.
             structure = (c[i] < ema200[i] and ema50[i] < ema200[i]
-                         and (pos_usdtd > config.USDTD_POS_HI)
                          and (c[i] < sar[i]))
 
         if structure:

@@ -21,7 +21,7 @@ import os
 import numpy as np
 import pandas as pd
 
-from backend import backtester, config, data_feed, database as db, indicators, learning, optimizer
+from backend import backtester, config, data_feed, database as db, learning, optimizer
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STATE_PATH = os.path.join(ROOT, "data", "state.json")
@@ -35,20 +35,32 @@ _env_syms = os.getenv("BACKTEST_SYMBOLS", "").strip()
 SYMBOLS = [s.strip().upper() for s in _env_syms.split(",") if s.strip()] or config.WATCHLIST
 
 
-async def _regime_timeline() -> pd.Series:
-    btc = await data_feed.get_klines_history("BTCUSDT", "1d", LOOKBACK_DAYS + 60)
-    if btc.empty:
-        return pd.Series(dtype=object)
-    ema50 = indicators.ema(btc["close"], config.EMA_FAST)
-    rising = ema50 > ema50.shift(3)
-    return rising.map(lambda x: "BULL" if x else "BEAR")
+def _regime_from_usdtd(usdtd: pd.Series) -> pd.Series:
+    """Regime driven solely by USDT.D (same rule as live):
+    heading to / at support -> BULL (long), heading to / at resistance -> BEAR."""
+    hi = config.USDTD_POS_HI
+    lo = 1 - hi
+    diff = usdtd.diff().fillna(0.0)
+    out = []
+    for pos, dv in zip(usdtd, diff):
+        if pos > hi:
+            out.append("BEAR")
+        elif pos < lo:
+            out.append("BULL")
+        elif dv > 0:            # rising -> toward resistance
+            out.append("BEAR")
+        else:                   # falling/flat -> toward support
+            out.append("BULL")
+    return pd.Series(out, index=usdtd.index)
 
 
-async def _usdtd_timeline(index: pd.Index) -> pd.Series:
+async def _usdtd_timeline() -> pd.Series:
+    idx = pd.date_range(end=pd.Timestamp.utcnow().normalize(),
+                        periods=LOOKBACK_DAYS + 60, freq="D", tz="UTC")
     if config.DEMO:
-        # synthetic oscillation so some short setups can arm in demo
-        vals = 0.5 + 0.35 * np.sin(np.linspace(0, 6.28 * 3, len(index)))
-        return pd.Series(vals, index=index)
+        # synthetic oscillation so some short regimes appear in demo
+        vals = 0.5 + 0.35 * np.sin(np.linspace(0, 6.28 * 3, len(idx)))
+        return pd.Series(vals, index=idx)
     try:
         h = await data_feed._client.get(
             config.COINGECKO_BASE + "/coins/tether/market_chart",
@@ -65,7 +77,7 @@ async def _usdtd_timeline(index: pd.Index) -> pd.Series:
                 return pos
     except Exception as exc:
         print(f"[backtest] usdtd history failed: {exc}")
-    return pd.Series(0.5, index=index)
+    return pd.Series(0.5, index=idx)
 
 
 async def main():
@@ -73,11 +85,11 @@ async def main():
     os.makedirs(os.path.dirname(STATE_PATH), exist_ok=True)
 
     print(f"[backtest] lookback={LOOKBACK_DAYS}d, symbols={len(SYMBOLS)}")
-    regime_daily = await _regime_timeline()
-    if regime_daily.empty:
-        print("[backtest] no BTC data — aborting")
+    usdtd_daily = await _usdtd_timeline()
+    if usdtd_daily.empty:
+        print("[backtest] no USDT.D data — aborting")
         return
-    usdtd_daily = await _usdtd_timeline(regime_daily.index)
+    regime_daily = _regime_from_usdtd(usdtd_daily)   # regime driven by USDT.D (same as live)
 
     all_trades: list[dict] = []
     symbol_data: dict = {}
