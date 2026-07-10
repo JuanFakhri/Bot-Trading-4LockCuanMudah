@@ -169,8 +169,11 @@ def evaluate(symbol: str, htf: pd.DataFrame, dtf: pd.DataFrame, ltf: pd.DataFram
         check("close < EMA200 4H & EMA50 < EMA200 4H",
               price < ema200.iloc[-1] and ema50.iloc[-1] < ema200.iloc[-1])
         check("RSI 4H < 50", h_rsi.iloc[-1] < 50, f"rsi={h_rsi.iloc[-1]:.1f}")
-        check("USDT.D di resistance (pos>0.7)", regime.get("usdtd_at_resistance", False),
-              f"pos={regime.get('usdtd_pos')}")
+        # USDT.D heading to (or at) resistance is enough — the regime already
+        # decided SHORT from USDT.D, so accept "menuju resistance" too.
+        usdtd_short_ok = bool(regime.get("usdtd_at_resistance") or regime.get("usdtd_bias") == "SHORT")
+        check("USDT.D menuju/di resistance", usdtd_short_ok,
+              f"{regime.get('usdtd_target')} · pos={regime.get('usdtd_pos')}")
         check("Parabolic SAR (close < SAR 4H)", price < sar.iloc[-1])
 
     htf_ok = all(c["ok"] for c in checklist)

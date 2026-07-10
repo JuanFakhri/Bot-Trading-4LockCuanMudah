@@ -71,36 +71,34 @@ async def compute_regime() -> dict:
         ethbtc_dir = _direction(eth_ema)
         btcd_dir = {"NAIK": "TURUN", "TURUN": "NAIK", "STABIL": "STABIL"}[ethbtc_dir]
 
-    alt_pred = _ALT_MATRIX.get((btcd_dir, btc_dir), "STABIL")
+    alt_pred = _ALT_MATRIX.get((btcd_dir, btc_dir), "STABIL")  # info only now
 
-    # ---- 1. USDT.D bias (checked first, strongest weight) ----
-    usdtd_bias = "NEUTRAL"
-    usdtd_pull = 0
+    # ---- DECISION: USDT.D only ----
+    # USDT.D heading toward support (falling) -> risk-on -> LONG alts.
+    # USDT.D heading toward resistance (rising) -> risk-off -> SHORT alts.
+    at_support = at_resistance = False
+    usdtd_target = "–"
+    alt_bias, regime = "NEUTRAL", "NEUTRAL"
     if usdtd.get("ok"):
         at_support = usdtd["pos"] < (1 - config.USDTD_POS_HI)   # pos < 0.3
         at_resistance = usdtd["pos"] > config.USDTD_POS_HI       # pos > 0.7
-        if at_resistance or usdtd["rising"]:
-            usdtd_bias, usdtd_pull = "SHORT", -1
-        elif at_support or not usdtd["rising"]:
-            usdtd_bias, usdtd_pull = "LONG", +1
-        if at_support:
-            usdtd_pull = 2      # support is a strong risk-on signal for alts
         if at_resistance:
-            usdtd_pull = -2
+            alt_bias, regime, usdtd_target = "SHORT", "BEAR", "di resistance"
+        elif at_support:
+            alt_bias, regime, usdtd_target = "LONG", "BULL", "di support"
+        elif usdtd["rising"]:
+            alt_bias, regime, usdtd_target = "SHORT", "BEAR", "menuju resistance"
+        else:
+            alt_bias, regime, usdtd_target = "LONG", "BULL", "menuju support"
 
-    # ---- 3. combine -> ALT bias -> machine ----
-    score = {"NAIK": 1, "TURUN": -1, "STABIL": 0}[alt_pred] + usdtd_pull
-    if score > 0:
-        alt_bias, regime = "LONG", "BULL"
-    elif score < 0:
-        alt_bias, regime = "SHORT", "BEAR"
-    else:
-        alt_bias, regime = "NEUTRAL", "NEUTRAL"
+    usdtd_bias = alt_bias
 
     return {
         "regime": regime,
         "alt_bias": alt_bias,
         "alt_prediction": alt_pred,
+        "usdtd_target": usdtd_target,
+        "decider": "USDT.D",
         "btc_ema50": btc_ema50,
         "btc_ema50_rising": (btc_dir == "NAIK") if btc_dir != "STABIL" else None,
         "btc_dir": btc_dir,

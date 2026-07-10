@@ -618,14 +618,16 @@ function renderMarket(r = {}) {
     ? Math.round(r.usdtd_pos * 100) + "%" + (r.usdtd_at_support ? " (support)" : r.usdtd_at_resistance ? " (resistance)" : "")
     : "–";
   const rows = [
-    ["① USDT.D", r.usdtd_value != null ? r.usdtd_value + "%" : (r.usdtd_ok ? "–" : "n/a"), null],
+    ["USDT.D", r.usdtd_value != null ? r.usdtd_value + "%" : (r.usdtd_ok ? "–" : "n/a"), null],
     ["USDT.D posisi", usdtdPosTxt, r.usdtd_at_support ? true : r.usdtd_at_resistance ? false : null],
-    ["USDT.D arah", r.usdtd_rising == null ? "–" : (r.usdtd_rising ? "naik (risk-off)" : "turun (risk-on)"), r.usdtd_rising == null ? null : !r.usdtd_rising],
-    ["② Arah BTC", r.btc_dir ? r.btc_dir.toLowerCase() : "–", dirCls(r.btc_dir)],
-    ["BTC.D", r.btcd_value != null ? r.btcd_value + "%" : "–", null],
-    ["BTC.D arah", r.btcd_dir ? r.btcd_dir.toLowerCase() : "–", dirCls(r.btcd_dir) === true ? false : dirCls(r.btcd_dir) === false ? true : null],
+    ["USDT.D arah", r.usdtd_target || (r.usdtd_rising == null ? "–" : (r.usdtd_rising ? "menuju resistance" : "menuju support")),
+      r.alt_bias === "LONG" ? true : r.alt_bias === "SHORT" ? false : null],
+    ["🎯 Keputusan (USDT.D)", r.alt_bias === "LONG" ? "LONG (alt naik)" : r.alt_bias === "SHORT" ? "SHORT (alt turun)" : "NETRAL",
+      r.alt_bias === "LONG" ? true : r.alt_bias === "SHORT" ? false : null],
+    ["— info —", "arah BTC & dominance", null],
+    ["Arah BTC", r.btc_dir ? r.btc_dir.toLowerCase() : "–", dirCls(r.btc_dir)],
+    ["BTC.D", r.btcd_value != null ? `${r.btcd_value}% (${(r.btcd_dir || "").toLowerCase()})` : "–", null],
     ["Prediksi ALT (matriks)", r.alt_prediction || "–", altCls],
-    ["③ Bias akhir", r.alt_bias || "–", r.alt_bias === "LONG" ? true : r.alt_bias === "SHORT" ? false : null],
   ];
   $("market").innerHTML = rows.map(([k, v, up]) => {
     const cls = up === true ? "tag-up" : up === false ? "tag-dn" : "";
