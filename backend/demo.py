@@ -79,4 +79,4 @@ def klines(symbol: str, interval: str, limit: int) -> pd.DataFrame:
 
 
 def usdt_dominance() -> dict:
-    return {"value": 4.82, "pos": 0.34, "rising": False, "ok": True}
+    return {"value": 4.82, "pos": 0.34, "rising": False, "consolidating": False, "ok": True}

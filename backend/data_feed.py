@@ -149,7 +149,7 @@ async def get_usdt_dominance() -> dict:
     if _usdtd_cache and (now - float(_usdtd_cache.get("_ts", 0))) < 300:
         return _usdtd_cache["value"]  # type: ignore[return-value]
 
-    result = {"value": None, "pos": 0.5, "rising": False, "ok": False}
+    result = {"value": None, "pos": 0.5, "rising": False, "consolidating": False, "ok": False}
     try:
         g = await _client.get(config.COINGECKO_BASE + "/global")
         current = None
@@ -169,10 +169,15 @@ async def get_usdt_dominance() -> dict:
                 rng = (hi - lo) or 1.0
                 pos = (cur_cap - lo) / rng
                 rising = caps[-1] > caps[max(0, len(caps) - 2)]
+                # consolidation: little movement over the last ~7 days
+                recent = caps[-7:]
+                recent_pos = [(x - lo) / rng for x in recent]
+                consolidating = (max(recent_pos) - min(recent_pos)) < 0.2 if len(recent) >= 4 else False
                 result = {
                     "value": round(current, 3),
                     "pos": round(max(0.0, min(1.0, pos)), 3),
                     "rising": bool(rising),
+                    "consolidating": bool(consolidating),
                     "ok": True,
                 }
     except Exception as exc:

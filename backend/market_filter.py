@@ -73,19 +73,29 @@ async def compute_regime() -> dict:
 
     alt_pred = _ALT_MATRIX.get((btcd_dir, btc_dir), "STABIL")  # info only now
 
-    # ---- DECISION: USDT.D only ----
-    # USDT.D heading toward support (falling) -> risk-on -> LONG alts.
-    # USDT.D heading toward resistance (rising) -> risk-off -> SHORT alts.
-    at_support = at_resistance = False
+    # ---- DECISION ----
+    # Primary: USDT.D. Heading to support (falling) -> LONG; to resistance
+    # (rising) -> SHORT. BUT if USDT.D is CONSOLIDATING (sideways, no clear
+    # target), fall back to the BTC + BTC.D dominance matrix.
+    at_support = at_resistance = consolidating = False
     usdtd_target = "–"
+    decider = "USDT.D"
     alt_bias, regime = "NEUTRAL", "NEUTRAL"
     if usdtd.get("ok"):
         at_support = usdtd["pos"] < (1 - config.USDTD_POS_HI)   # pos < 0.3
         at_resistance = usdtd["pos"] > config.USDTD_POS_HI       # pos > 0.7
+        consolidating = bool(usdtd.get("consolidating")) and not at_support and not at_resistance
+
         if at_resistance:
             alt_bias, regime, usdtd_target = "SHORT", "BEAR", "di resistance"
         elif at_support:
             alt_bias, regime, usdtd_target = "LONG", "BULL", "di support"
+        elif consolidating:
+            # USDT.D ranging -> use BTC.D matrix (image rules)
+            decider = "Matriks BTC.D"
+            usdtd_target = "konsolidasi"
+            alt_bias = {"NAIK": "LONG", "TURUN": "SHORT", "STABIL": "NEUTRAL"}[alt_pred]
+            regime = {"LONG": "BULL", "SHORT": "BEAR", "NEUTRAL": "NEUTRAL"}[alt_bias]
         elif usdtd["rising"]:
             alt_bias, regime, usdtd_target = "SHORT", "BEAR", "menuju resistance"
         else:
@@ -98,7 +108,8 @@ async def compute_regime() -> dict:
         "alt_bias": alt_bias,
         "alt_prediction": alt_pred,
         "usdtd_target": usdtd_target,
-        "decider": "USDT.D",
+        "usdtd_consolidating": consolidating,
+        "decider": decider,
         "btc_ema50": btc_ema50,
         "btc_ema50_rising": (btc_dir == "NAIK") if btc_dir != "STABIL" else None,
         "btc_dir": btc_dir,
