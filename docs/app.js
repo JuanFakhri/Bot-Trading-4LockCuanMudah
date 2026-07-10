@@ -150,7 +150,7 @@ function renderBacktest(rep) {
   $("bt-totalr").textContent = (s.total_r >= 0 ? "+" : "") + (s.total_r ?? 0) + "R";
   $("bt-dd").textContent = (s.max_drawdown_r ?? 0) + "R";
   const p = rep.params || {};
-  $("bt-meta").textContent = `Periode ${p.lookback_days || "?"} hari · ${p.symbols || "?"} simbol · TF ${p.htf || "?"}`
+  $("bt-meta").textContent = `Periode ${p.lookback_days || "?"} hari · ${p.symbols || "?"} simbol · bias ${p.htf || "4h"} · trigger ${p.ltf || "4h"}`
     + (rep.generated_ts ? ` · dibuat ${new Date(rep.generated_ts).toLocaleString("id-ID")}` : "")
     + (p.demo ? " · (DEMO)" : "");
 

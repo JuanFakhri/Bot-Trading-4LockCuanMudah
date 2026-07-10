@@ -26,18 +26,24 @@ def _align_daily(series: pd.Series, htf_index: pd.Index) -> pd.Series:
 
 def backtest_symbol(symbol: str, htf: pd.DataFrame, dtf: pd.DataFrame,
                     regime_daily: pd.Series, usdtd_daily: pd.Series,
-                    params: dict | None = None) -> list[dict]:
+                    params: dict | None = None,
+                    ltf: pd.DataFrame | None = None) -> list[dict]:
     """Return a list of resolved trade dicts for one symbol.
 
     ``params`` optionally overrides tunable settings (sl_atr, min_rr,
-    confirm_bars, require_ad) so the optimizer can search for settings that turn
-    losing setups into winners.
+    confirm_bars, require_ad). When ``ltf`` (1H candles) is provided the entry
+    trigger and position management run on 1H bars with 4H context — closer to
+    the live strategy — instead of approximating the trigger on 4H.
     """
     params = params or {}
     p_sl_atr = float(params.get("sl_atr", config.SL_ATR_MULT))
     p_min_rr = float(params.get("min_rr", config.MIN_RR))
     p_confirm = int(params.get("confirm_bars", config.CONFIRM_MAX_BARS))
     p_require_ad = bool(params.get("require_ad", True))
+
+    if ltf is not None and not ltf.empty:
+        return _backtest_1h(symbol, htf, dtf, ltf, regime_daily, usdtd_daily,
+                            p_sl_atr, p_min_rr, p_confirm, p_require_ad)
 
     if len(htf) < config.EMA_SLOW + 30 or len(dtf) < 30:
         return []
@@ -272,6 +278,154 @@ def _manage(pos: dict, bar_high: float, bar_low: float):
         if bar_low <= tp2:
             return (0.5 + 0.5 * (entry - tp2) / risk, tp2)
     return None
+
+
+def _backtest_1h(symbol, htf, dtf, ltf, regime_daily, usdtd_daily,
+                 sl_atr, min_rr, confirm_bars, require_ad):
+    """1H-triggered backtest: 4H context aligned to the 1H timeline; the entry
+    trigger and trade management run on 1H bars (more faithful to live)."""
+    if len(htf) < config.EMA_SLOW + 30 or len(dtf) < 30 or len(ltf) < 60:
+        return []
+
+    pl_ = config.PIVOT_LEN
+    n4 = len(htf)
+    h4 = htf["high"].to_numpy()
+    l4 = htf["low"].to_numpy()
+    c4 = htf["close"].to_numpy()
+
+    ema50 = indicators.ema(htf["close"], config.EMA_FAST).to_numpy()
+    ema200 = indicators.ema(htf["close"], config.EMA_SLOW).to_numpy()
+    rsi4 = indicators.rsi(htf["close"], config.RSI_LEN).to_numpy()
+    atr4 = indicators.atr(htf, config.ATR_LEN).to_numpy()
+    ad4 = indicators.ad_line(htf).to_numpy()
+    sar4 = indicators.parabolic_sar(htf).to_numpy()
+    piv_hi, piv_lo = indicators.find_pivots(htf, pl_)
+    piv_hi = piv_hi.to_numpy(); piv_lo = piv_lo.to_numpy()
+    d_ema200 = indicators.ema(dtf["close"], config.EMA_SLOW).reindex(htf.index, method="ffill").to_numpy()
+
+    # running confirmed swings + structure per 4H bar
+    swH = swL = np.nan
+    swHbar = swLbar = -1
+    swH_s = np.full(n4, np.nan); swL_s = np.full(n4, np.nan)
+    swHb_s = np.full(n4, -1); swLb_s = np.full(n4, -1)
+    st_long = np.zeros(n4, bool); st_short = np.zeros(n4, bool)
+    dows = htf.index.weekday.to_numpy()
+    for i in range(n4):
+        j = i - pl_
+        if j >= 0:
+            if piv_hi[j]:
+                swH, swHbar = h4[j], j
+            if piv_lo[j]:
+                swL, swLbar = l4[j], j
+        swH_s[i], swL_s[i], swHb_s[i], swLb_s[i] = swH, swL, swHbar, swLbar
+        if i >= 3:
+            st_long[i] = (c4[i] > ema200[i] and ema50[i] > ema200[i] and c4[i] > d_ema200[i]
+                          and (ad4[i] > ad4[i - 3] or not require_ad)
+                          and not (config.SKIP_FRIDAY_LONG and dows[i] == 4))
+            st_short[i] = (c4[i] < ema200[i] and ema50[i] < ema200[i] and c4[i] < sar4[i])
+
+    # align 4H context to the 1H index (use last CLOSED 4H bar -> no lookahead)
+    ctx = pd.DataFrame({
+        "atr": atr4, "rsi": rsi4, "ad": ad4, "sar": sar4,
+        "swH": swH_s, "swL": swL_s, "swHb": swHb_s, "swLb": swLb_s,
+        "stL": st_long.astype(float), "stS": st_short.astype(float),
+    }, index=htf.index).reindex(ltf.index, method="ffill")
+
+    a_atr = ctx["atr"].to_numpy(); a_rsi = ctx["rsi"].to_numpy()
+    a_ad = ctx["ad"].to_numpy(); a_sar = ctx["sar"].to_numpy()
+    a_swH = ctx["swH"].to_numpy(); a_swL = ctx["swL"].to_numpy()
+    a_swHb = ctx["swHb"].to_numpy(); a_swLb = ctx["swLb"].to_numpy()
+    a_stL = ctx["stL"].to_numpy(); a_stS = ctx["stS"].to_numpy()
+
+    regime = regime_daily.reindex(ltf.index, method="ffill")
+    usdtd = usdtd_daily.reindex(ltf.index, method="ffill")
+
+    # 1H trigger indicators
+    o1 = ltf["open"].to_numpy(); h1 = ltf["high"].to_numpy()
+    l1 = ltf["low"].to_numpy(); c1 = ltf["close"].to_numpy()
+    rsi1 = indicators.rsi(ltf["close"], config.RSI_LEN).to_numpy()
+    obv1 = indicators.obv(ltf).to_numpy()
+    ts1 = ltf.index
+    n1 = len(ltf)
+
+    # 4H pivot liquidity levels with their confirmation time
+    hi_conf = [(htf.index[k + pl_], float(h4[k])) for k in range(n4) if piv_hi[k] and k + pl_ < n4]
+    lo_conf = [(htf.index[k + pl_], float(l4[k])) for k in range(n4) if piv_lo[k] and k + pl_ < n4]
+
+    trades = []
+    pos = None
+    cooldown_until = -1
+    armed = None
+
+    for i in range(3, n1):
+        if pos is not None:
+            hit = _manage(pos, h1[i], l1[i])
+            if hit is not None:
+                r, exit_price = hit
+                pos.update(outcome=("WIN" if r > 0.05 else "LOSS" if r < -0.05 else "BE"),
+                           r=round(r, 3), exit_price=exit_price, exit_ts=ts1[i].isoformat())
+                trades.append(pos)
+                cooldown_until = i + config.COOLDOWN_BARS
+                pos = None
+            continue
+        if i < cooldown_until:
+            armed = None
+            continue
+
+        reg = regime.iloc[i]
+        machine = "long" if reg == "BULL" else "short" if reg == "BEAR" else None
+        atr_i = a_atr[i]
+        if machine is None or np.isnan(atr_i) or atr_i <= 0 or np.isnan(a_swH[i]) or np.isnan(a_swL[i]):
+            armed = None
+            continue
+
+        # confirmation of an existing ARM on the 1H bar
+        if armed is not None:
+            if armed["machine"] != machine or i > armed["expire"]:
+                armed = None
+            else:
+                ratio_now = _retrace_ratio(c1[i], armed["start"], armed["end"], machine)
+                if ratio_now >= config.FIB_INVALID:
+                    armed = None
+                else:
+                    if machine == "long":
+                        conf = (c1[i] > o1[i] and c1[i] > h1[i - 1] and rsi1[i] > rsi1[i - 1]
+                                and obv1[i] > obv1[i - 2] and rsi1[i] > 50)
+                    else:
+                        conf = (c1[i] < o1[i] and c1[i] < l1[i - 1] and rsi1[i] < rsi1[i - 1]
+                                and obv1[i] < obv1[i - 2] and rsi1[i] < 50)
+                    if conf:
+                        t = ts1[i]
+                        if machine == "long":
+                            liq = sorted(p for (cts, p) in hi_conf if cts <= t and p > c1[i])
+                        else:
+                            liq = sorted((p for (cts, p) in lo_conf if cts <= t and p < c1[i]), reverse=True)
+                        pos = _open_trade(symbol, machine, i, c1, armed["start"], armed["end"],
+                                          a_atr, a_rsi, a_ad, a_sar, int(ts1[i].weekday()),
+                                          float(usdtd.iloc[i]) if not np.isnan(usdtd.iloc[i]) else 0.5,
+                                          ratio_now, ts1, sl_atr, min_rr, liq)
+                        armed = None
+                        continue
+
+        # try to ARM using 4H context (golden zone + structure)
+        if machine == "long":
+            if a_swHb[i] <= a_swLb[i] or (a_swH[i] - a_swL[i]) < config.IMPULSE_MIN_ATR * atr_i:
+                continue
+            start_p, end_p = a_swL[i], a_swH[i]
+            struct = bool(a_stL[i])
+        else:
+            if a_swLb[i] <= a_swHb[i] or (a_swH[i] - a_swL[i]) < config.IMPULSE_MIN_ATR * atr_i:
+                continue
+            start_p, end_p = a_swH[i], a_swL[i]
+            struct = bool(a_stS[i])
+
+        ratio = _retrace_ratio(c1[i], start_p, end_p, machine)
+        if not (config.FIB_ZONE_LO <= ratio <= config.FIB_ZONE_HI and ratio < config.FIB_INVALID):
+            continue
+        if struct:
+            armed = {"machine": machine, "start": start_p, "end": end_p, "expire": i + confirm_bars}
+
+    return trades
 
 
 def summarize(trades: list[dict]) -> dict:

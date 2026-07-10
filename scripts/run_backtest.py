@@ -97,11 +97,12 @@ async def main():
         try:
             htf = await data_feed.get_klines_history(sym, config.HTF, LOOKBACK_DAYS)
             dtf = await data_feed.get_klines_history(sym, config.DTF, LOOKBACK_DAYS + 60)
+            ltf = await data_feed.get_klines_history(sym, "1h", LOOKBACK_DAYS)  # 1H trigger
             if htf.empty or dtf.empty:
                 print(f"[backtest] {sym}: no data")
                 continue
-            symbol_data[sym] = (htf, dtf)
-            trades = backtester.backtest_symbol(sym, htf, dtf, regime_daily, usdtd_daily)
+            symbol_data[sym] = (htf, dtf, ltf)
+            trades = backtester.backtest_symbol(sym, htf, dtf, regime_daily, usdtd_daily, ltf=ltf)
             all_trades.extend(trades)
             print(f"[backtest] {sym}: {len(trades)} trades")
         except Exception as exc:
@@ -129,7 +130,7 @@ async def main():
 
     report = {
         "generated_ts": pd.Timestamp.utcnow().isoformat(),
-        "params": {"lookback_days": LOOKBACK_DAYS, "htf": config.HTF,
+        "params": {"lookback_days": LOOKBACK_DAYS, "htf": config.HTF, "ltf": "1h",
                    "symbols": len(SYMBOLS), "demo": config.DEMO},
         "summary": summary,
         "recent_trades": [

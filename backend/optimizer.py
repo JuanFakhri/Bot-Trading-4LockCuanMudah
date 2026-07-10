@@ -41,8 +41,9 @@ def _win_rate(trades: list[dict]) -> float:
 
 def _run_all(symbol_data: dict, regime, usdtd, params: dict) -> list[dict]:
     out = []
-    for sym, (htf, dtf) in symbol_data.items():
-        out.extend(backtester.backtest_symbol(sym, htf, dtf, regime, usdtd, params))
+    for sym, data in symbol_data.items():
+        htf, dtf, ltf = data if len(data) == 3 else (data[0], data[1], None)
+        out.extend(backtester.backtest_symbol(sym, htf, dtf, regime, usdtd, params, ltf=ltf))
     return out
 
 
