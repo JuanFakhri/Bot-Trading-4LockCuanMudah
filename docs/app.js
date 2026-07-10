@@ -171,6 +171,7 @@ function renderBacktest(rep) {
     : `<p class="muted small">Belum ada pelajaran (butuh ≥5 sampel per pola).</p>`;
 
   renderOptimization(rep.optimization);
+  renderWalkforward(rep.walkforward);
   renderBtMetrics(s);
 
   const tr = rep.recent_trades || [];
@@ -212,6 +213,30 @@ function renderOptimization(opt) {
       </div>
       ${cmp}
     </div>`;
+}
+
+function renderWalkforward(wf) {
+  const el = $("bt-wf");
+  if (!el) return;
+  if (!wf || !wf.test_all) { el.innerHTML = `<p class="muted small">Belum ada data.</p>`; return; }
+  const a = wf.test_all, f = wf.test_filtered;
+  const profit = (f.profit_factor >= 1 && f.total_r > 0);
+  const cell = (v, good) => `<span class="${good ? "o-win" : "o-loss"}">${v}</span>`;
+  el.innerHTML = `
+    <div class="opt-box ${profit ? "on" : "off"}">
+      ${profit ? "✅ <b>Profit di data uji (out-of-sample)!</b>" : "⚠️ Belum profit di data uji — perlu perbaikan lanjutan."}
+      &nbsp;Bot menahan diri: dari ${wf.test_n} sinyal, hanya <b>${wf.kept}</b> yang dieksekusi.
+    </div>
+    <div class="table-wrap"><table style="margin-top:10px">
+      <thead><tr><th></th><th>Semua trade</th><th>Setelah filter bot</th></tr></thead>
+      <tbody>
+        <tr><td class="muted">Jumlah trade</td><td>${a.trades}</td><td>${f.trades}</td></tr>
+        <tr><td class="muted">Win rate</td><td>${a.win_rate}%</td><td>${cell(f.win_rate + "%", f.win_rate >= a.win_rate)}</td></tr>
+        <tr><td class="muted">Profit Factor</td><td>${a.profit_factor}</td><td>${cell(f.profit_factor, f.profit_factor >= 1)}</td></tr>
+        <tr><td class="muted">Expectancy</td><td>${a.expectancy_r}R</td><td>${cell(f.expectancy_r + "R", f.expectancy_r > 0)}</td></tr>
+        <tr><td class="muted">Total R</td><td>${a.total_r}R</td><td>${cell(f.total_r + "R", f.total_r > 0)}</td></tr>
+      </tbody>
+    </table></div>`;
 }
 
 function renderBtMetrics(s) {

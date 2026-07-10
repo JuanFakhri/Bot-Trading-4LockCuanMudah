@@ -146,10 +146,29 @@ async def main():
         json.dump(tuned, f, ensure_ascii=False, indent=0)
     print(f"[backtest] optimize: accepted={opt['accepted']} params={opt['params']} — {opt['reason']}")
 
-    # ---- REBUILD the learning brain from the backtest ----
+    # ---- WALK-FORWARD: learn on train, apply the self-learning filter to the
+    # unseen test split. This measures what the LIVE bot would actually trade
+    # (it refuses blocked / low-confidence patterns), out-of-sample. ----
+    srt = sorted(all_trades, key=lambda x: x["exit_ts"])
+    cut = int(len(srt) * 0.7)
+    train, test = srt[:cut], srt[cut:]
     db.execute("DELETE FROM pattern_stats")
     db.execute("DELETE FROM lessons")
-    for t in sorted(all_trades, key=lambda x: x["exit_ts"]):
+    for t in train:
+        learning.record_outcome(t["features"], t["r"] > 0.05, t["r"])
+    kept = [t for t in test if learning.evaluate(t["features"])["allowed"]
+            and learning.evaluate(t["features"])["confidence"] >= config.CONFIDENCE_FLOOR]
+    walkforward = {
+        "cutoff_ts": test[0]["exit_ts"] if test else None,
+        "test_all": backtester.summarize(test),
+        "test_filtered": backtester.summarize(kept),
+        "kept": len(kept), "test_n": len(test),
+    }
+
+    # ---- REBUILD the learning brain from ALL trades (for the live bot) ----
+    db.execute("DELETE FROM pattern_stats")
+    db.execute("DELETE FROM lessons")
+    for t in srt:
         learning.record_outcome(t["features"], t["r"] > 0.05, t["r"])
 
     blocked = [l for l in db.lessons(200) if l["kind"] == "BLOCK"]
@@ -171,6 +190,7 @@ async def main():
             "lessons": db.lessons(40),
         },
         "optimization": opt,
+        "walkforward": walkforward,
     }
     with open(OUT_PATH, "w", encoding="utf-8") as f:
         json.dump(report, f, ensure_ascii=False, separators=(",", ":"))
