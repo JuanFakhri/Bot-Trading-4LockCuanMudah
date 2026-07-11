@@ -183,7 +183,8 @@ async def main():
     report = {
         "generated_ts": pd.Timestamp.utcnow().isoformat(),
         "params": {"lookback_days": LOOKBACK_DAYS, "htf": config.HTF, "ltf": "1h",
-                   "symbols": len(SYMBOLS), "demo": config.DEMO, "strategy": STRATEGY},
+                   "symbols": len(SYMBOLS), "demo": config.DEMO, "strategy": STRATEGY,
+                   "score_th": SCORE_TH if STRATEGY == "smc" else None},
         "summary": summary,
         "recent_trades": [
             {k: t[k] for k in ("symbol", "direction", "entry", "exit_price",
