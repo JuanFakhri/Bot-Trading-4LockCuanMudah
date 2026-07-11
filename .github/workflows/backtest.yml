@@ -21,6 +21,10 @@ on:
         default: "fib"
         type: choice
         options: ["fib", "smc"]
+      score_th:
+        description: "Ambang AI Score untuk SMC (default 70; lebih rendah = lebih banyak trade)"
+        required: false
+        default: "70"
   schedule:
     - cron: "0 3 * * 0"          # tiap Minggu 03:00 UTC
 
@@ -50,6 +54,7 @@ jobs:
           BACKTEST_DAYS: ${{ github.event.inputs.days || '180' }}
           BACKTEST_SYMBOLS: ${{ github.event.inputs.symbols || '' }}
           BACKTEST_STRATEGY: ${{ github.event.inputs.strategy || 'fib' }}
+          BACKTEST_SCORE_TH: ${{ github.event.inputs.score_th || '70' }}
         run: python -m scripts.run_backtest
 
       - name: Sync frontend to GitHub Pages folder

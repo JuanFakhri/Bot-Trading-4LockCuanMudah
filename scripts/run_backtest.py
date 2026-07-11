@@ -37,6 +37,7 @@ SYMBOLS = [s.strip().upper() for s in _env_syms.split(",") if s.strip()] or conf
 
 # "fib" (default) or "smc" (SMC + AI-Score confluence strategy)
 STRATEGY = os.getenv("BACKTEST_STRATEGY", "fib").strip().lower()
+SCORE_TH = float(os.getenv("BACKTEST_SCORE_TH", "70"))   # SMC AI-Score gate
 
 
 def _dir_series(df: pd.Series | None, idx: pd.Index, invert: bool = False) -> pd.Series:
@@ -127,7 +128,8 @@ async def main():
                 continue
             symbol_data[sym] = (htf, dtf, ltf)
             if STRATEGY == "smc":
-                trades = smc_backtester.backtest_symbol_smc(sym, htf, dtf, ltf, usdtd_daily, btcd_dir_daily)
+                trades = smc_backtester.backtest_symbol_smc(sym, htf, dtf, ltf, usdtd_daily,
+                                                            btcd_dir_daily, {"score_th": SCORE_TH})
             else:
                 trades = backtester.backtest_symbol(sym, htf, dtf, regime_daily, usdtd_daily, ltf=ltf)
             all_trades.extend(trades)
