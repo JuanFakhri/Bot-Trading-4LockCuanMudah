@@ -33,7 +33,7 @@ jobs:
       - name: Run market scan
         env:
           BOT_STRATEGY: smc          # strategi live: SMC + AI-Score (tervalidasi backtest)
-          SMC_SCORE_TH: "55"         # ambang AI-Score untuk entry (samakan dgn backtest)
+          SMC_SCORE_TH: "60"         # ambang AI-Score terbaik (PF 1.41, OOS 1.90, DD -6R)
         run: python -m scripts.github_scan
 
       - name: Sync frontend to GitHub Pages folder

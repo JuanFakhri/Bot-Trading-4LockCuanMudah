@@ -47,7 +47,10 @@ CONFIRM_MAX_BARS = 16   # bars allowed between ARM and confirmation
 # PF 1.44 over 212 trades, walk-forward OOS PF 2.09) or "fib" (original).
 # --------------------------------------------------------------------------
 STRATEGY = os.getenv("BOT_STRATEGY", "smc").strip().lower()
-SMC_SCORE_TH = float(os.getenv("SMC_SCORE_TH", "55"))   # AI-Score gate for a live entry
+SMC_SCORE_TH = float(os.getenv("SMC_SCORE_TH", "60"))   # AI-Score gate for a live entry
+# Threshold sweep (730d, real data): 55 -> PF 1.44 / OOS 2.09 / DD -12.5R (aggressive);
+# 60 -> PF 1.41 / OOS 1.90 / DD -6.0R (best risk-adjusted, DEFAULT); 65/70 -> OOS
+# collapses on a tiny sample (overfit). 60 keeps the edge with half the drawdown.
 SMC_ATR_MIN = 0.3       # entry only when 1H ATR is 0.3%..8% of price (#14)
 SMC_ATR_MAX = 8.0
 
