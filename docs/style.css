@@ -154,6 +154,7 @@ a.btn { text-decoration: none; display: inline-flex; align-items: center; }
 .badge.state-entry { background: var(--accent); color: #fff; }
 .badge.state-armed { background: rgba(245,158,11,.18); color: var(--amber); }
 .badge.state-watching { background: var(--panel); color: var(--muted); }
+.badge.score { background: rgba(99,102,241,.18); color: var(--accent); }
 
 .conf-wrap { margin: 10px 0 6px; }
 .conf-bar { height: 8px; background: var(--panel); border-radius: 999px; overflow: hidden; border: 1px solid var(--border); }

@@ -607,6 +607,7 @@ function cardHTML(s) {
       <div class="badges">
         <span class="badge ${dir}">${s.direction}</span>
         <span class="badge ${stateCls}">${s.state}</span>
+        ${s.score != null ? `<span class="badge score" title="AI Score konfluensi (0-95)">AI ${s.score}</span>` : ""}
       </div>
     </div>
     <div class="conf-wrap">
@@ -621,6 +622,7 @@ function cardHTML(s) {
       <div><span class="lbl lv-sl">SL</span><span class="lv-sl">${fmt(p.sl)}</span></div>
       <div><span class="lbl lv-tp">TP1</span><span class="lv-tp">${fmt(p.tp1)}</span></div>
       <div><span class="lbl lv-tp">TP2 ${p.tp_source === "likuiditas" ? "💧" : ""}</span><span class="lv-tp">${fmt(p.tp2)}</span></div>
+      ${p.tp3 != null ? `<div><span class="lbl lv-tp">TP3</span><span class="lv-tp">${fmt(p.tp3)}</span></div>` : ""}
       <div><span class="lbl">RR</span><span>${p.rr ?? "–"}${p.rr_ok ? " ✓" : ""}</span></div>
       <div><span class="lbl">Ukuran</span><span>${fmt(p.position_size, 4)}</span></div>
     </div>

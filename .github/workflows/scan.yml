@@ -31,6 +31,9 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Run market scan
+        env:
+          BOT_STRATEGY: smc          # strategi live: SMC + AI-Score (tervalidasi backtest)
+          SMC_SCORE_TH: "55"         # ambang AI-Score untuk entry (samakan dgn backtest)
         run: python -m scripts.github_scan
 
       - name: Sync frontend to GitHub Pages folder

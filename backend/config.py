@@ -42,6 +42,15 @@ IMPULSE_MIN_ATR = 3.0   # impulse range must be >= 3x ATR
 IMPULSE_MAX_AGE = 60    # impulse pivot age (bars) must be <= 60
 CONFIRM_MAX_BARS = 16   # bars allowed between ARM and confirmation
 
+# --------------------------------------------------------------------------
+# Active live strategy: "smc" (SMC + AI-Score confluence, backtest-validated:
+# PF 1.44 over 212 trades, walk-forward OOS PF 2.09) or "fib" (original).
+# --------------------------------------------------------------------------
+STRATEGY = os.getenv("BOT_STRATEGY", "smc").strip().lower()
+SMC_SCORE_TH = float(os.getenv("SMC_SCORE_TH", "55"))   # AI-Score gate for a live entry
+SMC_ATR_MIN = 0.3       # entry only when 1H ATR is 0.3%..8% of price (#14)
+SMC_ATR_MAX = 8.0
+
 # Golden zone (fibonacci retracement of the impulse)
 FIB_ZONE_LO = 0.5
 FIB_ZONE_HI = 0.618

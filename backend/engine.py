@@ -15,7 +15,8 @@ import asyncio
 import json
 from datetime import datetime, timezone
 
-from . import config, data_feed, database as db, learning, market_filter, risk, strategy, tuning
+from . import (config, data_feed, database as db, learning, market_filter, risk,
+               strategy, strategy_smc, tuning)
 
 _BAR_SEC = {"15m": 900, "1h": 3600, "4h": 14400, "1d": 86400}
 
@@ -62,9 +63,12 @@ class Engine:
             self.scanning = False
 
     async def _eval_symbol(self, symbol: str) -> dict | None:
+        smc = config.STRATEGY == "smc"
         htf = await data_feed.get_klines(symbol, config.HTF, config.KLIMIT)
         dtf = await data_feed.get_klines(symbol, config.DTF, 260)
-        ltf = await data_feed.get_klines(symbol, config.LTF, 200)
+        # SMC's entry timeframe is 1H; the fib engine uses the 15m trigger.
+        ltf = await data_feed.get_klines(symbol, "1h" if smc else config.LTF,
+                                         300 if smc else 200)
         if htf.empty or dtf.empty or ltf.empty:
             return None
 
@@ -72,7 +76,10 @@ class Engine:
         # trades a user manually marks as taken, even if no signal fires)
         self.prices[symbol] = float(ltf["close"].iloc[-1])
 
-        sig = strategy.evaluate(symbol, htf, dtf, ltf, self.regime)
+        if smc:
+            sig = strategy_smc.evaluate(symbol, htf, dtf, ltf, self.regime)
+        else:
+            sig = strategy.evaluate(symbol, htf, dtf, ltf, self.regime)
         if sig is None:
             return None
 
@@ -81,7 +88,8 @@ class Engine:
         sig["allowed"] = verdict["allowed"]
         sig["learn_reason"] = verdict["reason"]
 
-        plan = risk.build_trade_plan(sig)
+        # SMC ships its own plan (swing-based SL, 1/2/3R); fib builds one here.
+        plan = sig.get("plan") if smc else risk.build_trade_plan(sig)
         sig["plan"] = plan
 
         # Decide whether to open a paper trade.
