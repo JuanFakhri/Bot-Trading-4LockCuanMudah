@@ -19,6 +19,16 @@ on:
         description: "Ambang AI Score (default 60; lebih rendah = lebih banyak trade)"
         required: false
         default: "60"
+      variant:
+        description: "Varian strategi: v1 (live) atau v2 (eksperimen, aturan lebih ketat)"
+        required: false
+        default: "v1"
+        type: choice
+        options: ["v1", "v2"]
+      v2_score_th:
+        description: "Ambang AI Score v2 (dipakai jika variant=v2; default 75)"
+        required: false
+        default: "75"
   schedule:
     - cron: "0 3 * * 0"          # tiap Minggu 03:00 UTC
 
@@ -48,6 +58,8 @@ jobs:
           BACKTEST_DAYS: ${{ github.event.inputs.days || '180' }}
           BACKTEST_SYMBOLS: ${{ github.event.inputs.symbols || '' }}
           BACKTEST_SCORE_TH: ${{ github.event.inputs.score_th || '60' }}
+          BACKTEST_VARIANT: ${{ github.event.inputs.variant || 'v1' }}
+          BACKTEST_V2_SCORE_TH: ${{ github.event.inputs.v2_score_th || '75' }}
         run: python -m scripts.run_backtest
 
       - name: Sync frontend to GitHub Pages folder
