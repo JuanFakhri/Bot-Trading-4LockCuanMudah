@@ -32,7 +32,10 @@ jobs:
 
       - name: Run market scan
         env:
-          SMC_SCORE_TH: "60"         # ambang AI-Score terbaik (PF 1.41, OOS 1.90, DD -6R)
+          # Setelan live tervalidasi (730 hari data asli): 41 trade, PF 1.79,
+          # win 65.9%, DD -5.26R, OOS PF 3.66.
+          SMC_SCORE_TH: "60"         # ambang AI-Score
+          SMC_VOL_MULT: "1.0"        # ATR-only (1.5 = mode 18-trade/PF 2.60)
         run: python -m scripts.github_scan
 
       - name: Sync frontend to GitHub Pages folder
