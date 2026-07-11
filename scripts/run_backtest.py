@@ -22,7 +22,7 @@ import numpy as np
 import pandas as pd
 
 from backend import (config, data_feed, database as db, indicators,
-                     learning, market_filter, smc_backtester, smc_backtester_v2)
+                     learning, market_filter, smc_backtester)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STATE_PATH = os.path.join(ROOT, "data", "state.json")
@@ -36,10 +36,6 @@ SYMBOLS = [s.strip().upper() for s in _env_syms.split(",") if s.strip()] or conf
 
 # SMC AI-Score gate (defaults to the live value).
 SCORE_TH = float(os.getenv("BACKTEST_SCORE_TH", str(config.SMC_SCORE_TH)))
-
-# Strategy variant: "" / "v1" = live SMC; "v2" = experimental stricter spec.
-VARIANT = os.getenv("BACKTEST_VARIANT", "v1").strip().lower()
-V2_SCORE_TH = float(os.getenv("BACKTEST_V2_SCORE_TH", "75"))
 
 
 def _dir_series(df: pd.Series | None, idx: pd.Index, invert: bool = False) -> pd.Series:
@@ -90,50 +86,16 @@ async def main():
     os.makedirs(os.path.dirname(OUT_PATH), exist_ok=True)
     os.makedirs(os.path.dirname(STATE_PATH), exist_ok=True)
 
-    print(f"[backtest] variant={VARIANT}, lookback={LOOKBACK_DAYS}d, symbols={len(SYMBOLS)}, "
-          f"score_th={V2_SCORE_TH if VARIANT == 'v2' else SCORE_TH}")
+    print(f"[backtest] lookback={LOOKBACK_DAYS}d, symbols={len(SYMBOLS)}, score_th={SCORE_TH}")
     usdtd_daily = await _usdtd_timeline()
     if usdtd_daily.empty:
         print("[backtest] no USDT.D data — aborting")
         return
 
-    # macro daily series (direction proxies) for the SMC macro score
+    # BTC.D direction (ETH/BTC proxy) for the SMC macro score component
     ethbtc = await data_feed.get_klines_history("ETHBTC", "1d", LOOKBACK_DAYS + 80)
-    btc_daily = await data_feed.get_klines_history("BTCUSDT", "1d", LOOKBACK_DAYS + 80)
-    eth_daily = await data_feed.get_klines_history("ETHUSDT", "1d", LOOKBACK_DAYS + 80)
     btcd_dir_daily = _dir_series(ethbtc, usdtd_daily.index, invert=True)
 
-    macro = None
-    usdtd_test = None
-    if VARIANT == "v2":
-        eth_bull = None
-        if eth_daily is not None and not eth_daily.empty:
-            e50 = indicators.ema(eth_daily["close"], config.EMA_FAST)
-            e200 = indicators.ema(eth_daily["close"], config.EMA_SLOW)
-            eb = (e50 > e200).astype(float)
-            eb.index = eb.index.normalize()
-            eth_bull = eb[~eb.index.duplicated(keep="last")]
-        macro = {
-            "usdtd": usdtd_daily,
-            "btcd_dir": btcd_dir_daily,
-            "btc_dir": _dir_series(btc_daily, usdtd_daily.index),
-            "eth_dir": _dir_series(eth_daily, usdtd_daily.index),
-            "eth_bull": eth_bull,
-        }
-        # ---- #17: test the USDT.D -> ALT/BTC/ETH correlation hypothesis ----
-        closes = {}
-        for nm, dd in (("BTC", btc_daily), ("ETH", eth_daily)):
-            if dd is not None and not dd.empty:
-                closes[nm] = dd["close"]
-        for alt in ("SOLUSDT", "AVAXUSDT"):
-            dd = await data_feed.get_klines_history(alt, "1d", LOOKBACK_DAYS + 80)
-            if dd is not None and not dd.empty:
-                closes[alt.replace("USDT", "")] = dd["close"]
-        usdtd_test = smc_backtester_v2.usdtd_correlation(usdtd_daily, closes)
-        print(f"[backtest] USDT.D correlation test: holds={usdtd_test.get('holds')} "
-              f"{usdtd_test.get('assets')}")
-
-    v2_diag: dict = {}   # funnel diagnostics across all symbols (v2 only)
     all_trades: list[dict] = []
     for sym in SYMBOLS:
         try:
@@ -143,20 +105,14 @@ async def main():
             if htf.empty or dtf.empty:
                 print(f"[backtest] {sym}: no data")
                 continue
-            if VARIANT == "v2":
-                trades = smc_backtester_v2.backtest_symbol_v2(
-                    sym, htf, dtf, ltf, macro, {"score_th": V2_SCORE_TH, "diag": v2_diag})
-            else:
-                trades = smc_backtester.backtest_symbol_smc(sym, htf, dtf, ltf, usdtd_daily,
-                                                            btcd_dir_daily, {"score_th": SCORE_TH})
+            trades = smc_backtester.backtest_symbol_smc(sym, htf, dtf, ltf, usdtd_daily,
+                                                        btcd_dir_daily, {"score_th": SCORE_TH})
             all_trades.extend(trades)
             print(f"[backtest] {sym}: {len(trades)} trades")
         except Exception as exc:
             print(f"[backtest] {sym} error: {exc}")
 
     summary = smc_backtester.summarize(all_trades)
-    if VARIANT == "v2":
-        print(f"[backtest] v2 funnel: {v2_diag}")
 
     # ---- WALK-FORWARD: learn on train, apply the self-learning filter to the
     # unseen test split. This measures what the LIVE bot would actually trade
@@ -190,10 +146,7 @@ async def main():
         "generated_ts": pd.Timestamp.utcnow().isoformat(),
         "params": {"lookback_days": LOOKBACK_DAYS, "htf": config.HTF, "ltf": "1h",
                    "symbols": len(SYMBOLS), "demo": config.DEMO, "strategy": "smc",
-                   "variant": VARIANT,
-                   "score_th": (V2_SCORE_TH if VARIANT == "v2" else SCORE_TH)},
-        "usdtd_test": usdtd_test,
-        "v2_funnel": (v2_diag if VARIANT == "v2" else None),
+                   "score_th": SCORE_TH},
         "summary": summary,
         "recent_trades": [
             {k: t[k] for k in ("symbol", "direction", "entry", "exit_price",
