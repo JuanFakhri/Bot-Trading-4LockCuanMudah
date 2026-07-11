@@ -41,6 +41,11 @@ EXPERIMENTS = [
     ("#12 chandelier_exit", {"chandelier"},      60),
     ("#14 range_off",      {"range_off"},        60),
     ("#16 antifake_retest", {"antifake"},        60),
+    # ---- combined candidates (only the changes that helped individually) ----
+    ("COMBO winners",      {"atr_exp", "vol15", "range_off", "chandelier"}, 60),
+    ("COMBO +antifake",    {"atr_exp", "vol15", "range_off", "chandelier", "antifake"}, 60),
+    ("COMBO +candle",      {"atr_exp", "vol15", "range_off", "chandelier", "candle"}, 60),
+    ("COMBO lite (atr+vol)", {"atr_exp", "vol15"}, 60),
 ]
 
 

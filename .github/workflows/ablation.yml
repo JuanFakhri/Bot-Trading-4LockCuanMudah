@@ -42,5 +42,8 @@ jobs:
             echo "Tidak ada perubahan."
           else
             git commit -m "chore: hasil ablation study [skip ci]"
-            git push
+            for i in 1 2 3 4; do
+              git pull --rebase origin claude/fib-hybrid-trading-bot-elzm69 && git push && break
+              echo "push retry $i"; sleep 3
+            done
           fi
