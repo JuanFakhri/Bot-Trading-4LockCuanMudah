@@ -1,8 +1,9 @@
-# 🧪 Backtest — FIB Hybrid + SMC Confluence
+# 🧪 Backtest — SMC Confluence (Pine)
 
-`FIB_Hybrid_SMC.pine` adalah **strategi Pine Script v6** untuk **menguji** usulan
-tambahan (SMC, ADX, ATR, volume, premium/discount, BTC.D/USDT.D/DXY/TOTAL3, sesi,
-multi-TF) **di atas** strategi FIB Hybrid — **sebelum** dimasukkan ke bot live.
+`SMC_Confluence.pine` adalah **strategi Pine Script v6** untuk **menguji** komponen
+konfluensi (SMC, ADX, ATR, volume, premium/discount, BTC.D/USDT.D/DXY/TOTAL3, sesi,
+multi-TF, golden-zone fib) di TradingView — alat eksplorasi terpisah dari bot live
+(bot live sudah memakai strategi SMC + AI-Score ini).
 
 ## Cara backtest di TradingView
 1. Buka [TradingView](https://www.tradingview.com) → **Pine Editor**.

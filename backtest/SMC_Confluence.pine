@@ -1,9 +1,9 @@
 //@version=6
 // =============================================================================
-//  FIB HYBRID + SMC CONFLUENCE  —  BACKTEST ONLY
+//  SMC CONFLUENCE  —  BACKTEST ONLY
 // -----------------------------------------------------------------------------
 //  Tujuan: MENGUJI usulan tambahan (SMC, ADX, ATR, volume, premium/discount,
-//  BTC.D/USDT.D/DXY/TOTAL3, sesi, multi-TF) DI ATAS strategi FIB Hybrid, SEBELUM
+//  BTC.D/USDT.D/DXY/TOTAL3, sesi, multi-TF) DI ATAS basis golden-zone fib, SEBELUM
 //  dimasukkan ke bot live. Setiap komponen bisa di-toggle & diberi bobot skor,
 //  jadi Anda bisa lihat mana yang benar-benar menambah edge (bukan asal AND).
 //
@@ -21,7 +21,7 @@
 //     itu diterapkan di bot live, bukan di backtest ini.
 // =============================================================================
 
-strategy("FIB Hybrid + SMC Confluence [Backtest]", overlay=true,
+strategy("SMC Confluence [Backtest]", overlay=true,
      initial_capital=10000,
      default_qty_type=strategy.percent_of_equity, default_qty_value=100,
      commission_type=strategy.commission.percent, commission_value=0.05,

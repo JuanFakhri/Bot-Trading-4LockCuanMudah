@@ -1,4 +1,4 @@
-"""Technical indicators used by the FIB Hybrid strategy.
+"""Technical indicators used by the SMC strategy.
 
 Pure functions over pandas Series / DataFrames. Each returns a Series aligned
 to the input index so callers can read the latest value with ``.iloc[-1]``.

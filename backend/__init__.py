@@ -1,1 +1,1 @@
-"""FIB Hybrid self-learning trading-signal bot backend."""
+"""SMC self-learning trading-signal bot backend."""

@@ -11,7 +11,7 @@ from fastapi.staticfiles import StaticFiles
 from . import config, data_feed
 from .engine import engine, run_loop
 
-app = FastAPI(title="FIB Hybrid Bot", version="1.0")
+app = FastAPI(title="SMC Bot", version="1.0")
 
 FRONTEND_DIR = os.path.join(os.path.dirname(__file__), "..", "frontend")
 

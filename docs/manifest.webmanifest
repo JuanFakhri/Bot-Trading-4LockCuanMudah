@@ -1,7 +1,7 @@
 {
-  "name": "FIB Hybrid Bot",
-  "short_name": "FIB Bot",
-  "description": "Sinyal trading crypto self-learning (Strategi FIB Hybrid)",
+  "name": "SMC Bot",
+  "short_name": "SMC Bot",
+  "description": "Sinyal trading crypto self-learning (Strategi SMC)",
   "start_url": ".",
   "scope": ".",
   "display": "standalone",

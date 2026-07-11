@@ -1,4 +1,4 @@
-# 📈 FIB Hybrid Bot — Self-Learning Trading Signal (Web, Gratis)
+# 📈 SMC Bot — Self-Learning Trading Signal (Web, Gratis)
 
 Bot sinyal trading crypto berbasis web yang **belajar sendiri dari kesalahannya**.
 Dibangun dari nol mengikuti **Strategi FIB — Hybrid**: entry di 15M/1H, bias &

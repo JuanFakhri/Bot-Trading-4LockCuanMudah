@@ -1,4 +1,4 @@
-"""Central configuration for the FIB Hybrid bot.
+"""Central configuration for the SMC bot.
 
 Everything is tuned to the strategy document. Values that the self-learning
 engine is allowed to nudge live in the database, not here — this file only

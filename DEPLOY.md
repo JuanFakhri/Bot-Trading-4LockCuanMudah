@@ -1,4 +1,4 @@
-# 🚀 Deploy Gratis — FIB Hybrid Bot
+# 🚀 Deploy Gratis — SMC Bot
 
 Bot ini FastAPI + WebSocket, jadi bisa online 24/7 dan dibuka dari HP. Berikut
 3 pilihan gratis. **Render** paling mudah (1-klik).
@@ -24,7 +24,7 @@ Langkah (sekali saja):
    branch** → Branch: **main** / folder: **`/docs`** → **Save**.
 3. Repo → **Settings → Actions → General** → *Workflow permissions* → pilih
    **Read and write permissions** → **Save** (agar Actions bisa commit hasil).
-4. Repo → tab **Actions** → aktifkan workflow → buka **“FIB Hybrid scan”** →
+4. Repo → tab **Actions** → aktifkan workflow → buka **“SMC scan”** →
    **Run workflow** (untuk isi pertama kali; berikutnya otomatis tiap 15 menit).
 5. Buka situs di **`https://<username>.github.io/<repo>/`**.
 

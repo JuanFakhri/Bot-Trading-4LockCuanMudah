@@ -1,4 +1,4 @@
-/* FIB Hybrid Bot — frontend controller */
+/* SMC Bot — frontend controller */
 const $ = (id) => document.getElementById(id);
 const fmt = (n, d = 4) => (n == null || isNaN(n)) ? "–" : Number(n).toLocaleString("en-US", { maximumFractionDigits: d });
 

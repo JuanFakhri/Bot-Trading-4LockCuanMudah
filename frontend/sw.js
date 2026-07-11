@@ -1,4 +1,4 @@
-/* FIB Hybrid Bot — service worker (installable PWA).
+/* SMC Bot — service worker (installable PWA).
    Shell is cache-first; live data (data/*.json, /api/*) is always network-first
    so signals & backtest stay fresh. */
 const CACHE = "fib-bot-v1";
