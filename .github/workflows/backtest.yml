@@ -15,6 +15,12 @@ on:
         description: "Simbol dipisah koma (kosongkan = semua). Contoh: ETHUSDT,SOLUSDT"
         required: false
         default: ""
+      strategy:
+        description: "Strategi: fib (asli) atau smc (SMC + AI Score)"
+        required: false
+        default: "fib"
+        type: choice
+        options: ["fib", "smc"]
   schedule:
     - cron: "0 3 * * 0"          # tiap Minggu 03:00 UTC
 
@@ -43,6 +49,7 @@ jobs:
         env:
           BACKTEST_DAYS: ${{ github.event.inputs.days || '180' }}
           BACKTEST_SYMBOLS: ${{ github.event.inputs.symbols || '' }}
+          BACKTEST_STRATEGY: ${{ github.event.inputs.strategy || 'fib' }}
         run: python -m scripts.run_backtest
 
       - name: Sync frontend to GitHub Pages folder

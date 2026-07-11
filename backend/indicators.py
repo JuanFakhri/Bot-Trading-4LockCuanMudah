@@ -39,6 +39,21 @@ def atr(df: pd.DataFrame, length: int = 14) -> pd.Series:
     return true_range(df).ewm(alpha=1 / length, adjust=False).mean()
 
 
+def adx(df: pd.DataFrame, length: int = 14) -> pd.Series:
+    """Average Directional Index (Wilder)."""
+    high, low = df["high"], df["low"]
+    up = high.diff()
+    down = -low.diff()
+    plus_dm = ((up > down) & (up > 0)) * up
+    minus_dm = ((down > up) & (down > 0)) * down
+    tr = true_range(df)
+    atr_ = tr.ewm(alpha=1 / length, adjust=False).mean()
+    plus_di = 100 * plus_dm.ewm(alpha=1 / length, adjust=False).mean() / atr_.replace(0, np.nan)
+    minus_di = 100 * minus_dm.ewm(alpha=1 / length, adjust=False).mean() / atr_.replace(0, np.nan)
+    dx = 100 * (plus_di - minus_di).abs() / (plus_di + minus_di).replace(0, np.nan)
+    return dx.ewm(alpha=1 / length, adjust=False).mean().fillna(0.0)
+
+
 def obv(df: pd.DataFrame) -> pd.Series:
     """On-Balance Volume."""
     direction = np.sign(df["close"].diff().fillna(0.0))

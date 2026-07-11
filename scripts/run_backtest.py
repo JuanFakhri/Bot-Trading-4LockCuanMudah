@@ -21,7 +21,8 @@ import os
 import numpy as np
 import pandas as pd
 
-from backend import backtester, config, data_feed, database as db, indicators, learning, market_filter, optimizer
+from backend import (backtester, config, data_feed, database as db, indicators,
+                     learning, market_filter, optimizer, smc_backtester)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STATE_PATH = os.path.join(ROOT, "data", "state.json")
@@ -33,6 +34,9 @@ LOOKBACK_DAYS = int(os.getenv("BACKTEST_DAYS", "180"))
 # Optional symbol override (comma-separated, e.g. "ETHUSDT,SOLUSDT"). Empty = all.
 _env_syms = os.getenv("BACKTEST_SYMBOLS", "").strip()
 SYMBOLS = [s.strip().upper() for s in _env_syms.split(",") if s.strip()] or config.WATCHLIST
+
+# "fib" (default) or "smc" (SMC + AI-Score confluence strategy)
+STRATEGY = os.getenv("BACKTEST_STRATEGY", "fib").strip().lower()
 
 
 def _dir_series(df: pd.Series | None, idx: pd.Index, invert: bool = False) -> pd.Series:
@@ -105,6 +109,12 @@ async def main():
         return
     regime_daily = await _regime_timeline(usdtd_daily)   # USDT.D + BTC.D matrix on consolidation (same as live)
 
+    # BTC.D direction timeline (ETH/BTC proxy) for the SMC strategy
+    btcd_dir_daily = None
+    if STRATEGY == "smc":
+        ethbtc = await data_feed.get_klines_history("ETHBTC", "1d", LOOKBACK_DAYS + 80)
+        btcd_dir_daily = _dir_series(ethbtc, usdtd_daily.index, invert=True)
+
     all_trades: list[dict] = []
     symbol_data: dict = {}
     for sym in SYMBOLS:
@@ -116,7 +126,10 @@ async def main():
                 print(f"[backtest] {sym}: no data")
                 continue
             symbol_data[sym] = (htf, dtf, ltf)
-            trades = backtester.backtest_symbol(sym, htf, dtf, regime_daily, usdtd_daily, ltf=ltf)
+            if STRATEGY == "smc":
+                trades = smc_backtester.backtest_symbol_smc(sym, htf, dtf, ltf, usdtd_daily, btcd_dir_daily)
+            else:
+                trades = backtester.backtest_symbol(sym, htf, dtf, regime_daily, usdtd_daily, ltf=ltf)
             all_trades.extend(trades)
             print(f"[backtest] {sym}: {len(trades)} trades")
         except Exception as exc:
@@ -124,8 +137,12 @@ async def main():
 
     summary = backtester.summarize(all_trades)
 
-    # ---- optimize: search for settings that turn losses into wins ----
-    opt = optimizer.optimize(symbol_data, regime_daily, usdtd_daily)
+    # ---- optimize (fib strategy only; SMC uses its fixed confluence rules) ----
+    if STRATEGY == "smc":
+        opt = {"accepted": False, "reason": "Optimizer khusus strategi fib.",
+               "params": {"sl_atr": config.SL_ATR_MULT, "min_rr": config.MIN_RR}, "tuned": None}
+    else:
+        opt = optimizer.optimize(symbol_data, regime_daily, usdtd_daily)
     tuned = {"sl_atr": opt["params"]["sl_atr"], "min_rr": opt["params"]["min_rr"],
              "require_ad": opt["params"].get("require_ad", True),
              "accepted": opt["accepted"], "updated_ts": pd.Timestamp.utcnow().isoformat()}
@@ -164,7 +181,7 @@ async def main():
     report = {
         "generated_ts": pd.Timestamp.utcnow().isoformat(),
         "params": {"lookback_days": LOOKBACK_DAYS, "htf": config.HTF, "ltf": "1h",
-                   "symbols": len(SYMBOLS), "demo": config.DEMO},
+                   "symbols": len(SYMBOLS), "demo": config.DEMO, "strategy": STRATEGY},
         "summary": summary,
         "recent_trades": [
             {k: t[k] for k in ("symbol", "direction", "entry", "exit_price",
