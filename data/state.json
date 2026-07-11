@@ -2,88 +2,25 @@
 "trades": [],
 "pattern_stats": [
 {
-"signature": "L|fib=0.55-0.618|ad=False|dow=4",
-"wins": 1,
-"losses": 0,
-"sum_r": 0.347,
-"updated_ts": "2026-07-11T11:53:54.883791+00:00"
-},
-{
-"signature": "long|reg=BULL|fib=0.55-0.618|rH=hi|rL=na|ud=na|ad=False|sar=None|dow=4",
-"wins": 1,
-"losses": 0,
-"sum_r": 0.347,
-"updated_ts": "2026-07-11T11:53:54.883791+00:00"
-},
-{
-"signature": "S|fib=0.55-0.618|usdtd=na|sar=False",
-"wins": 2,
-"losses": 2,
-"sum_r": -0.014000000000000012,
-"updated_ts": "2026-07-11T11:53:54.902411+00:00"
-},
-{
-"signature": "short|reg=BEAR|fib=0.55-0.618|rH=lo|rL=na|ud=na|ad=None|sar=False|dow=1",
-"wins": 1,
-"losses": 0,
-"sum_r": 1.057,
-"updated_ts": "2026-07-11T11:53:54.885375+00:00"
-},
-{
-"signature": "short|reg=BEAR|fib=0.55-0.618|rH=mid|rL=na|ud=na|ad=None|sar=False|dow=1",
-"wins": 0,
-"losses": 1,
-"sum_r": -1.0,
-"updated_ts": "2026-07-11T11:53:54.887210+00:00"
-},
-{
 "signature": "S|fib=0.5-0.55|usdtd=na|sar=False",
-"wins": 3,
-"losses": 4,
-"sum_r": -1.262,
-"updated_ts": "2026-07-11T11:53:54.900899+00:00"
+"wins": 1,
+"losses": 1,
+"sum_r": -0.683,
+"updated_ts": "2026-07-11T11:56:11.114606+00:00"
 },
 {
-"signature": "short|reg=BEAR|fib=0.5-0.55|rH=mid|rL=na|ud=na|ad=None|sar=False|dow=6",
-"wins": 0,
-"losses": 1,
-"sum_r": -1.0,
-"updated_ts": "2026-07-11T11:53:54.888975+00:00"
+"signature": "short|reg=BEAR|fib=0.5-0.55|rH=lo|rL=na|ud=na|ad=None|sar=False|dow=4",
+"wins": 1,
+"losses": 0,
+"sum_r": 0.317,
+"updated_ts": "2026-07-11T11:56:11.112887+00:00"
 },
 {
 "signature": "short|reg=BEAR|fib=0.5-0.55|rH=lo|rL=na|ud=na|ad=None|sar=False|dow=1",
 "wins": 0,
-"losses": 2,
-"sum_r": -2.0,
-"updated_ts": "2026-07-11T11:53:54.897686+00:00"
-},
-{
-"signature": "short|reg=BEAR|fib=0.5-0.55|rH=lo|rL=na|ud=na|ad=None|sar=False|dow=4",
-"wins": 2,
-"losses": 1,
-"sum_r": 1.4170000000000003,
-"updated_ts": "2026-07-11T11:53:54.900899+00:00"
-},
-{
-"signature": "short|reg=BEAR|fib=0.5-0.55|rH=lo|rL=na|ud=na|ad=None|sar=False|dow=0",
-"wins": 1,
-"losses": 0,
-"sum_r": 0.321,
-"updated_ts": "2026-07-11T11:53:54.896028+00:00"
-},
-{
-"signature": "short|reg=BEAR|fib=0.55-0.618|rH=lo|rL=na|ud=na|ad=None|sar=False|dow=4",
-"wins": 0,
 "losses": 1,
 "sum_r": -1.0,
-"updated_ts": "2026-07-11T11:53:54.899329+00:00"
-},
-{
-"signature": "short|reg=BEAR|fib=0.55-0.618|rH=lo|rL=na|ud=na|ad=None|sar=False|dow=0",
-"wins": 1,
-"losses": 0,
-"sum_r": 0.929,
-"updated_ts": "2026-07-11T11:53:54.902411+00:00"
+"updated_ts": "2026-07-11T11:56:11.114606+00:00"
 }
 ],
 "lessons": []
