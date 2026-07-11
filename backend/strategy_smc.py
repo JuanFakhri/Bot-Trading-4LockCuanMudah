@@ -48,6 +48,7 @@ def evaluate(symbol: str, htf: pd.DataFrame, dtf: pd.DataFrame, ltf: pd.DataFram
     ema200_1 = indicators.ema(ltf["close"], config.EMA_SLOW).to_numpy()
     ema20_1 = indicators.ema(ltf["close"], 20).to_numpy()
     atr_1 = indicators.atr(ltf, config.ATR_LEN).to_numpy()
+    atr_sma = pd.Series(atr_1).rolling(20, min_periods=5).mean().to_numpy()   # v1.1 #4
     adx_1 = indicators.adx(ltf, 14).to_numpy()
     vsma = ltf["volume"].rolling(20, min_periods=5).mean().to_numpy()
     piv_hi, piv_lo = indicators.find_pivots(ltf, pl)
@@ -125,7 +126,9 @@ def evaluate(symbol: str, htf: pd.DataFrame, dtf: pd.DataFrame, ltf: pd.DataFram
         btcd_ok = btcd_dir == "NAIK"
         usdtd_ok = usdtd_rising
 
-    vol_ok = (not np.isnan(vsma[i])) and v[i] > vsma[i]
+    # v1.1: ablation-validated filters (PF 1.41->2.60, win 62->72%, DD -6->-3.4R)
+    vol_ok = (not np.isnan(vsma[i])) and v[i] > config.SMC_VOL_MULT * vsma[i]   # #5 volume 1.5x
+    atr_exp = (not np.isnan(atr_sma[i])) and atr_1[i] > atr_sma[i]              # #4 ATR expansion
     adx_ok = adx_1[i] > 25
     atr_pct = atr_val / price * 100 if price else 0.0
     atr_ok = config.SMC_ATR_MIN <= atr_pct <= config.SMC_ATR_MAX
@@ -146,7 +149,8 @@ def evaluate(symbol: str, htf: pd.DataFrame, dtf: pd.DataFrame, ltf: pd.DataFram
          "detail": "bull" if machine == "long" else "bear"},
         {"rule": f"{'Discount' if machine=='long' else 'Premium'} zone", "ok": bool(pd_ok)},
         {"rule": "ADX > 25 (trending)", "ok": bool(adx_ok), "detail": f"adx={adx_1[i]:.0f}"},
-        {"rule": "Volume spike (> SMA20)", "ok": bool(vol_ok)},
+        {"rule": f"Volume > {config.SMC_VOL_MULT}x SMA20", "ok": bool(vol_ok)},
+        {"rule": "ATR expansion (> SMA20)", "ok": bool(atr_exp)},
         {"rule": f"ATR {config.SMC_ATR_MIN}-{config.SMC_ATR_MAX}%", "ok": bool(atr_ok),
          "detail": f"{atr_pct:.2f}%"},
         {"rule": "Sesi London/NY", "ok": bool(in_session), "detail": f"{hours:02d}:00 UTC"},
@@ -163,7 +167,7 @@ def evaluate(symbol: str, htf: pd.DataFrame, dtf: pd.DataFrame, ltf: pd.DataFram
     ]
 
     # hard pre-reqs that MUST hold for a fire (mirror the backtest's `continue`s)
-    hard_ok = atr_ok and in_session and pd_ok and vol_ok
+    hard_ok = atr_ok and in_session and pd_ok and vol_ok and atr_exp
     fire = hard_ok and score >= score_th
     if fire:
         state = "ENTRY"

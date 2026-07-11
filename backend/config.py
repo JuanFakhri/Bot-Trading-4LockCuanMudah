@@ -49,6 +49,10 @@ SMC_SCORE_TH = float(os.getenv("SMC_SCORE_TH", "60"))   # AI-Score gate for a li
 # collapses on a tiny sample (overfit). 60 keeps the edge with half the drawdown.
 SMC_ATR_MIN = 0.3       # entry only when 1H ATR is 0.3%..8% of price (#14)
 SMC_ATR_MAX = 8.0
+# v1.1 ablation-validated entry filters (PF 1.41->2.60, win 62->72%, DD -6->-3.4R,
+# OOS 1.90->2.72 over 730d). Trades fewer but far higher quality.
+SMC_VOL_MULT = 1.5      # #5 require volume > 1.5x SMA20 (was >1x)
+# (ATR expansion — atr > atr-SMA20 — is enforced directly in strategy_smc)
 
 # Golden zone (fibonacci retracement) — one component of the AI Score
 FIB_ZONE_LO = 0.5

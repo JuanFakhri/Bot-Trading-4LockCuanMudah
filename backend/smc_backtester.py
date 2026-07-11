@@ -51,6 +51,7 @@ def backtest_symbol_smc(symbol, htf, dtf, ltf, usdtd_daily, btcd_dir_daily,
     ema20_1 = indicators.ema(ltf["close"], 20).to_numpy()
     rsi_1 = indicators.rsi(ltf["close"], config.RSI_LEN).to_numpy()
     atr_1 = indicators.atr(ltf, config.ATR_LEN).to_numpy()
+    atr_sma = pd.Series(atr_1).rolling(20, min_periods=5).mean().to_numpy()   # v1.1 #4
     adx_1 = indicators.adx(ltf, 14).to_numpy()
     vsma = ltf["volume"].rolling(20, min_periods=5).mean().to_numpy()
     piv_hi, piv_lo = indicators.find_pivots(ltf, config.PIVOT_LEN)
@@ -171,7 +172,9 @@ def backtest_symbol_smc(symbol, htf, dtf, ltf, usdtd_daily, btcd_dir_daily,
             btcd_ok = btcd_dir[i] == "NAIK"                      # short alt: BTC.D up
             usdtd_ok = usdtd[i] > usdtd_prev[i]                  # USDT.D higher (rising)
 
-        vol_ok = (not np.isnan(vsma[i])) and v[i] > vsma[i]      # #4
+        # v1.1 ablation-validated filters (PF 1.41->2.60, DD -6->-3.4R over 730d)
+        vol_ok = (not np.isnan(vsma[i])) and v[i] > config.SMC_VOL_MULT * vsma[i]   # #5
+        atr_exp = (not np.isnan(atr_sma[i])) and atr_1[i] > atr_sma[i]              # #4
         adx_ok = adx_1[i] > 25                                   # #3
 
         # ---- AI Score (#15) ----
@@ -179,7 +182,7 @@ def backtest_symbol_smc(symbol, htf, dtf, ltf, usdtd_daily, btcd_dir_daily,
                  + W["fib"] * in_fib + W["sweep"] * sweep + W["choch"] * choch
                  + W["bos"] * bos + W["fvg"] * fvg + W["ob"] * ob
                  + W["btcd"] * btcd_ok + W["usdtd"] * usdtd_ok)
-        if not vol_ok:            # volume spike is a hard pre-req (#4)
+        if not vol_ok or not atr_exp:   # volume spike + volatility expansion (hard)
             continue
         if score < score_th:
             continue
