@@ -150,7 +150,9 @@ function renderBacktest(rep) {
   $("bt-totalr").textContent = (s.total_r >= 0 ? "+" : "") + (s.total_r ?? 0) + "R";
   $("bt-dd").textContent = (s.max_drawdown_r ?? 0) + "R";
   const p = rep.params || {};
-  $("bt-meta").textContent = `Strategi: ${(p.strategy || "fib").toUpperCase()} · ${p.lookback_days || "?"} hari · ${p.symbols || "?"} simbol · trigger ${p.ltf || "4h"}`
+  $("bt-meta").textContent = `Strategi: ${(p.strategy || "smc").toUpperCase()}`
+    + (p.score_th != null ? ` (AI Score ≥ ${p.score_th})` : "")
+    + ` · ${p.lookback_days || "?"} hari · ${p.symbols || "?"} simbol · trigger ${p.ltf || "1h"}`
     + (rep.generated_ts ? ` · dibuat ${new Date(rep.generated_ts).toLocaleString("id-ID")}` : "")
     + (p.demo ? " · (DEMO)" : "");
 
@@ -170,7 +172,7 @@ function renderBacktest(rep) {
         <div class="meta">win ${Math.round((l.win_rate || 0) * 100)}% · ${l.samples} sampel</div></div>`).join("")
     : `<p class="muted small">Belum ada pelajaran (butuh ≥5 sampel per pola).</p>`;
 
-  renderOptimization(rep.optimization);
+  renderOptimization(rep.params);
   renderWalkforward(rep.walkforward);
   renderBtMetrics(s);
 
@@ -191,27 +193,19 @@ function renderBacktest(rep) {
     : `<tr><td colspan="9" class="empty">Belum ada trade backtest.</td></tr>`;
 }
 
-function renderOptimization(opt) {
+function renderOptimization(p) {
   const el = $("bt-opt");
   if (!el) return;
-  if (!opt) { el.innerHTML = `<p class="muted small">Belum ada data optimasi.</p>`; return; }
-  const p = opt.params || {};
-  const on = opt.accepted;
-  const cmp = (opt.baseline && opt.tuned) ? `
-    <div class="opt-cmp">
-      <span class="h"></span><span class="h">Baseline</span><span class="h">Setelah optimasi</span>
-      <span class="h">Win (uji)</span><span>${opt.baseline.test.win_rate}%</span><span class="${opt.tuned.test.win_rate >= opt.baseline.test.win_rate ? "o-win" : ""}">${opt.tuned.test.win_rate}%</span>
-      <span class="h">Ekspektasi (uji)</span><span>${opt.baseline.test.expectancy_r}R</span><span class="${opt.tuned.test.expectancy_r >= opt.baseline.test.expectancy_r ? "o-win" : "o-loss"}">${opt.tuned.test.expectancy_r}R</span>
-    </div>` : "";
+  p = p || {};
   el.innerHTML = `
-    <div class="opt-box ${on ? "on" : "off"}">
-      ${on ? "✅ <b>Diterapkan ke sinyal live</b>" : "ℹ️ Tetap pakai setelan default"} — ${opt.reason || ""}
+    <div class="opt-box on">
+      ✅ <b>Strategi SMC + AI-Score</b> — entry hanya saat konfluensi lolos ambang.
       <div class="opt-params">
-        <span class="opt-chip">SL ${p.sl_atr}×ATR</span>
-        <span class="opt-chip">RR≥${p.min_rr}</span>
-        <span class="opt-chip">A/D ${p.require_ad ? "wajib" : "opsional"}</span>
+        <span class="opt-chip">AI Score ≥ ${p.score_th ?? 60}</span>
+        <span class="opt-chip">Trigger 1H</span>
+        <span class="opt-chip">SL swing ± ATR</span>
+        <span class="opt-chip">TP 1R/2R/3R</span>
       </div>
-      ${cmp}
     </div>`;
 }
 

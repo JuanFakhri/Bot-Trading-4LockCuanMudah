@@ -222,6 +222,78 @@ def backtest_symbol_smc(symbol, htf, dtf, ltf, usdtd_daily, btcd_dir_daily,
     return trades
 
 
+def summarize(trades: list[dict]) -> dict:
+    """Aggregate win rate, profit factor, expectancy, equity curve, drawdown."""
+    trades = sorted(trades, key=lambda t: t["exit_ts"])
+    wins = [t for t in trades if t["r"] > 0.05]
+    losses = [t for t in trades if t["r"] < -0.05]
+    gross_win = sum(t["r"] for t in wins)
+    gross_loss = -sum(t["r"] for t in losses)
+    total = len(trades)
+
+    equity = 0.0
+    peak = 0.0
+    max_dd = 0.0
+    curve = []
+    for t in trades:
+        equity += t["r"]
+        peak = max(peak, equity)
+        max_dd = min(max_dd, equity - peak)
+        curve.append({"ts": t["exit_ts"], "r": round(equity, 2)})
+
+    per_symbol: dict[str, dict] = {}
+    for t in trades:
+        s = per_symbol.setdefault(t["symbol"], {"n": 0, "w": 0, "r": 0.0})
+        s["n"] += 1
+        s["w"] += 1 if t["r"] > 0.05 else 0
+        s["r"] += t["r"]
+
+    # per-direction win rate
+    def _dir(d):
+        sub = [t for t in trades if t["direction"] == d]
+        w = sum(1 for t in sub if t["r"] > 0.05)
+        return {"n": len(sub), "win_rate": round(w / len(sub) * 100, 1) if sub else 0.0,
+                "total_r": round(sum(t["r"] for t in sub), 2)}
+
+    # average trade duration in 4H bars
+    durs = []
+    for t in trades:
+        try:
+            dt = (pd.Timestamp(t["exit_ts"]) - pd.Timestamp(t["entry_ts"])).total_seconds()
+            durs.append(dt / 14400.0)
+        except Exception:
+            pass
+    avg_dur = round(sum(durs) / len(durs), 1) if durs else 0.0
+
+    # R distribution histogram
+    edges = [(-99, -1), (-1, 0), (0, 1), (1, 2), (2, 3), (3, 99)]
+    labels = ["≤-1", "-1..0", "0..1", "1..2", "2..3", ">3"]
+    hist = []
+    for (lo, hi), lab in zip(edges, labels):
+        hist.append({"label": lab, "count": sum(1 for t in trades if lo < t["r"] <= hi)})
+
+    return {
+        "trades": total,
+        "wins": len(wins),
+        "losses": len(losses),
+        "win_rate": round(len(wins) / total * 100, 1) if total else 0.0,
+        "profit_factor": round(gross_win / gross_loss, 2) if gross_loss > 0 else round(gross_win, 2),
+        "expectancy_r": round(sum(t["r"] for t in trades) / total, 3) if total else 0.0,
+        "total_r": round(sum(t["r"] for t in trades), 2),
+        "max_drawdown_r": round(max_dd, 2),
+        "avg_duration_bars": avg_dur,
+        "long": _dir("LONG"),
+        "short": _dir("SHORT"),
+        "r_histogram": hist,
+        "equity_curve": curve,
+        "per_symbol": {
+            k: {"n": v["n"], "win_rate": round(v["w"] / v["n"] * 100, 1),
+                "total_r": round(v["r"], 2)}
+            for k, v in sorted(per_symbol.items(), key=lambda kv: -kv[1]["r"])
+        },
+    }
+
+
 def _manage_smc(pos, bar_high, bar_low, close, ema20):
     """3-tier exit (30/30/40) + EMA20 trail. Returns final blended R when the
     position fully closes, else None."""

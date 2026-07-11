@@ -16,7 +16,7 @@ import json
 from datetime import datetime, timezone
 
 from . import (config, data_feed, database as db, learning, market_filter, risk,
-               strategy, strategy_smc, tuning)
+               strategy_smc)
 
 _BAR_SEC = {"15m": 900, "1h": 3600, "4h": 14400, "1d": 86400}
 
@@ -37,7 +37,6 @@ class Engine:
             return
         self.scanning = True
         try:
-            tuning.reload()  # pick up latest optimizer-tuned params each scan
             self.regime = await market_filter.compute_regime()
             await self._update_open_trades()
 
@@ -63,12 +62,9 @@ class Engine:
             self.scanning = False
 
     async def _eval_symbol(self, symbol: str) -> dict | None:
-        smc = config.STRATEGY == "smc"
         htf = await data_feed.get_klines(symbol, config.HTF, config.KLIMIT)
         dtf = await data_feed.get_klines(symbol, config.DTF, 260)
-        # SMC's entry timeframe is 1H; the fib engine uses the 15m trigger.
-        ltf = await data_feed.get_klines(symbol, "1h" if smc else config.LTF,
-                                         300 if smc else 200)
+        ltf = await data_feed.get_klines(symbol, "1h", 300)   # SMC entry TF is 1H
         if htf.empty or dtf.empty or ltf.empty:
             return None
 
@@ -76,10 +72,7 @@ class Engine:
         # trades a user manually marks as taken, even if no signal fires)
         self.prices[symbol] = float(ltf["close"].iloc[-1])
 
-        if smc:
-            sig = strategy_smc.evaluate(symbol, htf, dtf, ltf, self.regime)
-        else:
-            sig = strategy.evaluate(symbol, htf, dtf, ltf, self.regime)
+        sig = strategy_smc.evaluate(symbol, htf, dtf, ltf, self.regime)
         if sig is None:
             return None
 
@@ -88,8 +81,8 @@ class Engine:
         sig["allowed"] = verdict["allowed"]
         sig["learn_reason"] = verdict["reason"]
 
-        # SMC ships its own plan (swing-based SL, 1/2/3R); fib builds one here.
-        plan = sig.get("plan") if smc else risk.build_trade_plan(sig)
+        # SMC ships its own plan (swing-based SL, 1/2/3R).
+        plan = sig.get("plan")
         sig["plan"] = plan
 
         # Decide whether to open a paper trade.
@@ -110,8 +103,6 @@ class Engine:
                 sig["gate"] = "Posisi masih terbuka"
         elif sig["state"] == "ENTRY" and not verdict["allowed"]:
             sig["gate"] = f"Dihindari oleh pembelajaran: {verdict['reason']}"
-        elif sig["state"] == "ENTRY" and plan and not plan["rr_ok"]:
-            sig["gate"] = f"RR {plan['rr']} < {config.MIN_RR}"
 
         return sig
 

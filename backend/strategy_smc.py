@@ -2,8 +2,7 @@
 
 This is the *live* twin of ``smc_backtester.py``. The backtester walks every
 1H bar historically; here we evaluate only the **latest closed 1H bar** and emit
-a signal dict shaped exactly like ``strategy.evaluate`` so the engine, risk
-guard, learning brain and web UI keep working unchanged.
+a signal dict the engine, risk guard, learning brain and web UI consume directly.
 
 Entry requires the same confluence the backtest validated (PF 1.44 over 212
 trades, walk-forward OOS PF 2.09): multi-TF trend alignment (1D+4H+1H),

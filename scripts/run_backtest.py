@@ -1,12 +1,12 @@
-"""Run a historical backtest of the FIB Hybrid strategy and let the bot LEARN.
+"""Run a historical backtest of the SMC + AI-Score strategy and let the bot LEARN.
 
 Steps:
-  1. Build a regime timeline from BTC's 1D EMA50 slope.
-  2. Build a USDT.D position timeline (20-day range) from CoinGecko history.
-  3. Backtest every watchlist symbol on 4H history with 1D filters.
-  4. REBUILD the learning brain from the backtest: every resolved trade is fed
+  1. Build a USDT.D position timeline (20-day range) + BTC.D direction (ETH/BTC
+     proxy) for the macro components of the AI Score.
+  2. Backtest every watchlist symbol on the 1H entry timeframe with 1D/4H bias.
+  3. REBUILD the learning brain from the backtest: every resolved trade is fed
      into ``learning`` so losing patterns get blocked and winners get favoured.
-  5. Write the report to ``docs/data/backtest.json`` (shown in the web UI) and
+  4. Write the report to ``docs/data/backtest.json`` (shown in the web UI) and
      persist the updated learning to ``data/state.json``.
 
 Usage: ``BOT_DEMO=1 python -m scripts.run_backtest``  (or without BOT_DEMO on a
@@ -21,12 +21,11 @@ import os
 import numpy as np
 import pandas as pd
 
-from backend import (backtester, config, data_feed, database as db, indicators,
-                     learning, market_filter, optimizer, smc_backtester)
+from backend import (config, data_feed, database as db, indicators,
+                     learning, market_filter, smc_backtester)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STATE_PATH = os.path.join(ROOT, "data", "state.json")
-TUNING_PATH = os.path.join(ROOT, "data", "tuning.json")
 OUT_PATH = os.path.join(ROOT, "docs", "data", "backtest.json")
 
 LOOKBACK_DAYS = int(os.getenv("BACKTEST_DAYS", "180"))
@@ -35,9 +34,8 @@ LOOKBACK_DAYS = int(os.getenv("BACKTEST_DAYS", "180"))
 _env_syms = os.getenv("BACKTEST_SYMBOLS", "").strip()
 SYMBOLS = [s.strip().upper() for s in _env_syms.split(",") if s.strip()] or config.WATCHLIST
 
-# "fib" (default) or "smc" (SMC + AI-Score confluence strategy)
-STRATEGY = os.getenv("BACKTEST_STRATEGY", "fib").strip().lower()
-SCORE_TH = float(os.getenv("BACKTEST_SCORE_TH", "70"))   # SMC AI-Score gate
+# SMC AI-Score gate (defaults to the live value).
+SCORE_TH = float(os.getenv("BACKTEST_SCORE_TH", str(config.SMC_SCORE_TH)))
 
 
 def _dir_series(df: pd.Series | None, idx: pd.Index, invert: bool = False) -> pd.Series:
@@ -52,21 +50,6 @@ def _dir_series(df: pd.Series | None, idx: pd.Index, invert: bool = False) -> pd
     if invert:
         d = d.map({"NAIK": "TURUN", "TURUN": "NAIK", "STABIL": "STABIL"})
     return d.reindex(idx, method="ffill").fillna("STABIL")
-
-
-async def _regime_timeline(usdtd: pd.Series) -> pd.Series:
-    """Canonical spec (Section A): regime from BTC EMA50 1D — rising = BULL
-    (long machine), falling = BEAR (short machine). USDT.D (passed separately to
-    the backtester) gates the short trigger at resistance."""
-    idx = usdtd.index
-    btc = await data_feed.get_klines_history("BTCUSDT", "1d", LOOKBACK_DAYS + 80)
-    if btc.empty:
-        return pd.Series("BULL", index=idx)
-    ema50 = indicators.ema(btc["close"], config.EMA_FAST)
-    reg = (ema50 > ema50.shift(3)).map(lambda x: "BULL" if x else "BEAR")
-    reg.index = reg.index.normalize()
-    reg = reg[~reg.index.duplicated(keep="last")]
-    return reg.reindex(idx, method="ffill").fillna("BULL")
 
 
 async def _usdtd_timeline() -> pd.Series:
@@ -103,21 +86,17 @@ async def main():
     os.makedirs(os.path.dirname(OUT_PATH), exist_ok=True)
     os.makedirs(os.path.dirname(STATE_PATH), exist_ok=True)
 
-    print(f"[backtest] lookback={LOOKBACK_DAYS}d, symbols={len(SYMBOLS)}")
+    print(f"[backtest] lookback={LOOKBACK_DAYS}d, symbols={len(SYMBOLS)}, score_th={SCORE_TH}")
     usdtd_daily = await _usdtd_timeline()
     if usdtd_daily.empty:
         print("[backtest] no USDT.D data — aborting")
         return
-    regime_daily = await _regime_timeline(usdtd_daily)   # USDT.D + BTC.D matrix on consolidation (same as live)
 
-    # BTC.D direction timeline (ETH/BTC proxy) for the SMC strategy
-    btcd_dir_daily = None
-    if STRATEGY == "smc":
-        ethbtc = await data_feed.get_klines_history("ETHBTC", "1d", LOOKBACK_DAYS + 80)
-        btcd_dir_daily = _dir_series(ethbtc, usdtd_daily.index, invert=True)
+    # BTC.D direction timeline (ETH/BTC proxy) for the SMC macro score
+    ethbtc = await data_feed.get_klines_history("ETHBTC", "1d", LOOKBACK_DAYS + 80)
+    btcd_dir_daily = _dir_series(ethbtc, usdtd_daily.index, invert=True)
 
     all_trades: list[dict] = []
-    symbol_data: dict = {}
     for sym in SYMBOLS:
         try:
             htf = await data_feed.get_klines_history(sym, config.HTF, LOOKBACK_DAYS)
@@ -126,31 +105,14 @@ async def main():
             if htf.empty or dtf.empty:
                 print(f"[backtest] {sym}: no data")
                 continue
-            symbol_data[sym] = (htf, dtf, ltf)
-            if STRATEGY == "smc":
-                trades = smc_backtester.backtest_symbol_smc(sym, htf, dtf, ltf, usdtd_daily,
-                                                            btcd_dir_daily, {"score_th": SCORE_TH})
-            else:
-                trades = backtester.backtest_symbol(sym, htf, dtf, regime_daily, usdtd_daily, ltf=ltf)
+            trades = smc_backtester.backtest_symbol_smc(sym, htf, dtf, ltf, usdtd_daily,
+                                                        btcd_dir_daily, {"score_th": SCORE_TH})
             all_trades.extend(trades)
             print(f"[backtest] {sym}: {len(trades)} trades")
         except Exception as exc:
             print(f"[backtest] {sym} error: {exc}")
 
-    summary = backtester.summarize(all_trades)
-
-    # ---- optimize (fib strategy only; SMC uses its fixed confluence rules) ----
-    if STRATEGY == "smc":
-        opt = {"accepted": False, "reason": "Optimizer khusus strategi fib.",
-               "params": {"sl_atr": config.SL_ATR_MULT, "min_rr": config.MIN_RR}, "tuned": None}
-    else:
-        opt = optimizer.optimize(symbol_data, regime_daily, usdtd_daily)
-    tuned = {"sl_atr": opt["params"]["sl_atr"], "min_rr": opt["params"]["min_rr"],
-             "require_ad": opt["params"].get("require_ad", True),
-             "accepted": opt["accepted"], "updated_ts": pd.Timestamp.utcnow().isoformat()}
-    with open(TUNING_PATH, "w", encoding="utf-8") as f:
-        json.dump(tuned, f, ensure_ascii=False, indent=0)
-    print(f"[backtest] optimize: accepted={opt['accepted']} params={opt['params']} — {opt['reason']}")
+    summary = smc_backtester.summarize(all_trades)
 
     # ---- WALK-FORWARD: learn on train, apply the self-learning filter to the
     # unseen test split. This measures what the LIVE bot would actually trade
@@ -166,8 +128,8 @@ async def main():
             and learning.evaluate(t["features"])["confidence"] >= config.CONFIDENCE_FLOOR]
     walkforward = {
         "cutoff_ts": test[0]["exit_ts"] if test else None,
-        "test_all": backtester.summarize(test),
-        "test_filtered": backtester.summarize(kept),
+        "test_all": smc_backtester.summarize(test),
+        "test_filtered": smc_backtester.summarize(kept),
         "kept": len(kept), "test_n": len(test),
     }
 
@@ -183,8 +145,8 @@ async def main():
     report = {
         "generated_ts": pd.Timestamp.utcnow().isoformat(),
         "params": {"lookback_days": LOOKBACK_DAYS, "htf": config.HTF, "ltf": "1h",
-                   "symbols": len(SYMBOLS), "demo": config.DEMO, "strategy": STRATEGY,
-                   "score_th": SCORE_TH if STRATEGY == "smc" else None},
+                   "symbols": len(SYMBOLS), "demo": config.DEMO, "strategy": "smc",
+                   "score_th": SCORE_TH},
         "summary": summary,
         "recent_trades": [
             {k: t[k] for k in ("symbol", "direction", "entry", "exit_price",
@@ -196,7 +158,6 @@ async def main():
             "favored_count": len(favored),
             "lessons": db.lessons(40),
         },
-        "optimization": opt,
         "walkforward": walkforward,
     }
     with open(OUT_PATH, "w", encoding="utf-8") as f:

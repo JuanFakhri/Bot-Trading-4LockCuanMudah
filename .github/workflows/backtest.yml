@@ -1,4 +1,4 @@
-name: FIB Hybrid backtest
+name: SMC backtest
 
 # Jalankan manual (atau mingguan) untuk membacktest strategi FIB pada data
 # historis Binance. Hasilnya ditampilkan di tab "Backtest" web, DAN bot belajar
@@ -15,16 +15,10 @@ on:
         description: "Simbol dipisah koma (kosongkan = semua). Contoh: ETHUSDT,SOLUSDT"
         required: false
         default: ""
-      strategy:
-        description: "Strategi: fib (asli) atau smc (SMC + AI Score)"
-        required: false
-        default: "fib"
-        type: choice
-        options: ["fib", "smc"]
       score_th:
-        description: "Ambang AI Score untuk SMC (default 70; lebih rendah = lebih banyak trade)"
+        description: "Ambang AI Score (default 60; lebih rendah = lebih banyak trade)"
         required: false
-        default: "70"
+        default: "60"
   schedule:
     - cron: "0 3 * * 0"          # tiap Minggu 03:00 UTC
 
@@ -53,8 +47,7 @@ jobs:
         env:
           BACKTEST_DAYS: ${{ github.event.inputs.days || '180' }}
           BACKTEST_SYMBOLS: ${{ github.event.inputs.symbols || '' }}
-          BACKTEST_STRATEGY: ${{ github.event.inputs.strategy || 'fib' }}
-          BACKTEST_SCORE_TH: ${{ github.event.inputs.score_th || '70' }}
+          BACKTEST_SCORE_TH: ${{ github.event.inputs.score_th || '60' }}
         run: python -m scripts.run_backtest
 
       - name: Sync frontend to GitHub Pages folder
@@ -64,7 +57,7 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -f data/state.json data/tuning.json docs/data/backtest.json docs/index.html docs/style.css docs/app.js
+          git add -f data/state.json docs/data/backtest.json docs/index.html docs/style.css docs/app.js
           if git diff --cached --quiet; then
             echo "Tidak ada perubahan."
           else

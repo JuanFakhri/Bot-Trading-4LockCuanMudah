@@ -38,15 +38,11 @@ EMA_SLOW = 200
 RSI_LEN = 14
 ATR_LEN = 14
 PIVOT_LEN = 5           # left/right bars for swing pivot
-IMPULSE_MIN_ATR = 3.0   # impulse range must be >= 3x ATR
-IMPULSE_MAX_AGE = 60    # impulse pivot age (bars) must be <= 60
-CONFIRM_MAX_BARS = 16   # bars allowed between ARM and confirmation
 
 # --------------------------------------------------------------------------
-# Active live strategy: "smc" (SMC + AI-Score confluence, backtest-validated:
-# PF 1.44 over 212 trades, walk-forward OOS PF 2.09) or "fib" (original).
+# Strategy: SMC + AI-Score confluence (the only strategy; backtest-validated —
+# PF 1.41 over 69 trades at score_th 60, walk-forward OOS PF 1.90).
 # --------------------------------------------------------------------------
-STRATEGY = os.getenv("BOT_STRATEGY", "smc").strip().lower()
 SMC_SCORE_TH = float(os.getenv("SMC_SCORE_TH", "60"))   # AI-Score gate for a live entry
 # Threshold sweep (730d, real data): 55 -> PF 1.44 / OOS 2.09 / DD -12.5R (aggressive);
 # 60 -> PF 1.41 / OOS 1.90 / DD -6.0R (best risk-adjusted, DEFAULT); 65/70 -> OOS
@@ -54,36 +50,25 @@ SMC_SCORE_TH = float(os.getenv("SMC_SCORE_TH", "60"))   # AI-Score gate for a li
 SMC_ATR_MIN = 0.3       # entry only when 1H ATR is 0.3%..8% of price (#14)
 SMC_ATR_MAX = 8.0
 
-# Golden zone (fibonacci retracement of the impulse)
+# Golden zone (fibonacci retracement) — one component of the AI Score
 FIB_ZONE_LO = 0.5
 FIB_ZONE_HI = 0.618
-FIB_INVALID = 0.786     # deeper retrace than this invalidates the impulse
-FIB_EXTENSION = 1.272   # TP2 projection
 
-# USDT.D resistance threshold (20-day range position) for the short machine
+# USDT.D range position (20-day) used by the market filter / macro score
 USDTD_POS_HI = 0.7
-# Short trigger requires USDT.D at resistance (canonical spec C.4: pos>0.7).
 USDTD_SHORT_POS = 0.7
 USDTD_LOOKBACK = 20
-
-# RSI trigger zones on the LTF
-LONG_ARM_RSI = (30.0, 50.0)
-SHORT_ARM_RSI = (50.0, 70.0)
 
 # --------------------------------------------------------------------------
 # Risk
 # --------------------------------------------------------------------------
 RISK_PER_TRADE = 0.02       # 2% equity per trade
-SL_ATR_MULT = 1.0           # SL placed 1x ATR outside swing/OB
 SL_CAP_PCT = 0.06           # SL never wider than 6%
 BE_BUFFER_PCT = 0.0015      # +0.15% breakeven buffer after TP1
-MIN_RR = 2.0                # TP2 requires RR >= 2
 COOLDOWN_BARS = 16          # per-symbol cooldown after an exit
 MAX_TRADES_PER_DAY = 3
 DAILY_DD_STOP = -0.08       # circuit breaker: stop after -8% day
 DAILY_SL_STOP = 2           # circuit breaker: stop after 2 stop-losses
-
-SKIP_FRIDAY_LONG = True     # weekend-gap protection for the bull machine
 
 # --------------------------------------------------------------------------
 # Self-learning
