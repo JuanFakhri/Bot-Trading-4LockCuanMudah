@@ -1,5 +1,142 @@
 {
 "trades": [],
-"pattern_stats": [],
-"lessons": []
+"pattern_stats": [
+{
+"signature": "S|fib=0.5-0.55|usdtd=na|sar=False",
+"wins": 4,
+"losses": 3,
+"sum_r": 0.07600000000000007,
+"updated_ts": "2026-07-11T16:48:11.741265+00:00"
+},
+{
+"signature": "short|reg=BEAR|fib=0.5-0.55|rH=mid|rL=na|ud=na|ad=None|sar=False|dow=0",
+"wins": 1,
+"losses": 0,
+"sum_r": 0.32,
+"updated_ts": "2026-07-11T16:48:11.712201+00:00"
+},
+{
+"signature": "L|fib=0.55-0.618|ad=False|dow=0",
+"wins": 1,
+"losses": 0,
+"sum_r": 1.387,
+"updated_ts": "2026-07-11T16:48:11.713839+00:00"
+},
+{
+"signature": "long|reg=BULL|fib=0.55-0.618|rH=mid|rL=na|ud=na|ad=False|sar=None|dow=0",
+"wins": 1,
+"losses": 0,
+"sum_r": 1.387,
+"updated_ts": "2026-07-11T16:48:11.713839+00:00"
+},
+{
+"signature": "short|reg=BEAR|fib=0.5-0.55|rH=lo|rL=na|ud=na|ad=None|sar=False|dow=4",
+"wins": 1,
+"losses": 0,
+"sum_r": 0.338,
+"updated_ts": "2026-07-11T16:48:11.715467+00:00"
+},
+{
+"signature": "S|fib=0.55-0.618|usdtd=na|sar=False",
+"wins": 8,
+"losses": 1,
+"sum_r": 7.5489999999999995,
+"updated_ts": "2026-07-11T16:48:11.745850+00:00"
+},
+{
+"signature": "short|reg=BEAR|fib=0.55-0.618|rH=lo|rL=na|ud=na|ad=None|sar=False|dow=3",
+"wins": 1,
+"losses": 0,
+"sum_r": 0.365,
+"updated_ts": "2026-07-11T16:48:11.716989+00:00"
+},
+{
+"signature": "short|reg=BEAR|fib=0.55-0.618|rH=lo|rL=na|ud=na|ad=None|sar=False|dow=4",
+"wins": 1,
+"losses": 0,
+"sum_r": 2.1,
+"updated_ts": "2026-07-11T16:48:11.719211+00:00"
+},
+{
+"signature": "short|reg=BEAR|fib=0.5-0.55|rH=lo|rL=na|ud=na|ad=None|sar=False|dow=1",
+"wins": 0,
+"losses": 3,
+"sum_r": -3.0,
+"updated_ts": "2026-07-11T16:48:11.734948+00:00"
+},
+{
+"signature": "short|reg=BEAR|fib=0.55-0.618|rH=lo|rL=na|ud=na|ad=None|sar=False|dow=0",
+"wins": 2,
+"losses": 0,
+"sum_r": 2.194,
+"updated_ts": "2026-07-11T16:48:11.745850+00:00"
+},
+{
+"signature": "short|reg=BEAR|fib=0.55-0.618|rH=mid|rL=na|ud=na|ad=None|sar=False|dow=2",
+"wins": 2,
+"losses": 0,
+"sum_r": 1.472,
+"updated_ts": "2026-07-11T16:48:11.725886+00:00"
+},
+{
+"signature": "L|fib=0.5-0.55|ad=False|dow=5",
+"wins": 0,
+"losses": 1,
+"sum_r": -1.0,
+"updated_ts": "2026-07-11T16:48:11.728488+00:00"
+},
+{
+"signature": "long|reg=BULL|fib=0.5-0.55|rH=hi|rL=na|ud=na|ad=False|sar=None|dow=5",
+"wins": 0,
+"losses": 1,
+"sum_r": -1.0,
+"updated_ts": "2026-07-11T16:48:11.728488+00:00"
+},
+{
+"signature": "short|reg=BEAR|fib=0.55-0.618|rH=mid|rL=na|ud=na|ad=None|sar=False|dow=0",
+"wins": 1,
+"losses": 0,
+"sum_r": 0.318,
+"updated_ts": "2026-07-11T16:48:11.730249+00:00"
+},
+{
+"signature": "short|reg=BEAR|fib=0.5-0.55|rH=lo|rL=na|ud=na|ad=None|sar=False|dow=0",
+"wins": 1,
+"losses": 0,
+"sum_r": 0.318,
+"updated_ts": "2026-07-11T16:48:11.736690+00:00"
+},
+{
+"signature": "short|reg=BEAR|fib=0.55-0.618|rH=lo|rL=na|ud=na|ad=None|sar=False|dow=1",
+"wins": 0,
+"losses": 1,
+"sum_r": -1.0,
+"updated_ts": "2026-07-11T16:48:11.738441+00:00"
+},
+{
+"signature": "short|reg=BEAR|fib=0.5-0.55|rH=mid|rL=na|ud=na|ad=None|sar=False|dow=1",
+"wins": 1,
+"losses": 0,
+"sum_r": 2.1,
+"updated_ts": "2026-07-11T16:48:11.741265+00:00"
+},
+{
+"signature": "short|reg=BEAR|fib=0.55-0.618|rH=lo|rL=na|ud=na|ad=None|sar=False|dow=2",
+"wins": 1,
+"losses": 0,
+"sum_r": 2.1,
+"updated_ts": "2026-07-11T16:48:11.743363+00:00"
+}
+],
+"lessons": [
+{
+"id": 2,
+"ts": "2026-07-11T16:48:11.745850+00:00",
+"signature": "S|fib=0.55-0.618|usdtd=na|sar=False",
+"kind": "FAVOR",
+"text": "✅ Diutamakan: sinyal SHORT pola [fib 0.55-0.618, USDT.D na, SAR no] menang 8/9 (89%). Diberi prioritas.",
+"win_rate": 0.889,
+"samples": 9
+}
+]
 }
