@@ -28,7 +28,7 @@ class RiskGuard:
     def can_enter(self, symbol: str, today: str, now_ts: float) -> tuple[bool, str]:
         self._roll_day(today)
         if self.trades_today >= config.MAX_TRADES_PER_DAY:
-            return False, "Maks 3 trade/hari tercapai"
+            return False, f"Maks {config.MAX_TRADES_PER_DAY} trade/hari tercapai"
         if self.stops_today >= config.DAILY_SL_STOP:
             return False, "Circuit breaker: 2 SL hari ini"
         if self.pnl_today <= config.DAILY_DD_STOP:

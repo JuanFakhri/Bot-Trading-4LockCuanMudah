@@ -380,9 +380,9 @@ function renderMyTrades(snap) {
   const wins = closed.filter(t => t.outcome === "WIN").length;
   const wr = closed.length ? Math.round(wins / closed.length * 100) : 0;
   const sumR = closed.reduce((a, t) => a + (t.r || 0), 0);
-  const overLimit = todayCount > 3;
+  const overLimit = todayCount > 5;
   $("my-risk").innerHTML = [
-    ["Trade hari ini", `${todayCount} / 3${overLimit ? " ⚠️" : ""}`],
+    ["Trade hari ini", `${todayCount} / 5${overLimit ? " ⚠️" : ""}`],
     ["Posisi terbuka", `${open.length}`],
     ["Menang / Kalah", `${wins} / ${closed.length - wins} (${wr}%)`],
     ["Total R (real.)", `${sumR >= 0 ? "+" : ""}${sumR.toFixed(2)}R`],
@@ -464,7 +464,13 @@ function renderRegime(r = {}) {
   b.textContent = map[reg] || reg;
 }
 
-let kpiMode = localStorage.getItem("fib-kpi") || "bot";
+// KPI atas default ke trade milik pengguna ("saya"), bukan statistik bot.
+// Migrasi sekali agar pengguna lama (default lama "bot") ikut pindah ke "saya".
+if (!localStorage.getItem("fib-kpi-v2")) {
+  localStorage.setItem("fib-kpi", "saya");
+  localStorage.setItem("fib-kpi-v2", "1");
+}
+let kpiMode = localStorage.getItem("fib-kpi") || "saya";
 function renderKpis(st = {}, risk = {}) {
   const el = $("k-pnl");
   if (kpiMode === "saya") {
@@ -474,7 +480,7 @@ function renderKpis(st = {}, risk = {}) {
     $("k-pf").textContent = m.pf || 0;
     $("k-resolved").textContent = m.resolved;
     $("k-open").textContent = m.open;
-    $("k-today").textContent = `${m.today}/3`;
+    $("k-today").textContent = `${m.today}/5`;
     el.textContent = (m.total_r >= 0 ? "+" : "") + m.total_r + "R";
     el.style.color = m.total_r > 0 ? "var(--green)" : m.total_r < 0 ? "var(--red)" : "var(--text)";
   } else {
@@ -483,7 +489,7 @@ function renderKpis(st = {}, risk = {}) {
     $("k-pf").textContent = st.profit_factor ?? "–";
     $("k-resolved").textContent = st.resolved ?? 0;
     $("k-open").textContent = st.open ?? 0;
-    $("k-today").textContent = `${risk.trades_today ?? 0}/${risk.max_trades ?? 3}`;
+    $("k-today").textContent = `${risk.trades_today ?? 0}/${risk.max_trades ?? 5}`;
     const pnl = risk.pnl_today_pct ?? 0;
     el.textContent = (pnl >= 0 ? "+" : "") + pnl + "%";
     el.style.color = pnl > 0 ? "var(--green)" : pnl < 0 ? "var(--red)" : "var(--text)";
@@ -661,7 +667,7 @@ function renderRisk(r = {}) {
     ? `<div class="halt">⛔ Entry baru DIHENTIKAN (circuit breaker)</div>`
     : `<div class="ok-box">✅ Entry baru diizinkan</div>`;
   $("risk").innerHTML = box + [
-    ["Trade hari ini", `${r.trades_today ?? 0} / ${r.max_trades ?? 3}`],
+    ["Trade hari ini", `${r.trades_today ?? 0} / ${r.max_trades ?? 5}`],
     ["Stop-loss hari ini", `${r.stops_today ?? 0} / 2`],
     ["PnL hari ini", `${r.pnl_today_pct ?? 0}%`],
     ["Risiko / trade", "2%"],

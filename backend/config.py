@@ -71,7 +71,7 @@ RISK_PER_TRADE = 0.02       # 2% equity per trade
 SL_CAP_PCT = 0.06           # SL never wider than 6%
 BE_BUFFER_PCT = 0.0015      # +0.15% breakeven buffer after TP1
 COOLDOWN_BARS = 16          # per-symbol cooldown after an exit
-MAX_TRADES_PER_DAY = 3
+MAX_TRADES_PER_DAY = 5
 DAILY_DD_STOP = -0.08       # circuit breaker: stop after -8% day
 DAILY_SL_STOP = 2           # circuit breaker: stop after 2 stop-losses
 
