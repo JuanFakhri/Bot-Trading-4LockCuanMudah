@@ -54,29 +54,6 @@ def adx(df: pd.DataFrame, length: int = 14) -> pd.Series:
     return dx.ewm(alpha=1 / length, adjust=False).mean().fillna(0.0)
 
 
-def stochastic(df: pd.DataFrame, k_len: int = 14, d_len: int = 3) -> tuple[pd.Series, pd.Series]:
-    """Stochastic oscillator. Returns (%K, %D), both 0..100."""
-    low_min = df["low"].rolling(k_len, min_periods=1).min()
-    high_max = df["high"].rolling(k_len, min_periods=1).max()
-    rng = (high_max - low_min).replace(0.0, np.nan)
-    k = (100 * (df["close"] - low_min) / rng).fillna(50.0)
-    d = k.rolling(d_len, min_periods=1).mean()
-    return k, d
-
-
-def stoch_rsi(close: pd.Series, rsi_len: int = 14, stoch_len: int = 14,
-              k_smooth: int = 3, d_smooth: int = 3) -> tuple[pd.Series, pd.Series]:
-    """Stochastic RSI (0..1). Returns (%K, %D) of the stochastic applied to RSI."""
-    r = rsi(close, rsi_len)
-    lo = r.rolling(stoch_len, min_periods=1).min()
-    hi = r.rolling(stoch_len, min_periods=1).max()
-    rng = (hi - lo).replace(0.0, np.nan)
-    sr = ((r - lo) / rng).fillna(0.5)
-    k = sr.rolling(k_smooth, min_periods=1).mean()
-    d = k.rolling(d_smooth, min_periods=1).mean()
-    return k, d
-
-
 def obv(df: pd.DataFrame) -> pd.Series:
     """On-Balance Volume."""
     direction = np.sign(df["close"].diff().fillna(0.0))
