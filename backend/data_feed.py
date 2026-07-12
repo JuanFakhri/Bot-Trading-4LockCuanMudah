@@ -10,6 +10,7 @@ rest of the bot keeps running instead of crashing.
 from __future__ import annotations
 
 import time
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 import httpx
@@ -217,6 +218,52 @@ async def get_btc_dominance() -> dict:
     _btcd_cache["_ts"] = now
     _btcd_cache["value"] = result
     return result
+
+
+async def get_economic_calendar() -> list[dict]:
+    """High-impact economic news for this week (ForexFactory JSON mirror).
+
+    Returns a list of ``{"title","country","impact","ts"}`` where ``ts`` is an
+    ISO-8601 UTC timestamp. Only High-impact, timed events are kept. Times are
+    stored in UTC; the dashboard converts to WIB for display.
+    """
+    if config.DEMO:
+        # a couple of synthetic upcoming events so the UI can be previewed
+        base = datetime.now(timezone.utc)
+        return [
+            {"title": "Demo CPI m/m", "country": "USD", "impact": "High",
+             "ts": (base + timedelta(hours=3)).isoformat()},
+            {"title": "Demo FOMC Statement", "country": "USD", "impact": "High",
+             "ts": (base + timedelta(hours=26)).isoformat()},
+        ]
+    out: list[dict] = []
+    try:
+        r = await _client.get(config.NEWS_URL)
+        if r.status_code != 200:
+            print(f"[data_feed] news HTTP {r.status_code}")
+            return out
+        for ev in r.json():
+            if str(ev.get("impact", "")).lower() != "high":
+                continue
+            raw = ev.get("date")
+            if not raw:
+                continue
+            try:
+                dt = datetime.fromisoformat(str(raw).replace("Z", "+00:00"))
+            except ValueError:
+                continue
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            out.append({
+                "title": ev.get("title", "News"),
+                "country": ev.get("country", ""),
+                "impact": "High",
+                "ts": dt.astimezone(timezone.utc).isoformat(),
+            })
+    except Exception as exc:
+        print(f"[data_feed] news failed: {exc}")
+    out.sort(key=lambda e: e["ts"])
+    return out
 
 
 async def close():

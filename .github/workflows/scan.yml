@@ -45,7 +45,7 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -f data/state.json docs/data/snapshot.json docs/index.html docs/style.css docs/app.js
+          git add -f data/state.json docs/data/snapshot.json docs/data/news.json docs/index.html docs/style.css docs/app.js
           if git diff --cached --quiet; then
             echo "Tidak ada perubahan."
           else

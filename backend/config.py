@@ -96,3 +96,9 @@ BINANCE_BASES = [
     "https://api1.binance.com",
 ]
 COINGECKO_BASE = "https://api.coingecko.com/api/v3"
+
+# Economic calendar (ForexFactory this-week feed, free JSON mirror). Used to warn
+# on the dashboard before high-impact news — the bot avoids trading around them.
+NEWS_URL = "https://nfs.faireconomy.media/ff_calendar_thisweek.json"
+NEWS_ALERT_HOURS = 4          # show the "news ahead" warning this many hours before
+WIB_OFFSET_HOURS = 7          # WIB = UTC+7 (display only; stored times stay UTC)

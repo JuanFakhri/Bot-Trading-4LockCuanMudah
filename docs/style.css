@@ -156,6 +156,27 @@ a.btn { text-decoration: none; display: inline-flex; align-items: center; }
 .badge.state-watching { background: var(--panel); color: var(--muted); }
 .badge.score { background: rgba(99,102,241,.18); color: var(--accent); }
 
+/* ---- News alert (ForexFactory high-impact, WIB) ---- */
+.news-alert { border-radius: 14px; padding: 12px 14px; margin: 10px 0 14px;
+  border: 1px solid var(--border); background: var(--panel); }
+.news-alert.hidden { display: none; }
+.news-alert.warn { border-color: var(--amber); background: rgba(245,158,11,.12); }
+.news-alert.danger { border-color: var(--red); background: rgba(239,68,68,.14); }
+.news-alert.ok { border-color: var(--green); background: rgba(34,197,94,.10); }
+.news-alert .na-head { font-weight: 800; font-size: 14px; line-height: 1.35; }
+.news-alert.warn .na-head { color: var(--amber); }
+.news-alert.danger .na-head { color: var(--red); }
+.news-alert .na-list { list-style: none; margin: 9px 0 0; padding: 0;
+  display: flex; flex-direction: column; gap: 4px; }
+.news-alert .na-list li { display: grid; grid-template-columns: auto 1fr auto; gap: 8px;
+  align-items: baseline; font-size: 12px; color: var(--muted);
+  padding: 4px 0; border-top: 1px dashed var(--border); }
+.news-alert .na-list li.soon { color: var(--text); font-weight: 700; }
+.news-alert .na-list .nt { font-variant-numeric: tabular-nums; }
+.news-alert .na-list .nn { color: var(--text); }
+.news-alert .na-list .nc { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.news-alert .na-src { margin-top: 8px; font-size: 11px; color: var(--muted); opacity: .85; }
+
 .conf-wrap { margin: 10px 0 6px; }
 .conf-bar { height: 8px; background: var(--panel); border-radius: 999px; overflow: hidden; border: 1px solid var(--border); }
 .conf-fill { height: 100%; background: linear-gradient(90deg, var(--amber), var(--accent-2)); }

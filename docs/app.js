@@ -100,6 +100,50 @@ function startPolling() {
 }
 connect();
 
+/* ============ NEWS ALERT (ForexFactory High-Impact, waktu WIB) ============ */
+let newsEvents = [];
+async function loadNews() {
+  try {
+    const r = await fetch("data/news.json", { cache: "no-store" });
+    if (r.ok) { const d = await r.json(); newsEvents = d.events || []; }
+  } catch (e) { /* offline: keep last */ }
+  renderNewsAlert();
+}
+function fmtWIB(d) {
+  return d.toLocaleString("id-ID", { weekday: "short", day: "2-digit", month: "short",
+    hour: "2-digit", minute: "2-digit", timeZone: "Asia/Jakarta" }) + " WIB";
+}
+function _hm(mins) { const m = Math.abs(mins); return `${Math.floor(m / 60)}j ${m % 60}m`; }
+function renderNewsAlert() {
+  const el = $("news-alert");
+  if (!el) return;
+  const now = Date.now();
+  const ALERT_MS = 4 * 3600e3;   // 4 jam sebelum
+  const evs = (newsEvents || [])
+    .map(e => ({ ...e, t: new Date(e.ts).getTime() }))
+    .filter(e => e.t - now > -30 * 60e3)     // buang yang sudah lewat >30 menit
+    .sort((a, b) => a.t - b.t);
+  if (!evs.length) { el.className = "news-alert hidden"; el.innerHTML = ""; return; }
+  const next = evs[0], diff = next.t - now, mins = Math.round(diff / 60000);
+  const list = evs.slice(0, 5).map(e => {
+    const dm = Math.round((e.t - now) / 60000);
+    const soon = e.t - now <= ALERT_MS && e.t - now > 0;
+    return `<li class="${soon ? "soon" : ""}"><span class="nt">${fmtWIB(new Date(e.t))}</span>
+      <span class="nn">${e.country ? e.country + " · " : ""}${e.title}</span>
+      <span class="nc">${e.t <= now ? "berlangsung" : "dalam " + _hm(dm)}</span></li>`;
+  }).join("");
+  let head, cls;
+  if (diff <= 0) { cls = "danger"; head = `🔴 NEWS BERLANGSUNG: ${next.title} — jangan trading dulu`; }
+  else if (diff <= ALERT_MS) { cls = "warn"; head = `⏰ ${_hm(mins)} lagi ada NEWS high-impact: <b>${next.title}</b> · ${fmtWIB(new Date(next.t))} — hindari entry`; }
+  else { cls = "ok"; head = `✅ Aman. News high-impact berikutnya: ${next.title} · ${fmtWIB(new Date(next.t))} (${_hm(mins)} lagi)`; }
+  el.className = "news-alert " + cls;
+  el.innerHTML = `<div class="na-head">${head}</div><ul class="na-list">${list}</ul>
+    <div class="na-src">📅 Sumber: ForexFactory · High Impact Expected · waktu WIB</div>`;
+}
+loadNews();
+setInterval(loadNews, 10 * 60 * 1000);     // refresh feed tiap 10 menit
+setInterval(renderNewsAlert, 30 * 1000);   // update hitung mundur tiap 30 detik
+
 /* ============ TABS: Live / Backtest ============ */
 let lastBacktest = null;
 document.querySelectorAll(".tab").forEach(t => {

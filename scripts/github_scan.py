@@ -24,6 +24,7 @@ from backend.engine import engine
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STATE_PATH = os.path.join(ROOT, "data", "state.json")
 SNAP_PATH = os.path.join(ROOT, "docs", "data", "snapshot.json")
+NEWS_PATH = os.path.join(ROOT, "docs", "data", "news.json")
 
 
 async def main():
@@ -47,6 +48,17 @@ async def main():
     # 4. persist learning back to JSON
     with open(STATE_PATH, "w", encoding="utf-8") as f:
         json.dump(db.export_state(), f, ensure_ascii=False, indent=0)
+
+    # 5. high-impact economic calendar (for the dashboard news alert, WIB)
+    try:
+        events = await data_feed.get_economic_calendar()
+        with open(NEWS_PATH, "w", encoding="utf-8") as f:
+            json.dump({"generated_ts": snap.get("last_scan"),
+                       "alert_hours": config.NEWS_ALERT_HOURS, "events": events},
+                      f, ensure_ascii=False, separators=(",", ":"))
+        print(f"[scan] news: {len(events)} high-impact events")
+    except Exception as exc:
+        print(f"[scan] news fetch failed: {exc}")
 
     reg = snap["regime"].get("regime")
     print(f"[scan] done: regime={reg} signals={len(snap['signals'])} "
