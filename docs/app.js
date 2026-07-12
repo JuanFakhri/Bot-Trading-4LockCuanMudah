@@ -282,6 +282,7 @@ function drawEquity(cv, curve) {
 
 /* ============ TRADE SAYA (personal tracker, disimpan di perangkat) ============ */
 const MT_KEY = "fib-my-trades";
+const MY_DAILY_LIMIT = 10;   // batas jurnal "Trade Saya" (manual, bukan cap strategi bot=5)
 let myOpenSymbols = new Set();
 
 const loadMT = () => { try { return JSON.parse(localStorage.getItem(MT_KEY)) || []; } catch (e) { return []; } };
@@ -380,9 +381,9 @@ function renderMyTrades(snap) {
   const wins = closed.filter(t => t.outcome === "WIN").length;
   const wr = closed.length ? Math.round(wins / closed.length * 100) : 0;
   const sumR = closed.reduce((a, t) => a + (t.r || 0), 0);
-  const overLimit = todayCount > 5;
+  const overLimit = todayCount > MY_DAILY_LIMIT;
   $("my-risk").innerHTML = [
-    ["Trade hari ini", `${todayCount} / 5${overLimit ? " ⚠️" : ""}`],
+    ["Trade hari ini", `${todayCount} / ${MY_DAILY_LIMIT}${overLimit ? " ⚠️" : ""}`],
     ["Posisi terbuka", `${open.length}`],
     ["Menang / Kalah", `${wins} / ${closed.length - wins} (${wr}%)`],
     ["Total R (real.)", `${sumR >= 0 ? "+" : ""}${sumR.toFixed(2)}R`],
@@ -480,7 +481,7 @@ function renderKpis(st = {}, risk = {}) {
     $("k-pf").textContent = m.pf || 0;
     $("k-resolved").textContent = m.resolved;
     $("k-open").textContent = m.open;
-    $("k-today").textContent = `${m.today}/5`;
+    $("k-today").textContent = `${m.today}/${MY_DAILY_LIMIT}`;
     el.textContent = (m.total_r >= 0 ? "+" : "") + m.total_r + "R";
     el.style.color = m.total_r > 0 ? "var(--green)" : m.total_r < 0 ? "var(--red)" : "var(--text)";
   } else {
