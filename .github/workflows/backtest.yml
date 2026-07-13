@@ -24,9 +24,9 @@ on:
         required: false
         default: "0.15"
       prior:
-        description: "Kekuatan prior Bayesian (default 3.0; 1.0 = ceiling bisa ~95%)"
+        description: "Kekuatan prior Bayesian (default 1.0 = ceiling ~95%, sama dgn live)"
         required: false
-        default: "3.0"
+        default: "1.0"
   schedule:
     - cron: "0 3 * * 0"          # tiap Minggu 03:00 UTC
 
