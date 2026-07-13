@@ -80,13 +80,11 @@ DAILY_SL_STOP = 2           # circuit breaker: stop after 2 stop-losses
 # --------------------------------------------------------------------------
 LEARN_MIN_SAMPLES = 5           # min resolved trades before a lesson is trusted
 LEARN_BLOCK_WINRATE = 0.35      # pattern win-rate below this gets blocked
-# Env-overridable so we can backtest different confidence settings WITHOUT
-# changing the live defaults. Smaller prior (e.g. 1.0) lets confidence swing
-# wider — up to ~95% for strongly-winning patterns. Higher floor (e.g. 0.65)
-# only surfaces/takes signals the bot is confident about (fewer signals).
-LEARN_PRIOR_ALPHA = float(os.getenv("LEARN_PRIOR_ALPHA", "1.0"))   # Bayesian prior wins (1.0 = confidence can reach ~95%)
-LEARN_PRIOR_BETA = float(os.getenv("LEARN_PRIOR_BETA", "1.0"))     # Bayesian prior losses
-CONFIDENCE_FLOOR = float(os.getenv("CONFIDENCE_FLOOR", "0.15"))    # signals below this hidden (kept low = signals stay frequent)
+# Prior 1.0 lets the learning confidence swing wide — up to ~95% for strongly-
+# winning patterns. Floor kept low (0.15) so signals stay frequent.
+LEARN_PRIOR_ALPHA = 1.0         # Bayesian prior wins
+LEARN_PRIOR_BETA = 1.0          # Bayesian prior losses
+CONFIDENCE_FLOOR = 0.15         # signals below this confidence are hidden
 
 DB_PATH = os.getenv("BOT_DB_PATH", os.path.join(os.path.dirname(__file__), "..", "data", "bot.db"))
 

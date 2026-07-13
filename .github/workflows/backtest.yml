@@ -19,14 +19,6 @@ on:
         description: "Ambang AI Score (default 60; lebih rendah = lebih banyak trade)"
         required: false
         default: "60"
-      confidence_floor:
-        description: "Lantai keyakinan belajar (default 0.15; 0.65 = hanya sinyal yakin)"
-        required: false
-        default: "0.15"
-      prior:
-        description: "Kekuatan prior Bayesian (default 1.0 = ceiling ~95%, sama dgn live)"
-        required: false
-        default: "1.0"
   schedule:
     - cron: "0 3 * * 0"          # tiap Minggu 03:00 UTC
 
@@ -56,9 +48,6 @@ jobs:
           BACKTEST_DAYS: ${{ github.event.inputs.days || '180' }}
           BACKTEST_SYMBOLS: ${{ github.event.inputs.symbols || '' }}
           BACKTEST_SCORE_TH: ${{ github.event.inputs.score_th || '60' }}
-          CONFIDENCE_FLOOR: ${{ github.event.inputs.confidence_floor || '0.15' }}
-          LEARN_PRIOR_ALPHA: ${{ github.event.inputs.prior || '3.0' }}
-          LEARN_PRIOR_BETA: ${{ github.event.inputs.prior || '3.0' }}
         run: python -m scripts.run_backtest
 
       - name: Sync frontend to GitHub Pages folder
