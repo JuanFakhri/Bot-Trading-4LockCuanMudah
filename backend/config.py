@@ -84,9 +84,9 @@ LEARN_BLOCK_WINRATE = 0.35      # pattern win-rate below this gets blocked
 # changing the live defaults. Smaller prior (e.g. 1.0) lets confidence swing
 # wider — up to ~95% for strongly-winning patterns. Higher floor (e.g. 0.65)
 # only surfaces/takes signals the bot is confident about (fewer signals).
-LEARN_PRIOR_ALPHA = float(os.getenv("LEARN_PRIOR_ALPHA", "3.0"))   # Bayesian prior wins
-LEARN_PRIOR_BETA = float(os.getenv("LEARN_PRIOR_BETA", "3.0"))     # Bayesian prior losses
-CONFIDENCE_FLOOR = float(os.getenv("CONFIDENCE_FLOOR", "0.15"))    # signals below this hidden
+LEARN_PRIOR_ALPHA = float(os.getenv("LEARN_PRIOR_ALPHA", "1.0"))   # Bayesian prior wins (1.0 = confidence can reach ~95%)
+LEARN_PRIOR_BETA = float(os.getenv("LEARN_PRIOR_BETA", "1.0"))     # Bayesian prior losses
+CONFIDENCE_FLOOR = float(os.getenv("CONFIDENCE_FLOOR", "0.15"))    # signals below this hidden (kept low = signals stay frequent)
 
 DB_PATH = os.getenv("BOT_DB_PATH", os.path.join(os.path.dirname(__file__), "..", "data", "bot.db"))
 
