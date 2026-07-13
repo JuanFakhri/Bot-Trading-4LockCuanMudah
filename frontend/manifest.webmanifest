@@ -1,13 +1,13 @@
 {
-  "name": "SMC Bot",
-  "short_name": "SMC Bot",
-  "description": "Sinyal trading crypto self-learning (Strategi SMC)",
+  "name": "NestSMC by Draftnest",
+  "short_name": "NestSMC",
+  "description": "NestSMC by Draftnest — Smart Money Signal Engine (self-learning, gratis)",
   "start_url": ".",
   "scope": ".",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#0b1020",
-  "theme_color": "#0b1020",
+  "background_color": "#14111F",
+  "theme_color": "#14111F",
   "icons": [
     { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
     { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }

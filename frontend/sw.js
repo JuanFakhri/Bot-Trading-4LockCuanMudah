@@ -1,7 +1,7 @@
-/* SMC Bot — service worker (installable PWA).
+/* NestSMC by Draftnest — service worker (installable PWA).
    Shell is cache-first; live data (data/*.json, /api/*) is always network-first
    so signals & backtest stay fresh. */
-const CACHE = "fib-bot-v1";
+const CACHE = "nestsmc-v2";
 const SHELL = [
   "./", "index.html", "style.css", "app.js",
   "manifest.webmanifest", "icon-192.png", "icon-512.png",

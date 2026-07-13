@@ -140,6 +140,7 @@ function renderNewsAlert() {
   el.innerHTML = `<div class="na-head">${head}</div><ul class="na-list">${list}</ul>
     <div class="na-src">📅 Sumber: ForexFactory · High Impact Expected · waktu WIB</div>`;
 }
+const _fy = $("foot-year"); if (_fy) _fy.textContent = new Date().getFullYear();
 loadNews();
 setInterval(loadNews, 10 * 60 * 1000);     // refresh feed tiap 10 menit
 setInterval(renderNewsAlert, 30 * 1000);   // update hitung mundur tiap 30 detik

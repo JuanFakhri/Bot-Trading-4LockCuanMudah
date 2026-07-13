@@ -1,39 +1,42 @@
-/* ============ THEME TOKENS ============ */
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap');
+
+/* ============ NestSMC by Draftnest — THEME TOKENS ============ */
+/* Aubergine base · Saffron (gold) · Periwinkle (smart) · Coral (short) */
 :root[data-theme="dark"] {
-  --bg: #0b1020;
-  --bg-2: #121a30;
-  --panel: #141d33;
-  --panel-2: #1b2540;
-  --border: #24304f;
-  --text: #e8edf7;
-  --muted: #8b98b8;
-  --accent: #4f8cff;
-  --accent-2: #6ee7b7;
-  --green: #22c55e;
-  --red: #ef4444;
-  --amber: #f59e0b;
-  --shadow: 0 8px 24px rgba(0,0,0,.35);
+  --bg: #14111F;
+  --bg-2: #0F0B1A;
+  --panel: #1B1730;
+  --panel-2: #241F3D;
+  --border: #322B4A;
+  --text: #F7F3EA;
+  --muted: #9C93B5;
+  --accent: #F5A93F;
+  --accent-2: #7C89FF;
+  --green: #7C89FF;
+  --red: #FF6B6B;
+  --amber: #FFC670;
+  --shadow: 0 12px 40px rgba(0,0,0,.45);
 }
 :root[data-theme="light"] {
-  --bg: #eef2f9;
-  --bg-2: #e3e9f4;
-  --panel: #ffffff;
-  --panel-2: #f4f7fc;
-  --border: #dbe2ef;
-  --text: #16203a;
-  --muted: #5d6b8a;
-  --accent: #2563eb;
-  --accent-2: #059669;
-  --green: #16a34a;
-  --red: #dc2626;
-  --amber: #d97706;
-  --shadow: 0 6px 18px rgba(30,50,90,.12);
+  --bg: #F5EFE3;
+  --bg-2: #ECE4D4;
+  --panel: #FFFDF8;
+  --panel-2: #F6F0E4;
+  --border: #E2D8C6;
+  --text: #241F3D;
+  --muted: #6B6483;
+  --accent: #D5891E;
+  --accent-2: #5661D6;
+  --green: #5661D6;
+  --red: #E05656;
+  --amber: #C77D14;
+  --shadow: 0 8px 22px rgba(60,40,90,.12);
 }
 
 * { box-sizing: border-box; }
 html, body { margin: 0; }
 body {
-  font-family: -apple-system, "Segoe UI", Roboto, Inter, system-ui, sans-serif;
+  font-family: Inter, -apple-system, "Segoe UI", Roboto, system-ui, sans-serif;
   background: linear-gradient(160deg, var(--bg), var(--bg-2));
   color: var(--text);
   min-height: 100vh;
@@ -48,9 +51,14 @@ body {
   position: sticky; top: 0; z-index: 20; box-shadow: var(--shadow);
 }
 .brand { display: flex; align-items: center; gap: 12px; }
-.logo { font-size: 28px; }
-.brand h1 { margin: 0; font-size: 20px; font-weight: 700; }
-.brand .tag { margin: 2px 0 0; font-size: 12px; color: var(--muted); }
+.logo { width: 42px; height: 42px; border-radius: 12px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(circle at 30% 20%, #241F3D, #14111F);
+  border: 1px solid var(--border); }
+.brand h1 { margin: 0; font-family: Fraunces, Georgia, serif; font-size: 21px;
+  font-weight: 600; letter-spacing: .2px; }
+.brand h1 .accent { color: var(--accent); font-style: italic; font-weight: 500; }
+.brand .tag { margin: 3px 0 0; font-size: 11.5px; color: var(--muted); letter-spacing: .2px; }
 .accent { color: var(--accent); }
 .top-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 
@@ -134,7 +142,7 @@ a.btn { text-decoration: none; display: inline-flex; align-items: center; }
   padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; box-shadow: var(--shadow);
 }
 .k-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
-.k-val { font-size: 22px; font-weight: 800; }
+.k-val { font-size: 22px; font-weight: 700; font-family: "JetBrains Mono", ui-monospace, monospace; }
 
 /* ============ SIGNAL CARDS ============ */
 .signal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
@@ -146,7 +154,7 @@ a.btn { text-decoration: none; display: inline-flex; align-items: center; }
 .card.entry { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
 .card.armed { border-color: var(--amber); }
 .card-top { display: flex; justify-content: space-between; align-items: center; }
-.sym { font-size: 17px; font-weight: 800; }
+.sym { font-size: 17px; font-weight: 700; font-family: "JetBrains Mono", ui-monospace, monospace; }
 .badges { display: flex; gap: 6px; }
 .badge { font-size: 11px; font-weight: 800; padding: 3px 9px; border-radius: 999px; letter-spacing: .3px; }
 .badge.long { background: rgba(34,197,94,.16); color: var(--green); }
@@ -269,3 +277,12 @@ th { color: var(--muted); font-weight: 600; font-size: 12px; }
 
 .foot { text-align: center; padding: 20px; color: var(--muted); font-size: 12px;
   display: flex; justify-content: space-between; max-width: 1320px; margin: 0 auto; flex-wrap: wrap; gap: 8px; }
+.foot-brand { width: 100%; text-align: center; padding: 4px 0 2px; color: var(--muted);
+  font-size: 12px; border-top: 1px solid var(--border); margin-top: 4px; }
+.foot-brand b { font-family: Fraunces, Georgia, serif; color: var(--text); font-weight: 600; }
+.foot-brand .accent { color: var(--accent); font-style: italic; }
+/* subtle ownership watermark, bottom-right corner */
+.brand-mark { position: fixed; right: 10px; bottom: 8px; z-index: 20; pointer-events: none;
+  font-size: 10.5px; color: var(--muted); opacity: .55; letter-spacing: .3px;
+  font-family: Fraunces, Georgia, serif; }
+.brand-mark .accent { color: var(--accent); font-style: italic; }
