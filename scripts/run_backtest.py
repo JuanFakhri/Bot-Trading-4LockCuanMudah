@@ -146,7 +146,8 @@ async def main():
         "generated_ts": pd.Timestamp.utcnow().isoformat(),
         "params": {"lookback_days": LOOKBACK_DAYS, "htf": config.HTF, "ltf": "1h",
                    "symbols": len(SYMBOLS), "demo": config.DEMO, "strategy": "smc",
-                   "score_th": SCORE_TH},
+                   "score_th": SCORE_TH, "confidence_floor": config.CONFIDENCE_FLOOR,
+                   "prior": config.LEARN_PRIOR_ALPHA},
         "summary": summary,
         "recent_trades": [
             {k: t[k] for k in ("symbol", "direction", "entry", "exit_price",
