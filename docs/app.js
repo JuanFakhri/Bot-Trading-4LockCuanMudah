@@ -196,7 +196,7 @@ function renderBacktest(rep) {
   $("bt-dd").textContent = (s.max_drawdown_r ?? 0) + "R";
   const p = rep.params || {};
   $("bt-meta").textContent = `Strategi: ${(p.strategy || "smc").toUpperCase()}`
-    + (p.score_th != null ? ` (AI Score ≥ ${p.score_th})` : "")
+    + (p.score_th != null ? ` (Skor Setup ≥ ${p.score_th})` : "")
     + ` · ${p.lookback_days || "?"} hari · ${p.symbols || "?"} simbol · trigger ${p.ltf || "1h"}`
     + (rep.generated_ts ? ` · dibuat ${new Date(rep.generated_ts).toLocaleString("id-ID")}` : "")
     + (p.demo ? " · (DEMO)" : "");
@@ -244,9 +244,9 @@ function renderOptimization(p) {
   p = p || {};
   el.innerHTML = `
     <div class="opt-box on">
-      ✅ <b>Strategi SMC + AI-Score</b> — entry hanya saat konfluensi lolos ambang.
+      ✅ <b>Strategi SMC + Skor Setup</b> — entry hanya saat konfluensi lolos ambang.
       <div class="opt-params">
-        <span class="opt-chip">AI Score ≥ ${p.score_th ?? 60}</span>
+        <span class="opt-chip">Skor Setup ≥ ${p.score_th ?? 60}</span>
         <span class="opt-chip">Trigger 1H</span>
         <span class="opt-chip">SL swing ± ATR</span>
         <span class="opt-chip">TP 1R/2R/3R</span>
@@ -653,7 +653,7 @@ function cardHTML(s) {
       <div class="badges">
         <span class="badge ${dir}">${s.direction}</span>
         <span class="badge ${stateCls}">${s.state}</span>
-        ${s.score != null ? `<span class="badge score" title="AI Score konfluensi (0-95)">AI ${s.score}</span>` : ""}
+        ${s.score != null ? `<span class="badge score" title="Skor Setup — konfluensi setup (0-95), entry ≥60">Skor ${s.score}</span>` : ""}
       </div>
     </div>
     <div class="conf-wrap">

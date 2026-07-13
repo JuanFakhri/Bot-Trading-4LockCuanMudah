@@ -1,14 +1,14 @@
 """SMC + confluence-score backtester (the "20-point" strategy).
 
 Entry is no longer a bare fib tap. It requires a confluence of Smart-Money
-concepts scored with the #15 "AI Score" (0-100); a trade fires only when the
+concepts scored with the #15 "Setup Score" (0-100); a trade fires only when the
 score clears a threshold AND a few hard filters pass. This trades far less than
 the fib engine but aims for higher-quality setups.
 
 Implemented (16 of 20): 4-stage entry (liquidity sweep -> CHOCH -> BOS -> FVG ->
 OB retest), premium/discount, ADX>25, volume spike, ATR band, multi-TF trend
 alignment (D/4H/1H), BTC.D & refined USDT.D, London/NY session, cooldown 8/2,
-risk 1%, exit TP 30/30/40 + EMA20 trail, and the weighted AI Score gate.
+risk 1%, exit TP 30/30/40 + EMA20 trail, and the weighted Setup-Score gate.
 
 Deferred (need data not freely available): DXY (#8), TOTAL3 (#10), news (#13).
 
@@ -22,7 +22,7 @@ import pandas as pd
 
 from . import config, indicators
 
-# AI Score weights (#15). DXY is deferred so its 5 pts are unreachable (max 95).
+# Setup-Score weights (#15). DXY is deferred so its 5 pts are unreachable (max 95).
 W = {"ema": 10, "rsi": 5, "adx": 10, "fib": 15, "sweep": 15, "choch": 15,
      "bos": 10, "fvg": 10, "ob": 5, "btcd": 5, "usdtd": 5}
 
@@ -177,7 +177,7 @@ def backtest_symbol_smc(symbol, htf, dtf, ltf, usdtd_daily, btcd_dir_daily,
         atr_exp = (not np.isnan(atr_sma[i])) and atr_1[i] > atr_sma[i]              # #4
         adx_ok = adx_1[i] > 25                                   # #3
 
-        # ---- AI Score (#15) ----
+        # ---- Setup Score (#15) ----
         score = (W["ema"] * ema_ok + W["rsi"] * rsi_ok + W["adx"] * adx_ok
                  + W["fib"] * in_fib + W["sweep"] * sweep + W["choch"] * choch
                  + W["bos"] * bos + W["fvg"] * fvg + W["ob"] * ob

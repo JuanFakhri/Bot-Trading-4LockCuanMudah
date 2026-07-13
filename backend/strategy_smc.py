@@ -7,7 +7,7 @@ a signal dict the engine, risk guard, learning brain and web UI consume directly
 Entry requires the same confluence the backtest validated (PF 1.44 over 212
 trades, walk-forward OOS PF 2.09): multi-TF trend alignment (1D+4H+1H),
 premium/discount, ADX>25, volume spike, an ATR band, London/NY session, the SMC
-signals (sweep → CHOCH → BOS → FVG → OB) and the weighted AI Score gate.
+signals (sweep → CHOCH → BOS → FVG → OB) and the weighted Setup-Score gate.
 """
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ import pandas as pd
 
 from . import config, indicators
 
-# AI Score weights (#15) — identical to the backtester.
+# Setup-Score weights (#15) — identical to the backtester.
 W = {"ema": 10, "rsi": 5, "adx": 10, "fib": 15, "sweep": 15, "choch": 15,
      "bos": 10, "fvg": 10, "ob": 5, "btcd": 5, "usdtd": 5}
 
@@ -162,7 +162,7 @@ def evaluate(symbol: str, htf: pd.DataFrame, dtf: pd.DataFrame, ltf: pd.DataFram
         {"rule": "BOS", "ok": bool(bos)},
         {"rule": "FVG retest", "ok": bool(fvg)},
         {"rule": "Order block", "ok": bool(ob)},
-        {"rule": f"AI Score >= {int(score_th)}", "ok": score >= score_th,
+        {"rule": f"Skor Setup >= {int(score_th)}", "ok": score >= score_th,
          "detail": f"score={score}"},
     ]
 
