@@ -38,6 +38,8 @@ def backtest_symbol_smc(symbol, htf, dtf, ltf, usdtd_daily, btcd_dir_daily,
     atr_min = float(params.get("atr_min_pct", 0.3))
     atr_max = float(params.get("atr_max_pct", 8.0))
     use_session = bool(params.get("use_session", True))
+    allow_long = bool(params.get("allow_long", True))    # research knob (live = both)
+    allow_short = bool(params.get("allow_short", True))
 
     if ltf is None or len(ltf) < 250 or len(htf) < config.EMA_SLOW + 30:
         return []
@@ -125,6 +127,8 @@ def backtest_symbol_smc(symbol, htf, dtf, ltf, usdtd_daily, btcd_dir_daily,
         short_ok = d_bull[i] == 0 and h4_bull[i] == 0 and h1_bull[i] == 0
         machine = "long" if long_ok else "short" if short_ok else None
         if machine is None:
+            continue
+        if (machine == "long" and not allow_long) or (machine == "short" and not allow_short):
             continue
 
         # ---- hard filters ----
