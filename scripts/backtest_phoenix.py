@@ -29,6 +29,10 @@ LOOKBACK_DAYS = int(os.getenv("PHOENIX_DAYS", "365"))
 _env_syms = os.getenv("PHOENIX_SYMBOLS", "").strip()
 SYMBOLS = [s.strip().upper() for s in _env_syms.split(",") if s.strip()] or config.WATCHLIST
 
+# Which engines to run (comma-separated: fib,breakout,range). Empty = all three.
+_env_eng = os.getenv("PHOENIX_ENGINES", "").strip()
+ENGINES = [e.strip().lower() for e in _env_eng.split(",") if e.strip()] or list(phx.ENGINES)
+
 
 async def main():
     os.makedirs(os.path.dirname(OUT_PATH), exist_ok=True)
@@ -53,7 +57,8 @@ async def main():
             if htf.empty or dtf.empty or ltf.empty:
                 print(f"[phoenix] {sym}: no data")
                 continue
-            trades = phx.backtest_symbol_phoenix(sym, htf, dtf, ltf, regime_daily, None)
+            trades = phx.backtest_symbol_phoenix(sym, htf, dtf, ltf, regime_daily, None,
+                                                 {"engines": ENGINES})
             all_trades.extend(trades)
             eng = {e: sum(1 for t in trades if t["engine"] == e) for e in phx.ENGINES}
             print(f"[phoenix] {sym}: {len(trades)} trades {eng}")
@@ -78,7 +83,7 @@ async def main():
     report = {
         "generated_ts": pd.Timestamp.utcnow().isoformat(),
         "params": {"lookback_days": LOOKBACK_DAYS, "htf": config.HTF, "ltf": "1h",
-                   "symbols": len(SYMBOLS), "demo": config.DEMO,
+                   "symbols": len(SYMBOLS), "demo": config.DEMO, "engines": ENGINES,
                    "regime_days": {str(k): int(v) for k, v in reg_counts.items()},
                    "risk_trend": config.PHX_RISK_TREND, "risk_range": config.PHX_RISK_RANGE},
         "summary": summary,
