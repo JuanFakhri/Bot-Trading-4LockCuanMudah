@@ -75,22 +75,27 @@ async def main():
     btc_ret = bm.pct_change()                      # return during month M
     btc_next = btc_ret.shift(-1)                    # return in month M+1 (reaction)
 
-    cpi_yoy = cpi.pct_change(12)
-    core_yoy = core.pct_change(12)
-    infl_cooling = cpi_yoy.diff() < 0              # YoY falling = disinflation
-    core_cooling = core_yoy.diff() < 0
-    ff_chg = ff.diff()
+    # unify everything onto ONE monthly PeriodIndex so booleans align safely
+    M = pd.DataFrame({"cpi": cpi, "core": core, "ff": ff}).sort_index()
+    M["btc_ret"] = btc_ret
+    M["btc_next"] = btc_next
+    M["cpi_yoy"] = M["cpi"].pct_change(12)
+    M["core_yoy"] = M["core"].pct_change(12)
+
+    infl_cooling = M["cpi_yoy"].diff() < 0         # YoY falling = disinflation
+    core_cooling = M["core_yoy"].diff() < 0
+    ff_chg = M["ff"].diff()
     cut = ff_chg < -0.05
     hike = ff_chg > 0.05
     hold = (~cut) & (~hike)
 
     # restrict to the study window (last ~DAYS)
-    start = (pd.Timestamp.utcnow().to_period("M") - int(DAYS / 30))
-    mask = cpi_yoy.index >= start
+    start = pd.Timestamp.utcnow().to_period("M") - int(DAYS / 30)
+    mask = pd.Series(M.index >= start, index=M.index)
 
     def cond(flag):
-        idx = flag[flag & mask].index
-        return _stats(btc_next.reindex(idx))
+        idx = M.index[flag.fillna(False) & mask]
+        return _stats(M["btc_next"].reindex(idx))
 
     out = {
         "generated_ts": pd.Timestamp.utcnow().isoformat(),
@@ -107,7 +112,7 @@ async def main():
             "hold": cond(hold),
             "hike (Fed Funds naik)": cond(hike),
         },
-        "baseline_all_months": _stats(btc_next[mask]),
+        "baseline_all_months": _stats(M["btc_next"][mask]),
     }
 
     def verdict():
