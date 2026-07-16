@@ -19,6 +19,18 @@ on:
         description: "Ambang AI Score (default 60; lebih rendah = lebih banyak trade)"
         required: false
         default: "60"
+      macro_gate:
+        description: "Gate makro ForexFactory (1=on): LONG hanya jika kebijakan tidak risk-off, SHORT hanya jika tidak risk-on"
+        required: false
+        default: "0"
+      macro_require_on:
+        description: "1=LONG wajib RISK_ON (perkuat sinyal long yang lemah)"
+        required: false
+        default: "0"
+      no_persist:
+        description: "1=jangan tulis learning state (uji A/B, tidak menyentuh bot live)"
+        required: false
+        default: "0"
   schedule:
     - cron: "0 3 * * 0"          # tiap Minggu 03:00 UTC
 
@@ -48,6 +60,9 @@ jobs:
           BACKTEST_DAYS: ${{ github.event.inputs.days || '180' }}
           BACKTEST_SYMBOLS: ${{ github.event.inputs.symbols || '' }}
           BACKTEST_SCORE_TH: ${{ github.event.inputs.score_th || '60' }}
+          BACKTEST_MACRO_GATE: ${{ github.event.inputs.macro_gate || '0' }}
+          BACKTEST_MACRO_REQUIRE_ON: ${{ github.event.inputs.macro_require_on || '0' }}
+          BACKTEST_NO_PERSIST: ${{ github.event.inputs.no_persist || '0' }}
         run: python -m scripts.run_backtest
 
       - name: Sync frontend to GitHub Pages folder

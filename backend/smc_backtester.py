@@ -40,6 +40,15 @@ def backtest_symbol_smc(symbol, htf, dtf, ltf, usdtd_daily, btcd_dir_daily,
     use_session = bool(params.get("use_session", True))
     allow_long = bool(params.get("allow_long", True))    # research knob (live = both)
     allow_short = bool(params.get("allow_short", True))
+    # Macro-calendar gate (#13, previously deferred): a daily crypto-policy bias
+    # from macro_news (RISK_ON = easing = bullish, RISK_OFF = tightening). When on,
+    # LONGs are only taken when policy is NOT risk-off and SHORTs only when NOT
+    # risk-on — a counter-policy setup becomes a NEUTRAL (no-trade). Default off so
+    # the live engine is unchanged until the A/B backtest proves it helps.
+    macro_gate = bool(params.get("macro_gate", False))
+    macro_require_on = bool(params.get("macro_require_on", False))  # longs need RISK_ON
+    macro_on_th = float(params.get("macro_on_th", 0.15))
+    macro_off_th = float(params.get("macro_off_th", -0.15))
 
     if ltf is None or len(ltf) < 250 or len(htf) < config.EMA_SLOW + 30:
         return []
@@ -76,6 +85,14 @@ def backtest_symbol_smc(symbol, htf, dtf, ltf, usdtd_daily, btcd_dir_daily,
     usdtd_prev = _align(usdtd_daily.shift(5), ts)
     btcd_dir = pd.Series(btcd_dir_daily).reindex(ts, method="ffill").fillna("STABIL").to_numpy() \
         if btcd_dir_daily is not None else np.array(["STABIL"] * n)
+
+    # macro policy bias (daily net score) aligned to 1H; 0.0 where unknown
+    macro_bias_daily = params.get("macro_bias_daily")
+    if macro_gate and macro_bias_daily is not None and len(macro_bias_daily):
+        macro_bias = pd.Series(macro_bias_daily).reindex(ts, method="ffill").fillna(0.0).to_numpy()
+    else:
+        macro_bias = None
+        macro_gate = False
 
     # session (UTC hours): London ~07-16, New York ~13-22
     hours = ts.hour.to_numpy()
@@ -130,6 +147,16 @@ def backtest_symbol_smc(symbol, htf, dtf, ltf, usdtd_daily, btcd_dir_daily,
             continue
         if (machine == "long" and not allow_long) or (machine == "short" and not allow_short):
             continue
+
+        # ---- macro policy gate (#13): don't fight the central-bank tone ----
+        if macro_gate:
+            mb = macro_bias[i]
+            if machine == "long" and mb <= macro_off_th:      # policy risk-off -> no long
+                continue
+            if machine == "short" and mb >= macro_on_th:       # policy risk-on -> no short
+                continue
+            if machine == "long" and macro_require_on and mb < macro_on_th:  # weak-long fix
+                continue
 
         # ---- hard filters ----
         atr_pct = atr_1[i] / c[i] * 100 if c[i] else 0

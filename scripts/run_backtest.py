@@ -37,6 +37,49 @@ SYMBOLS = [s.strip().upper() for s in _env_syms.split(",") if s.strip()] or conf
 # SMC AI-Score gate (defaults to the live value).
 SCORE_TH = float(os.getenv("BACKTEST_SCORE_TH", str(config.SMC_SCORE_TH)))
 
+# Macro-calendar policy gate (#13). When on, the SMC engine only takes LONGs when
+# economic policy is NOT risk-off and SHORTs when NOT risk-on (a counter-policy
+# setup becomes NEUTRAL/no-trade). MACRO_REQUIRE_ON additionally demands RISK_ON
+# for a long (fixes the "weak long" the trader flagged). Validated via OOS PF.
+MACRO_GATE = os.getenv("BACKTEST_MACRO_GATE", "0") == "1"
+MACRO_REQUIRE_ON = os.getenv("BACKTEST_MACRO_REQUIRE_ON", "0") == "1"
+# When set, do NOT rewrite the live learning brain (data/state.json). Used for the
+# macro-gate A/B so an unvalidated change never leaks into the live bot.
+NO_PERSIST = os.getenv("BACKTEST_NO_PERSIST", "0") == "1"
+
+
+async def _macro_bias_timeline(days: int):
+    """Daily crypto-policy bias (net macro_news score, trailing 7-day sum) over
+    the backtest window. Real: FRED releases; DEMO: synthetic. Empty on failure."""
+    from scripts.backtest_news import _build_events
+    from backend import macro_news
+    end = pd.Timestamp.utcnow().normalize()
+    start = end - pd.Timedelta(days=days + 90)
+    rng = np.random.default_rng(20260716)
+    try:
+        events = await _build_events(start, end, rng)
+    except Exception as exc:
+        print(f"[backtest] macro events failed: {exc}")
+        return pd.Series(dtype=float)
+    day: dict = {}
+    for ev in events:
+        a = macro_news.assess_event(ev["title"], actual=ev.get("actual"),
+                                    previous=ev.get("previous"))
+        if not a.matched or a.score == 0:
+            continue
+        d = pd.Timestamp(ev["ts"]).normalize()
+        day[d] = day.get(d, 0.0) + a.score
+    if not day:
+        return pd.Series(dtype=float)
+    s = pd.Series(day).sort_index()
+    s.index = s.index.tz_convert("UTC") if s.index.tz else s.index.tz_localize("UTC")
+    idx = pd.date_range(start=s.index.min(), end=end, freq="D", tz="UTC")
+    # a release's policy tone persists ~a week, then fades back to NEUTRAL
+    daily = s.reindex(idx, fill_value=0.0).rolling(7, min_periods=1).sum()
+    print(f"[backtest] macro timeline: {len(day)} release-days, "
+          f"RISK_ON {int((daily > 0.15).sum())}d / RISK_OFF {int((daily < -0.15).sum())}d")
+    return daily
+
 
 def _dir_series(df: pd.Series | None, idx: pd.Index, invert: bool = False) -> pd.Series:
     """Per-day NAIK/TURUN/STABIL from an EMA50 slope (deadband 0.5%), aligned to idx."""
@@ -96,6 +139,11 @@ async def main():
     ethbtc = await data_feed.get_klines_history("ETHBTC", "1d", LOOKBACK_DAYS + 80)
     btcd_dir_daily = _dir_series(ethbtc, usdtd_daily.index, invert=True)
 
+    # macro policy timeline (only when the gate is on)
+    macro_bias_daily = await _macro_bias_timeline(LOOKBACK_DAYS) if MACRO_GATE else None
+    if MACRO_GATE and (macro_bias_daily is None or macro_bias_daily.empty):
+        print("[backtest] macro gate requested but no macro data — running WITHOUT gate")
+
     all_trades: list[dict] = []
     for sym in SYMBOLS:
         try:
@@ -105,8 +153,10 @@ async def main():
             if htf.empty or dtf.empty:
                 print(f"[backtest] {sym}: no data")
                 continue
-            trades = smc_backtester.backtest_symbol_smc(sym, htf, dtf, ltf, usdtd_daily,
-                                                        btcd_dir_daily, {"score_th": SCORE_TH})
+            trades = smc_backtester.backtest_symbol_smc(
+                sym, htf, dtf, ltf, usdtd_daily, btcd_dir_daily,
+                {"score_th": SCORE_TH, "macro_gate": MACRO_GATE,
+                 "macro_require_on": MACRO_REQUIRE_ON, "macro_bias_daily": macro_bias_daily})
             all_trades.extend(trades)
             print(f"[backtest] {sym}: {len(trades)} trades")
         except Exception as exc:
@@ -146,7 +196,8 @@ async def main():
         "generated_ts": pd.Timestamp.utcnow().isoformat(),
         "params": {"lookback_days": LOOKBACK_DAYS, "htf": config.HTF, "ltf": "1h",
                    "symbols": len(SYMBOLS), "demo": config.DEMO, "strategy": "smc",
-                   "score_th": SCORE_TH},
+                   "score_th": SCORE_TH, "macro_gate": MACRO_GATE,
+                   "macro_require_on": MACRO_REQUIRE_ON},
         "summary": summary,
         "recent_trades": [
             {k: t[k] for k in ("symbol", "direction", "entry", "exit_price",
@@ -162,13 +213,22 @@ async def main():
     }
     with open(OUT_PATH, "w", encoding="utf-8") as f:
         json.dump(report, f, ensure_ascii=False, separators=(",", ":"))
-    with open(STATE_PATH, "w", encoding="utf-8") as f:
-        json.dump(db.export_state(), f, ensure_ascii=False, indent=0)
+    # NO_PERSIST: research A/B (e.g. macro-gate trial) must NOT overwrite the live
+    # learning brain until it is validated ("jangan ditambahkan kalau kurang bagus").
+    if not NO_PERSIST:
+        with open(STATE_PATH, "w", encoding="utf-8") as f:
+            json.dump(db.export_state(), f, ensure_ascii=False, indent=0)
+    else:
+        print("[backtest] NO_PERSIST — live learning state left untouched")
 
+    wf = walkforward.get("test_filtered", {})
     s = summary
     print(f"[backtest] DONE: {s['trades']} trades, win {s['win_rate']}%, "
           f"PF {s['profit_factor']}, expectancy {s['expectancy_r']}R, "
           f"maxDD {s['max_drawdown_r']}R | learned {len(blocked)} blocks, {len(favored)} favors")
+    print(f"[backtest] OOS(walk-forward): PF {wf.get('profit_factor')} "
+          f"win {wf.get('win_rate')}% trades {wf.get('trades')} "
+          f"| macro_gate={MACRO_GATE} require_on={MACRO_REQUIRE_ON}")
     await data_feed.close()
 
 
