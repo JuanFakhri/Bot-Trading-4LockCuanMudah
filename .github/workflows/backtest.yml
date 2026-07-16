@@ -39,6 +39,10 @@ on:
         description: "Ambang Setup Score khusus LONG (mis. 75; kosong = sama dengan score_th)"
         required: false
         default: ""
+      long_reversal_hard:
+        description: "1=perkuat LONG: wajib sweep-reclaim support + BOS (reversal nyata)"
+        required: false
+        default: "0"
   schedule:
     - cron: "0 3 * * 0"          # tiap Minggu 03:00 UTC
 
@@ -73,6 +77,7 @@ jobs:
           BACKTEST_NO_PERSIST: ${{ github.event.inputs.no_persist || '0' }}
           BACKTEST_LONG_STRUCT_TP: ${{ github.event.inputs.long_struct_tp || '0' }}
           BACKTEST_LONG_SCORE_TH: ${{ github.event.inputs.long_score_th || '' }}
+          BACKTEST_LONG_REVERSAL_HARD: ${{ github.event.inputs.long_reversal_hard || '0' }}
         run: python -m scripts.run_backtest
 
       - name: Sync frontend to GitHub Pages folder

@@ -48,6 +48,8 @@ LONG_STRUCT_TP = os.getenv("BACKTEST_LONG_STRUCT_TP", "0") == "1"
 # "Strengthen long" via conviction: higher Setup Score required for LONGs only.
 _lst = os.getenv("BACKTEST_LONG_SCORE_TH", "").strip()
 LONG_SCORE_TH = float(_lst) if _lst else SCORE_TH
+# "Strengthen long" via entry quality: LONG must be a real sweep-reclaim + BOS.
+LONG_REVERSAL_HARD = os.getenv("BACKTEST_LONG_REVERSAL_HARD", "0") == "1"
 # When set, do NOT rewrite the live learning brain (data/state.json). Used for the
 # macro-gate A/B so an unvalidated change never leaks into the live bot.
 NO_PERSIST = os.getenv("BACKTEST_NO_PERSIST", "0") == "1"
@@ -162,7 +164,8 @@ async def main():
                 sym, htf, dtf, ltf, usdtd_daily, btcd_dir_daily,
                 {"score_th": SCORE_TH, "macro_gate": MACRO_GATE,
                  "macro_require_on": MACRO_REQUIRE_ON, "macro_bias_daily": macro_bias_daily,
-                 "long_struct_tp": LONG_STRUCT_TP, "long_score_th": LONG_SCORE_TH})
+                 "long_struct_tp": LONG_STRUCT_TP, "long_score_th": LONG_SCORE_TH,
+                 "long_reversal_hard": LONG_REVERSAL_HARD})
             all_trades.extend(trades)
             print(f"[backtest] {sym}: {len(trades)} trades")
         except Exception as exc:
@@ -204,7 +207,7 @@ async def main():
                    "symbols": len(SYMBOLS), "demo": config.DEMO, "strategy": "smc",
                    "score_th": SCORE_TH, "macro_gate": MACRO_GATE,
                    "macro_require_on": MACRO_REQUIRE_ON, "long_struct_tp": LONG_STRUCT_TP,
-                   "long_score_th": LONG_SCORE_TH},
+                   "long_score_th": LONG_SCORE_TH, "long_reversal_hard": LONG_REVERSAL_HARD},
         "summary": summary,
         "recent_trades": [
             {k: t[k] for k in ("symbol", "direction", "entry", "exit_price",

@@ -57,6 +57,10 @@ def backtest_symbol_smc(symbol, htf, dtf, ltf, usdtd_daily, btcd_dir_daily,
     # "Strengthen long" via conviction: demand a higher Setup Score for LONGs only
     # (weak longs were ~50% coin-flips). Defaults to score_th = no change.
     long_score_th = float(params.get("long_score_th", score_th))
+    # "Strengthen long" via ENTRY quality: a LONG must be a real bullish reversal —
+    # a liquidity sweep below support that reclaims AND a change-of-character / BOS —
+    # not a bare EMA-aligned dip. Longs only; default off.
+    long_reversal_hard = bool(params.get("long_reversal_hard", False))
 
     if ltf is None or len(ltf) < 250 or len(htf) < config.EMA_SLOW + 30:
         return []
@@ -224,6 +228,9 @@ def backtest_symbol_smc(symbol, htf, dtf, ltf, usdtd_daily, btcd_dir_daily,
                  + W["bos"] * bos + W["fvg"] * fvg + W["ob"] * ob
                  + W["btcd"] * btcd_ok + W["usdtd"] * usdtd_ok)
         if not vol_ok or not atr_exp:   # volume spike + volatility expansion (hard)
+            continue
+        # strengthen long: require a genuine sweep-reclaim + structure break
+        if machine == "long" and long_reversal_hard and not (sweep and (choch or bos)):
             continue
         th = long_score_th if machine == "long" else score_th   # asymmetric long gate
         if score < th:
