@@ -49,6 +49,11 @@ def backtest_symbol_smc(symbol, htf, dtf, ltf, usdtd_daily, btcd_dir_daily,
     macro_require_on = bool(params.get("macro_require_on", False))  # longs need RISK_ON
     macro_on_th = float(params.get("macro_on_th", 0.15))
     macro_off_th = float(params.get("macro_off_th", -0.15))
+    # "Strengthen long": target the runner at the nearest real RESISTANCE (recent
+    # swing-high) instead of a flat 3R, so a long banks at the right level. Longs
+    # only; shorts keep the tested 3R exit. Default off (validated via OOS PF).
+    long_struct_tp = bool(params.get("long_struct_tp", False))
+    res_lookback = int(params.get("res_lookback", 40))
 
     if ltf is None or len(ltf) < 250 or len(htf) < config.EMA_SLOW + 30:
         return []
@@ -110,6 +115,8 @@ def backtest_symbol_smc(symbol, htf, dtf, ltf, usdtd_daily, btcd_dir_daily,
     cooldown_until = -1
     lowest = pd.Series(l).rolling(10, min_periods=3).min().shift(1).to_numpy()
     highest = pd.Series(h).rolling(10, min_periods=3).max().shift(1).to_numpy()
+    # nearest resistance (rolling swing-high) for the structure-based long TP
+    res_hi = pd.Series(h).rolling(res_lookback, min_periods=res_lookback // 2).max().shift(1).to_numpy()
 
     for i in range(210, n):
         # confirm pivots (known pl_ bars later)
@@ -226,6 +233,9 @@ def backtest_symbol_smc(symbol, htf, dtf, ltf, usdtd_daily, btcd_dir_daily,
             if risk <= 0:
                 continue
             tp1, tp2, tp3 = entry + risk, entry + 2 * risk, entry + 3 * risk
+            if long_struct_tp and not np.isnan(res_hi[i]) and res_hi[i] > entry:
+                # runner banks at the real resistance, but keep RR sane: >=2R, <=6R
+                tp3 = min(max(res_hi[i], entry + 2 * risk), entry + 6 * risk)
         else:
             sl = min(max(swH, entry) + atr_1[i], entry * (1 + config.SL_CAP_PCT))
             risk = sl - entry
