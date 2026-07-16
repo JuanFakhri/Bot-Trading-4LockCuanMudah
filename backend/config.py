@@ -86,6 +86,45 @@ LEARN_PRIOR_ALPHA = 1.0         # Bayesian prior wins
 LEARN_PRIOR_BETA = 1.0          # Bayesian prior losses
 CONFIDENCE_FLOOR = 0.15         # signals below this confidence are hidden
 
+# --------------------------------------------------------------------------
+# Phoenix Hybrid — multi-engine RESEARCH strategy (backtest only; NOT wired to
+# the live signal engine). Evaluated via scripts/backtest_phoenix.py and shown
+# in the "Phoenix" tab. Tuning lives here; nothing here changes live trading.
+# --------------------------------------------------------------------------
+PHX_NEUTRAL_BAND = 0.02          # BTC EMA50 flat within ±2% over N days -> NEUTRAL
+PHX_NEUTRAL_DAYS = 5
+PHX_VOL_MIN_PCT = 1.5            # ATR(14) 4H must exceed this % of price for trend engines
+# Engine 1 — FIB retrace
+PHX_FIB_IMPULSE_ATR = 2.5        # min impulse leg size (ATR multiples), down from 3
+PHX_FIB_ZONE_LO = 0.382         # wider golden zone
+PHX_FIB_ZONE_HI = 0.618
+PHX_FIB_CONFIRM_MIN = 2          # need 2 of 3 (BOS / RSI turn / volume) triggers
+# Engine 2 — Momentum breakout
+PHX_BRK_LOOKBACK = 20            # break the high/low of the last N bars
+PHX_BRK_VOL_MULT = 1.5          # volume > 1.5x SMA20
+PHX_BRK_ATR_MIN = 0.5           # ATR(14) 1H > 0.5% of price
+PHX_BRK_RSI = 55                # RSI 4H > 55 (long) / < 45 (short)
+# Engine 3 — Range mean-reversion
+PHX_RANGE_MIN_ATR = 2.0          # range width must be >= 2x ATR
+PHX_RANGE_WINDOW = 40            # bars used to define the range
+PHX_RANGE_HOLD_BARS = 12         # range must have held >= 12h (12x 1H bars)
+PHX_RANGE_RR = 1.5               # min reward:risk for a range trade
+PHX_RANGE_RSI_LO = 35            # oversold (long) / 100-this overbought (short)
+# Exits
+PHX_SL_ATR = 0.8                 # SL beyond swing/OB by 0.8 ATR (tighter -> better RR)
+PHX_TIME_STOP_BARS = 12          # close half if < 0.5R after N bars
+PHX_COOLDOWN_BARS = 10           # per-pair cooldown after an exit
+# Risk / recovery (portfolio level)
+PHX_RISK_TREND = 0.015           # 1.5% equity per FIB/breakout trade
+PHX_RISK_RANGE = 0.005           # 0.5% equity per range trade
+PHX_RISK_RECOVERY = 0.01         # 1% while in recovery mode
+PHX_RECOVERY_DD = 0.10           # enter recovery after -10% from equity peak
+PHX_RECOVERY_EXIT = 0.95         # leave recovery once back to 95% of peak
+PHX_DAILY_MAX_LOSS = 0.04        # stop for the day after -4%
+PHX_WEEKLY_MAX_LOSS = 0.08       # stop for the week after -8%
+PHX_MAX_CONCURRENT = 3           # max simultaneous open positions
+PHX_RECOVERY_MAX_TRADES_DAY = 2  # cap trades/day while recovering
+
 DB_PATH = os.getenv("BOT_DB_PATH", os.path.join(os.path.dirname(__file__), "..", "data", "bot.db"))
 
 # Data sources (all free, no API key required)

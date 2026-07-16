@@ -154,7 +154,11 @@ document.querySelectorAll(".tab").forEach(t => {
     const v = t.dataset.view;
     $("view-live").classList.toggle("hidden", v !== "live");
     $("view-backtest").classList.toggle("hidden", v !== "backtest");
+    $("view-macro").classList.toggle("hidden", v !== "macro");
+    $("view-phoenix").classList.toggle("hidden", v !== "phoenix");
     if (v === "backtest") loadBacktest();
+    if (v === "macro") loadMacro();
+    if (v === "phoenix") loadPhoenix();
   };
 });
 
@@ -320,6 +324,275 @@ function drawEquity(cv, curve) {
   const col = end >= 0 ? green : red;
   ctx.beginPath();
   curve.forEach((p, i) => { const px = x(i), py = y(p.r); i ? ctx.lineTo(px, py) : ctx.moveTo(px, py); });
+  ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.stroke();
+  ctx.lineTo(x(curve.length - 1), y(0)); ctx.lineTo(x(0), y(0)); ctx.closePath();
+  ctx.fillStyle = col; ctx.globalAlpha = 0.12; ctx.fill(); ctx.globalAlpha = 1;
+}
+
+/* ============ MAKRO: screening berita + backtest 3 tahun ============ */
+(function setupMacroControls() {
+  const run = $("mc-run");
+  const host = location.hostname, seg = location.pathname.split("/").filter(Boolean)[0];
+  if (run && host.endsWith("github.io") && seg) {
+    run.href = `https://github.com/${host.split(".")[0]}/${seg}/actions/workflows/news_backtest.yml`;
+  } else if (run) { run.href = "https://github.com"; run.textContent = "▶ Buka GitHub Actions"; }
+  const ref = $("mc-refresh"); if (ref) ref.onclick = () => loadMacro();
+})();
+
+const _pct = v => (v >= 0 ? "+" : "") + (v ?? 0) + "%";
+function _verdictBadge(bias, verdict) {
+  const cls = bias === "RISK_ON" ? "bagus" : bias === "RISK_OFF" ? "buruk" : "netral";
+  const txt = verdict ? verdict.toUpperCase() : (cls === "bagus" ? "BAGUS" : cls === "buruk" ? "BURUK" : "NETRAL");
+  return `<span class="verdict ${cls}">${txt}</span>`;
+}
+
+async function loadMacro() {
+  // 1) live screen from news.json (already enriched by the scan)
+  try {
+    const r = await fetch("data/news.json", { cache: "no-store" });
+    if (r.ok) renderMacroNow(await r.json());
+  } catch (e) { /* offline */ }
+  // 2) 3-year backtest report
+  let rep = null;
+  for (const url of ["data/news_backtest.json", "/api/news_backtest"]) {
+    try { const x = await fetch(url, { cache: "no-store" }); if (x.ok) { rep = await x.json(); break; } }
+    catch (e) { /* next */ }
+  }
+  if (rep) renderMacroBacktest(rep);
+}
+
+function renderMacroNow(d) {
+  const s = d.screen || {};
+  const now = $("mc-now");
+  if (now) {
+    const has = s.n_events > 0;
+    now.innerHTML = has
+      ? `<div class="mc-head">${_verdictBadge(s.bias, s.verdict)}
+           <span class="mc-net">skor makro ${s.net_score >= 0 ? "+" : ""}${s.net_score}</span>
+           <span class="muted small">${s.n_events} rilis ke depan</span></div>
+         ${s.driver ? `<p class="muted small">Penggerak utama: <b>${s.driver}</b> — ${s.driver_reason || ""}</p>` : ""}`
+      : `<p class="muted">Tidak ada rilis high-impact terdekat untuk dinilai.</p>`;
+  }
+  const evs = (d.events || []);
+  const tb = document.querySelector("#mc-events tbody");
+  $("mc-events-empty").classList.toggle("hidden", evs.length > 0);
+  if (tb) tb.innerHTML = evs.map(e => {
+    const pf = (e.previous || "–") + " → " + (e.forecast || "–");
+    const when = e.ts ? fmtWIB(new Date(e.ts)) : "–";
+    return `<tr><td class="small">${when}</td>
+      <td>${e.country ? e.country + " · " : ""}${e.title}<div class="muted xsmall">${e.reason || ""}</div></td>
+      <td class="small">${pf}</td>
+      <td>${_verdictBadge(e.bias, e.verdict)}</td></tr>`;
+  }).join("");
+}
+
+function _retCell(v) {
+  if (v == null) return `<td class="small">–</td>`;
+  const p = (v * 100);
+  const cls = p >= 0 ? "up" : "down";
+  return `<td class="small ${cls}">${p >= 0 ? "+" : ""}${p.toFixed(2)}%</td>`;
+}
+
+function renderMacroBacktest(rep) {
+  const p = rep.params || {};
+  const has = (p.n_events || 0) > 0;
+  $("mc-bt-empty").style.display = has ? "none" : "";
+  $("mc-bt-kpis").style.display = has ? "" : "none";
+  $("mc-meta").textContent = `${p.years || 3} tahun · ${p.n_events || 0} rilis diuji`
+    + ` (RISK_ON ${p.n_risk_on || 0} / RISK_OFF ${p.n_risk_off || 0})`
+    + ` · sumber: ${p.source || "?"}`
+    + (rep.generated_ts ? ` · dibuat ${new Date(rep.generated_ts).toLocaleString("id-ID")}` : "")
+    + (p.demo ? " · (DEMO)" : "");
+
+  const bh = rep.by_horizon || {};
+  const h3 = bh["3d"] || {};
+  $("mc-hit").textContent = (h3.all_hit?.hit_rate ?? 0) + "%";
+  $("mc-n").textContent = h3.all_hit?.n ?? 0;
+
+  // horizon breakdown: RISK_ON vs RISK_OFF average forward return
+  $("mc-horizon").innerHTML = ["1d", "3d", "7d"].map(h => {
+    const g = bh[h]; if (!g) return "";
+    const on = g.risk_on || {}, off = g.risk_off || {};
+    return `<div class="mc-hz">
+      <span class="mc-hz-lab">${h.replace("d", " hari")}</span>
+      <span class="mc-hz-on">RISK_ON ${_pct(on.avg_ret)} <span class="muted xsmall">(${on.n||0}, win ${on.win_rate||0}%)</span></span>
+      <span class="mc-hz-off">RISK_OFF ${_pct(off.avg_ret)} <span class="muted xsmall">(${off.n||0}, win ${off.win_rate||0}%)</span></span>
+    </div>`;
+  }).join("");
+
+  // per-type accuracy
+  const types = rep.by_type || {};
+  document.querySelector("#mc-types tbody").innerHTML = Object.keys(types).length
+    ? Object.entries(types).sort((a, b) => (b[1].hit_3d - a[1].hit_3d)).map(([t, v]) =>
+        `<tr><td>${t}</td><td>${v.n}</td><td>${v.hit_3d}%</td>
+         <td class="${v.avg_ret_3d >= 0 ? "up" : "down"}">${_pct(v.avg_ret_3d)}</td></tr>`).join("")
+    : `<tr><td colspan="4" class="muted small">–</td></tr>`;
+
+  // strategy vs buy&hold equity curve
+  const st = rep.strategy || {};
+  $("mc-strat-note").innerHTML = `Long BTC ${st.hold_days || 3} hari tiap rilis <b>RISK_ON</b>, flat setelah RISK_OFF`
+    + ` · di pasar ${st.exposure_pct || 0}% waktu · <b>strategi ${_pct(st.strat_return_pct)}</b>`
+    + ` vs buy&hold ${_pct(st.buyhold_return_pct)}. Uji konsep, bukan sinyal live.`;
+  drawDualCurve($("mc-equity"), st.curve || []);
+
+  // recent events journal
+  document.querySelector("#mc-journal tbody").innerHTML = (rep.recent_events || []).map(e => {
+    const d = e.ts ? new Date(e.ts).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "2-digit" }) : "–";
+    const pa = (e.previous ?? "–") + " → " + (e.actual ?? "–");
+    return `<tr><td class="small">${d}</td><td>${e.title}</td><td class="small">${pa}</td>
+      <td>${_verdictBadge(e.bias, e.verdict)}</td>
+      ${_retCell(e.fwd_1d)}${_retCell(e.fwd_3d)}${_retCell(e.fwd_7d)}</tr>`;
+  }).join("");
+}
+
+function drawDualCurve(cv, curve) {
+  if (!cv) return;
+  const dpr = window.devicePixelRatio || 1;
+  const W = cv.clientWidth || 600, H = cv.clientHeight || 240;
+  cv.width = W * dpr; cv.height = H * dpr;
+  const ctx = cv.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+  if (!curve.length) return;
+  const padL = 48, padB = 22, padT = 12, padR = 12;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const all = curve.flatMap(p => [p.strat, p.bh]);
+  let lo = Math.min(0, ...all), hi = Math.max(0, ...all);
+  if (hi === lo) hi = lo + 1;
+  const x = i => padL + plotW * (i / Math.max(1, curve.length - 1));
+  const y = v => padT + plotH * (1 - (v - lo) / (hi - lo));
+  const muted = cssVar("--muted"), accent = cssVar("--accent"), green = cssVar("--green");
+  ctx.strokeStyle = muted; ctx.globalAlpha = 0.4; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(padL, y(0)); ctx.lineTo(W - padR, y(0)); ctx.stroke();
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = muted; ctx.font = "10px system-ui"; ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  ctx.fillText(hi.toFixed(0) + "%", padL - 5, y(hi));
+  ctx.fillText(lo.toFixed(0) + "%", padL - 5, y(lo));
+  const line = (key, col, w) => {
+    ctx.beginPath();
+    curve.forEach((p, i) => { const px = x(i), py = y(p[key]); i ? ctx.lineTo(px, py) : ctx.moveTo(px, py); });
+    ctx.strokeStyle = col; ctx.lineWidth = w; ctx.stroke();
+  };
+  line("bh", muted, 1.5);          // buy & hold (reference)
+  line("strat", green, 2);         // screening strategy
+  // legend
+  ctx.textAlign = "left"; ctx.font = "11px system-ui";
+  ctx.fillStyle = green; ctx.fillText("■ strategi screening", padL + 4, padT + 6);
+  ctx.fillStyle = muted; ctx.fillText("■ buy & hold", padL + 140, padT + 6);
+}
+
+/* ============ PHOENIX: backtest strategi multi-mesin ============ */
+(function setupPhoenixControls() {
+  const run = $("px-run");
+  const host = location.hostname, seg = location.pathname.split("/").filter(Boolean)[0];
+  if (run && host.endsWith("github.io") && seg) {
+    run.href = `https://github.com/${host.split(".")[0]}/${seg}/actions/workflows/phoenix_backtest.yml`;
+  } else if (run) {
+    run.href = "https://github.com";
+    run.textContent = "▶ Jalankan backtest (buka GitHub Actions)";
+  }
+  const ref = $("px-refresh"); if (ref) ref.onclick = () => loadPhoenix();
+})();
+
+async function loadPhoenix() {
+  let rep = null;
+  try { const r = await fetch("data/phoenix_backtest.json", { cache: "no-store" }); if (r.ok) rep = await r.json(); }
+  catch (e) { /* offline / not generated yet */ }
+  renderPhoenix(rep);
+}
+
+const ENGINE_LABEL = { fib: "🔁 FIB Retrace", breakout: "🚀 Momentum Breakout", range: "📦 Range MR" };
+
+function renderPhoenix(rep) {
+  const s = (rep && rep.summary) || {};
+  const ov = s.overall || {}, pf = s.portfolio || {};
+  const has = (ov.trades || 0) > 0;
+  $("px-empty").classList.toggle("hidden", has);
+  $("px-body").style.display = has ? "" : "none";
+  if (!has) return;
+
+  const p = rep.params || {};
+  $("px-meta").textContent = `${p.lookback_days || "?"} hari · ${p.symbols || "?"} simbol · trigger ${p.ltf || "1h"}`
+    + (p.regime_days ? ` · regime: ${Object.entries(p.regime_days).map(([k, v]) => `${k} ${v}h`).join(" · ")}` : "")
+    + (rep.generated_ts ? ` · dibuat ${new Date(rep.generated_ts).toLocaleString("id-ID")}` : "")
+    + (p.demo ? " · (DEMO)" : "");
+
+  const sign = v => (v >= 0 ? "+" : "") + v;
+  const ret = pf.final_return_pct ?? 0;
+  const retEl = $("px-ret"); retEl.textContent = sign(ret) + "%";
+  retEl.className = "m-val " + (ret >= 0 ? "o-win" : "o-loss");
+  $("px-dd").textContent = (pf.max_drawdown_pct ?? 0) + "%";
+  $("px-win").textContent = (ov.win_rate ?? 0) + "%";
+  $("px-pf").textContent = ov.profit_factor ?? "–";
+  $("px-exp").textContent = sign(ov.expectancy_r ?? 0) + "R";
+  $("px-rec").textContent = "×" + (pf.recovery_episodes ?? 0);
+  $("px-taken").textContent = `${pf.n_accepted ?? 0} / ${pf.n_signals ?? 0}`;
+  $("px-days").textContent = (p.lookback_days || "?") + " hari";
+
+  drawPhoenixEquity($("px-equity"), rep.equity_curve || []);
+
+  // per-engine table
+  const eng = s.by_engine || {};
+  document.querySelector("#px-engines tbody").innerHTML = ["fib", "breakout", "range"].map(k => {
+    const e = eng[k] || {};
+    if (!e.trades) return `<tr><td>${ENGINE_LABEL[k]}</td><td colspan="5" class="empty">tidak ada trade</td></tr>`;
+    return `<tr><td>${ENGINE_LABEL[k]}</td><td>${e.trades}</td>
+      <td class="${e.win_rate >= 50 ? "o-win" : "o-loss"}">${e.win_rate}%</td>
+      <td class="${e.profit_factor >= 1 ? "o-win" : "o-loss"}">${e.profit_factor}</td>
+      <td>${sign(e.expectancy_r)}R</td>
+      <td class="${e.total_r >= 0 ? "o-win" : "o-loss"}">${sign(e.total_r)}R</td></tr>`;
+  }).join("");
+
+  // per-regime table
+  const reg = s.by_regime || {};
+  document.querySelector("#px-regimes tbody").innerHTML = ["BULL", "BEAR", "NEUTRAL"].map(k => {
+    const e = reg[k] || {};
+    if (!e.trades) return `<tr><td>${k}</td><td colspan="4" class="empty">–</td></tr>`;
+    return `<tr><td>${k}</td><td>${e.trades}</td>
+      <td class="${e.win_rate >= 50 ? "o-win" : "o-loss"}">${e.win_rate}%</td>
+      <td class="${e.profit_factor >= 1 ? "o-win" : "o-loss"}">${e.profit_factor}</td>
+      <td class="${e.total_r >= 0 ? "o-win" : "o-loss"}">${sign(e.total_r)}R</td></tr>`;
+  }).join("");
+
+  // recent trades journal
+  document.querySelector("#px-journal tbody").innerHTML = (rep.recent_trades || []).map(t => {
+    const d = t.exit_ts ? new Date(t.exit_ts).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "2-digit" }) : "–";
+    const oc = t.outcome === "WIN" ? "o-win" : t.outcome === "LOSS" ? "o-loss" : "";
+    return `<tr><td class="small">${d}</td><td>${t.symbol}</td>
+      <td class="small">${ENGINE_LABEL[t.engine] || t.engine}${t.recovering ? " ·🛟" : ""}</td>
+      <td>${t.direction}</td><td class="small">${t.regime}</td><td>${t.rr}</td>
+      <td class="${oc}">${t.outcome}</td>
+      <td class="${(t.r || 0) >= 0 ? "o-win" : "o-loss"}">${(t.r >= 0 ? "+" : "") + t.r}R</td></tr>`;
+  }).join("");
+}
+
+function drawPhoenixEquity(cv, curve) {
+  if (!cv) return;
+  const dpr = window.devicePixelRatio || 1;
+  const W = cv.clientWidth || 600, H = cv.clientHeight || 240;
+  cv.width = W * dpr; cv.height = H * dpr;
+  const ctx = cv.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+  if (!curve.length) return;
+  const padL = 48, padB = 22, padT = 12, padR = 12;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const vs = curve.map(p => p.eq);
+  let lo = Math.min(0, ...vs), hi = Math.max(0, ...vs);
+  if (hi === lo) hi = lo + 1;
+  const x = i => padL + plotW * (i / Math.max(1, curve.length - 1));
+  const y = v => padT + plotH * (1 - (v - lo) / (hi - lo));
+  const muted = cssVar("--muted"), green = cssVar("--green"), red = cssVar("--red");
+  ctx.strokeStyle = muted; ctx.globalAlpha = 0.4; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(padL, y(0)); ctx.lineTo(W - padR, y(0)); ctx.stroke();
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = muted; ctx.font = "10px system-ui"; ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  ctx.fillText(hi.toFixed(1) + "%", padL - 5, y(hi));
+  ctx.fillText(lo.toFixed(1) + "%", padL - 5, y(lo));
+  const end = vs[vs.length - 1];
+  const col = end >= 0 ? green : red;
+  ctx.beginPath();
+  curve.forEach((p, i) => { const px = x(i), py = y(p.eq); i ? ctx.lineTo(px, py) : ctx.moveTo(px, py); });
   ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.stroke();
   ctx.lineTo(x(curve.length - 1), y(0)); ctx.lineTo(x(0), y(0)); ctx.closePath();
   ctx.fillStyle = col; ctx.globalAlpha = 0.12; ctx.fill(); ctx.globalAlpha = 1;

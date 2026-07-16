@@ -1,0 +1,62 @@
+name: News macro backtest
+
+# Uji coba screening MAKRO — menilai apakah data high-impact ForexFactory
+# (CPI/inflasi turun, suku bunga dipotong, tenaga kerja melemah) benar-benar
+# mendahului pergerakan crypto. Backtest ~3 tahun (FRED + Binance), hasil
+# ditampilkan di tab "Makro". Ini analisa/screening — TIDAK menyentuh mesin
+# trade live (tidak mengeksekusi/memblokir sinyal).
+on:
+  workflow_dispatch:
+    inputs:
+      years:
+        description: "Berapa tahun data historis (mis. 3, 5)"
+        required: false
+        default: "3"
+      hold_days:
+        description: "Lama hold BTC (hari) setelah rilis RISK_ON"
+        required: false
+        default: "3"
+  schedule:
+    - cron: "30 3 * * 0"          # tiap Minggu 03:30 UTC (setelah SMC backtest)
+
+permissions:
+  contents: write
+
+concurrency:
+  group: news-macro-backtest
+  cancel-in-progress: false
+
+jobs:
+  news-backtest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run 3-year news macro backtest
+        env:
+          NEWS_BACKTEST_YEARS: ${{ github.event.inputs.years || '3' }}
+          NEWS_HOLD_DAYS: ${{ github.event.inputs.hold_days || '3' }}
+        run: python -m scripts.backtest_news
+
+      - name: Sync frontend to GitHub Pages folder
+        run: cp frontend/index.html frontend/style.css frontend/app.js frontend/manifest.webmanifest frontend/sw.js frontend/icon-192.png frontend/icon-512.png docs/
+
+      - name: Commit results
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -f docs/data/news_backtest.json docs/index.html docs/style.css docs/app.js
+          if git diff --cached --quiet; then
+            echo "Tidak ada perubahan."
+          else
+            git commit -m "chore: hasil backtest makro berita [skip ci]"
+            git push
+          fi
