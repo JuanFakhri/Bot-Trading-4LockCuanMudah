@@ -21,6 +21,10 @@ on:
         description: "Mesin aktif dipisah koma: fib,breakout,range (kosongkan = semua)"
         required: false
         default: ""
+      sides:
+        description: "Arah trade dipisah koma: long,short (kosongkan = keduanya)"
+        required: false
+        default: ""
   schedule:
     - cron: "0 4 * * 0"          # tiap Minggu 04:00 UTC (setelah backtest lain)
 
@@ -50,6 +54,7 @@ jobs:
           PHOENIX_DAYS: ${{ github.event.inputs.days || '1095' }}
           PHOENIX_SYMBOLS: ${{ github.event.inputs.symbols || '' }}
           PHOENIX_ENGINES: ${{ github.event.inputs.engines || '' }}
+          PHOENIX_SIDES: ${{ github.event.inputs.sides || '' }}
         run: python -m scripts.backtest_phoenix
 
       - name: Sync frontend to GitHub Pages folder

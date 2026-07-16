@@ -106,6 +106,7 @@ def backtest_symbol_phoenix(symbol, htf, dtf, ltf, regime_daily, usdtd_daily,
                             params=None) -> list[dict]:
     params = params or {}
     engines_on = set(params.get("engines", ENGINES))
+    sides_on = set(params.get("sides", ("LONG", "SHORT")))   # research knob
     if ltf is None or len(ltf) < 260 or len(htf) < config.EMA_SLOW + 30:
         return []
 
@@ -254,6 +255,8 @@ def backtest_symbol_phoenix(symbol, htf, dtf, ltf, regime_daily, usdtd_daily,
                                 fib_arm = None
 
         if sig is None:
+            continue
+        if sig[1] not in sides_on:      # direction filter (LONG/SHORT research knob)
             continue
 
         engine, direction, entry, sl, tp2 = sig
