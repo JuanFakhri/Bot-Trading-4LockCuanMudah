@@ -42,6 +42,7 @@
       <button class="tab active" data-view="live">📡 Live</button>
       <button class="tab" data-view="macro">🌐 Makro</button>
       <button class="tab" data-view="backtest">🔬 Backtest</button>
+      <button class="tab" data-view="phoenix">🧬 Phoenix</button>
     </div>
 
     <div id="view-live">
@@ -286,6 +287,79 @@
         </div>
       </section>
     </div><!-- /view-macro -->
+
+    <div id="view-phoenix" class="hidden">
+      <div class="bt-intro">
+        <h2>🧬 Phoenix Hybrid — uji strategi multi-mesin (3 tahun)</h2>
+        <p class="muted">Tiga mesin berbagi filter regime &amp; manajemen risiko yang sama, jadi selalu ada
+          setup di segala kondisi pasar: <b>🔁 FIB Retrace</b> (pullback 0.382–0.618, impuls ≥2.5×ATR,
+          konfirmasi 2-dari-3), <b>🚀 Momentum Breakout</b> (tembus high/low 20-bar + volume 1.5×), dan
+          <b>📦 Range Mean-Reversion</b> (fade support/resistance saat <b>NEUTRAL</b>/volatilitas rendah).
+          Exit: SL 0.8×ATR, TP1 50% di +1R lalu trailing EMA20/PSAR, TP2 +2R, time-stop 12 bar.
+          Portfolio: sizing dinamis + <b>Mode Recovery</b>, stop harian −4% / mingguan −8%, maks 3 posisi.
+          <b>Ini backtest riset — tidak mengubah sinyal atau eksekusi bot live.</b></p>
+        <p id="px-meta" class="muted small"></p>
+        <div class="bt-controls">
+          <a id="px-run" class="btn" target="_blank" rel="noopener">▶ Jalankan backtest Phoenix</a>
+          <button id="px-refresh" class="btn tiny">↻ Muat ulang hasil</button>
+        </div>
+      </div>
+
+      <p id="px-empty" class="empty">Belum ada hasil. Jalankan workflow "Phoenix backtest" di GitHub Actions.</p>
+
+      <div id="px-body" style="display:none">
+        <!-- portfolio KPIs -->
+        <section class="panel">
+          <div class="panel-head"><h2>Hasil portfolio (sizing + recovery aktif)</h2></div>
+          <div class="metrics-grid">
+            <div class="metric"><span class="m-label">Return total</span><span id="px-ret" class="m-val">–</span></div>
+            <div class="metric"><span class="m-label">Max drawdown</span><span id="px-dd" class="m-val">–</span></div>
+            <div class="metric"><span class="m-label">Win rate (semua sinyal)</span><span id="px-win" class="m-val">–</span></div>
+            <div class="metric"><span class="m-label">Profit factor</span><span id="px-pf" class="m-val">–</span></div>
+            <div class="metric"><span class="m-label">Ekspektasi</span><span id="px-exp" class="m-val">–</span></div>
+            <div class="metric"><span class="m-label">Mode Recovery dipicu</span><span id="px-rec" class="m-val">–</span></div>
+            <div class="metric"><span class="m-label">Sinyal / dieksekusi</span><span id="px-taken" class="m-val">–</span></div>
+            <div class="metric"><span class="m-label">Rentang uji</span><span id="px-days" class="m-val">–</span></div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head"><h2>Kurva ekuitas portfolio (%)</h2></div>
+          <canvas id="px-equity" class="equity"></canvas>
+        </section>
+
+        <div class="layout">
+          <section class="panel">
+            <div class="panel-head"><h2>⚙️ Kinerja per mesin</h2></div>
+            <div class="table-wrap"><table id="px-engines">
+              <thead><tr><th>Mesin</th><th>Trade</th><th>Win</th><th>PF</th><th>Ekspektasi</th><th>Total R</th></tr></thead>
+              <tbody></tbody>
+            </table></div>
+            <p class="muted xsmall">Setiap mesin diuji terpisah; yang drawdown / PF-nya buruk bisa dinonaktifkan.</p>
+          </section>
+          <aside class="side">
+            <section class="panel">
+              <div class="panel-head"><h2>📊 Kinerja per regime</h2></div>
+              <div class="table-wrap"><table id="px-regimes">
+                <thead><tr><th>Regime</th><th>Trade</th><th>Win</th><th>PF</th><th>Total R</th></tr></thead>
+                <tbody></tbody>
+              </table></div>
+            </section>
+          </aside>
+        </div>
+
+        <section class="panel">
+          <div class="panel-head"><h2>Trade Phoenix terakhir</h2></div>
+          <div class="table-wrap">
+            <table id="px-journal">
+              <thead><tr><th>Keluar</th><th>Simbol</th><th>Mesin</th><th>Arah</th><th>Regime</th>
+                <th>RR</th><th>Hasil</th><th>R</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </div><!-- /view-phoenix -->
   </main>
 
   <footer class="foot">

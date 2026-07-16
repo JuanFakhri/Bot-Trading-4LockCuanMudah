@@ -44,6 +44,14 @@ UI real-time via WebSocket, dan tersedia **mode siang/malam**.
   backtest mencari parameter (jarak SL, RR minimal, syarat A/D) yang meningkatkan
   ekspektasi, **memvalidasinya out-of-sample** (train/test) agar tidak overfit,
   lalu **menerapkannya otomatis ke sinyal live** via `data/tuning.json`.
+- **🧬 Phoenix Hybrid (riset multi-mesin)** — tab **Phoenix** membacktest strategi
+  3-mesin di data historis: **FIB Retrace** (pullback 0.382–0.618, konfirmasi
+  2-dari-3), **Momentum Breakout** (tembus 20-bar + volume), dan **Range
+  Mean-Reversion** (fade support/resistance saat regime **NEUTRAL**). Tiga mesin
+  berbagi filter regime & manajemen risiko (sizing dinamis, **Mode Recovery**,
+  stop harian −4% / mingguan −8%, maks 3 posisi). Menampilkan kinerja per-mesin,
+  per-regime, kurva ekuitas %, dan mode recovery. **Ini backtest riset — tidak
+  menyentuh sinyal/eksekusi bot live.**
 - **Deploy gratis** — GitHub Actions + Pages (tanpa server), atau Render /
   Railway / Fly.io / Docker (lihat [DEPLOY.md](DEPLOY.md)).
 

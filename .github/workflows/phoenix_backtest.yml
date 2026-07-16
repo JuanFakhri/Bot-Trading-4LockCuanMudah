@@ -1,0 +1,63 @@
+name: Phoenix backtest
+
+# Uji strategi PHOENIX HYBRID (multi-mesin) di data historis Binance ~3 tahun.
+# Tiga mesin — FIB Retrace, Momentum Breakout, Range Mean-Reversion — berbagi
+# filter regime (BULL/BEAR/NEUTRAL) & manajemen risiko (sizing dinamis, mode
+# recovery, stop harian/mingguan). Hasil ditampilkan di tab "Phoenix".
+# INI BACKTEST RISET — tidak menyentuh mesin trade live (tidak mengeksekusi,
+# tidak memblokir sinyal, tidak menulis state pembelajaran).
+on:
+  workflow_dispatch:
+    inputs:
+      days:
+        description: "Berapa hari data historis (mis. 365, 730, 1095 = 3 tahun)"
+        required: false
+        default: "1095"
+      symbols:
+        description: "Simbol dipisah koma (kosongkan = semua watchlist)"
+        required: false
+        default: ""
+  schedule:
+    - cron: "0 4 * * 0"          # tiap Minggu 04:00 UTC (setelah backtest lain)
+
+permissions:
+  contents: write
+
+concurrency:
+  group: phoenix-backtest
+  cancel-in-progress: false
+
+jobs:
+  phoenix-backtest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run Phoenix Hybrid backtest (3 engines, 3 years)
+        env:
+          PHOENIX_DAYS: ${{ github.event.inputs.days || '1095' }}
+          PHOENIX_SYMBOLS: ${{ github.event.inputs.symbols || '' }}
+        run: python -m scripts.backtest_phoenix
+
+      - name: Sync frontend to GitHub Pages folder
+        run: cp frontend/index.html frontend/style.css frontend/app.js frontend/manifest.webmanifest frontend/sw.js frontend/icon-192.png frontend/icon-512.png docs/
+
+      - name: Commit results
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -f docs/data/phoenix_backtest.json docs/index.html docs/style.css docs/app.js
+          if git diff --cached --quiet; then
+            echo "Tidak ada perubahan."
+          else
+            git commit -m "chore: hasil backtest Phoenix Hybrid [skip ci]"
+            git push
+          fi
