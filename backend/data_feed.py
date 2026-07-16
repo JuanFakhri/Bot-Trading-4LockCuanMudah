@@ -220,22 +220,51 @@ async def get_btc_dominance() -> dict:
     return result
 
 
+def _screen_event(ev: dict) -> dict:
+    """Attach the crypto-impact screen (bias / verdict / reason) to one event.
+
+    For upcoming events the actual print isn't out yet, so the screen reads the
+    *expectation* (forecast vs previous): "kalau rilis sesuai perkiraan, dampak
+    ke crypto bagus/buruk". This is analysis only — it does not touch trading.
+    """
+    from . import macro_news
+    a = macro_news.assess_event(ev.get("title", ""), actual=ev.get("actual"),
+                                forecast=ev.get("forecast"), previous=ev.get("previous"))
+    ev.update({
+        "type": a.type_label,
+        "bias": a.bias,
+        "verdict": a.verdict,
+        "score": round(a.score, 3),
+        "reason": a.reason,
+        "basis": a.basis,
+    })
+    return ev
+
+
 async def get_economic_calendar() -> list[dict]:
     """High-impact economic news for this week (ForexFactory JSON mirror).
 
-    Returns a list of ``{"title","country","impact","ts"}`` where ``ts`` is an
-    ISO-8601 UTC timestamp. Only High-impact, timed events are kept. Times are
-    stored in UTC; the dashboard converts to WIB for display.
+    Each event is ``{"title","country","impact","ts","forecast","previous",
+    "bias","verdict","score","reason","basis"}``. ``ts`` is ISO-8601 UTC. Only
+    High-impact, timed events are kept. The crypto-impact screen (bias/verdict)
+    is added by ``macro_news`` and is analysis-only — the live trade engine is
+    untouched.
     """
     if config.DEMO:
-        # a couple of synthetic upcoming events so the UI can be previewed
+        # synthetic upcoming events (with forecast/previous) so the screen shows
         base = datetime.now(timezone.utc)
-        return [
-            {"title": "Demo CPI m/m", "country": "USD", "impact": "High",
-             "ts": (base + timedelta(hours=3)).isoformat()},
-            {"title": "Demo FOMC Statement", "country": "USD", "impact": "High",
-             "ts": (base + timedelta(hours=26)).isoformat()},
+        demo = [
+            {"title": "CPI y/y", "country": "USD", "impact": "High",
+             "ts": (base + timedelta(hours=3)).isoformat(),
+             "forecast": "3.0%", "previous": "3.3%"},        # inflasi turun → bagus
+            {"title": "Federal Funds Rate", "country": "USD", "impact": "High",
+             "ts": (base + timedelta(hours=26)).isoformat(),
+             "forecast": "5.00%", "previous": "5.25%"},       # rate cut → bagus
+            {"title": "Non-Farm Employment Change", "country": "USD", "impact": "High",
+             "ts": (base + timedelta(hours=50)).isoformat(),
+             "forecast": "230K", "previous": "180K"},         # jobs panas → buruk
         ]
+        return [_screen_event(e) for e in demo]
     out: list[dict] = []
     try:
         r = await _client.get(config.NEWS_URL)
@@ -254,12 +283,14 @@ async def get_economic_calendar() -> list[dict]:
                 continue
             if dt.tzinfo is None:
                 dt = dt.replace(tzinfo=timezone.utc)
-            out.append({
+            out.append(_screen_event({
                 "title": ev.get("title", "News"),
                 "country": ev.get("country", ""),
                 "impact": "High",
                 "ts": dt.astimezone(timezone.utc).isoformat(),
-            })
+                "forecast": ev.get("forecast", ""),
+                "previous": ev.get("previous", ""),
+            }))
     except Exception as exc:
         print(f"[data_feed] news failed: {exc}")
     out.sort(key=lambda e: e["ts"])

@@ -32,6 +32,14 @@ UI real-time via WebSocket, dan tersedia **mode siang/malam**.
   pada data historis Binance (via GitHub Actions), menampilkan Win Rate/PF/kurva
   ekuitas, dan **men-feed hasilnya ke mesin pembelajaran** sehingga pola yang
   terbukti rugi di masa lalu langsung diblokir untuk sinyal live.
+- **🌐 Screening Makro (berita → crypto)** — tab **Makro** membaca kalender
+  **High Impact Expected** ForexFactory dan menilai tiap rilis untuk crypto lewat
+  jalur *likuiditas / kebijakan moneter*: **CPI/inflasi turun**, **suku bunga
+  dipotong**, atau tenaga kerja melemah → bank sentral cenderung melonggarkan →
+  likuiditas naik → **BAGUS** untuk crypto (dan sebaliknya **BURUK** saat inflasi
+  memanas / suku bunga naik). Disertai **backtest 3 tahun** (event study FRED +
+  Binance) yang mengukur hit-rate arah dan retur BTC +1/+3/+7 hari per bias. Ini
+  **murni layer analisa** — tidak mengeksekusi maupun memblokir trade live.
 - **⚙️ Optimasi otomatis (kekalahan → kemenangan)** — selain memblokir pola rugi,
   backtest mencari parameter (jarak SL, RR minimal, syarat A/D) yang meningkatkan
   ekspektasi, **memvalidasinya out-of-sample** (train/test) agar tidak overfit,
@@ -95,6 +103,7 @@ backend/
   data_feed.py      OHLCV Binance + USDT.D CoinGecko (gratis)
   indicators.py     EMA, RSI, ATR, OBV, A/D, Parabolic SAR, pivot, fib
   market_filter.py  Bagian A — regime BULL/BEAR
+  macro_news.py     screening berita ekonomi → bias crypto (CPI/rate/jobs)
   strategy.py       Bagian B & C — mesin long/short + trigger 15M
   risk.py           Bagian D & E — SL/TP, sizing, circuit breaker
   learning.py       mesin self-learning (pola, blokir, prioritas)

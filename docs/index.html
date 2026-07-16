@@ -40,6 +40,7 @@
   <main>
     <div class="tabs">
       <button class="tab active" data-view="live">📡 Live</button>
+      <button class="tab" data-view="macro">🌐 Makro</button>
       <button class="tab" data-view="backtest">🔬 Backtest</button>
     </div>
 
@@ -214,6 +215,77 @@
         </div>
       </section>
     </div><!-- /view-backtest -->
+
+    <div id="view-macro" class="hidden">
+      <div class="bt-intro">
+        <h2>🌐 Screening Makro — dampak berita ke crypto</h2>
+        <p class="muted">Membaca kalender <b>High Impact Expected</b> ForexFactory dan menilai
+          tiap rilis untuk crypto lewat jalur <b>likuiditas / kebijakan moneter</b>:
+          inflasi/CPI <b>turun</b>, suku bunga <b>dipotong</b>, atau tenaga kerja melemah →
+          bank sentral cenderung melonggarkan → likuiditas naik → <span class="verdict bagus">BAGUS</span>
+          untuk crypto. Sebaliknya inflasi memanas / suku bunga naik → <span class="verdict buruk">BURUK</span>.
+          <b>Ini layer analisa/screening — tidak mengeksekusi atau memblokir trade live.</b></p>
+        <p id="mc-meta" class="muted small"></p>
+        <div class="bt-controls">
+          <a id="mc-run" class="btn" target="_blank" rel="noopener">▶ Jalankan backtest 3 tahun</a>
+          <button id="mc-refresh" class="btn tiny">↻ Muat ulang hasil</button>
+        </div>
+      </div>
+
+      <!-- Current screen verdict -->
+      <section class="panel" id="mc-now-panel">
+        <div class="panel-head"><h2>Bias crypto dari berita terdekat</h2></div>
+        <div id="mc-now" class="mc-now"></div>
+      </section>
+
+      <div class="layout">
+        <section class="panel">
+          <div class="panel-head"><h2>📅 Rilis high-impact + penilaian crypto</h2></div>
+          <div class="table-wrap"><table id="mc-events">
+            <thead><tr><th>Waktu (WIB)</th><th>Rilis</th><th>Prev→Fcst</th><th>Crypto</th></tr></thead>
+            <tbody></tbody>
+          </table></div>
+          <p id="mc-events-empty" class="empty hidden">Belum ada event high-impact.</p>
+        </section>
+        <aside class="side">
+          <section class="panel">
+            <div class="panel-head"><h2>🧪 Uji 3 tahun: apakah sinyal ini benar?</h2></div>
+            <p class="muted small" id="mc-bt-empty">Belum ada hasil backtest. Jalankan workflow
+              "News macro backtest" di GitHub Actions.</p>
+            <div class="metrics-grid" id="mc-bt-kpis" style="display:none">
+              <div class="metric"><span class="m-label">Hit-rate arah (3 hari)</span><span id="mc-hit" class="m-val">–</span></div>
+              <div class="metric"><span class="m-label">Jumlah event diuji</span><span id="mc-n" class="m-val">–</span></div>
+            </div>
+            <div id="mc-horizon"></div>
+          </section>
+          <section class="panel">
+            <div class="panel-head"><h2>Rilis mana paling akurat</h2></div>
+            <div class="table-wrap"><table id="mc-types">
+              <thead><tr><th>Jenis rilis</th><th>N</th><th>Hit 3hr</th><th>Retur 3hr</th></tr></thead>
+              <tbody></tbody>
+            </table></div>
+          </section>
+        </aside>
+      </div>
+
+      <section class="panel">
+        <div class="panel-head"><h2>Kurva strategi screening vs Buy &amp; Hold (BTC)</h2></div>
+        <p class="muted small" id="mc-strat-note">Long BTC selama beberapa hari setiap rilis <b>RISK_ON</b>,
+          flat setelah <b>RISK_OFF</b>. Ini uji konsep, bukan sinyal live.</p>
+        <canvas id="mc-equity" class="equity"></canvas>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head"><h2>Event backtest terakhir</h2></div>
+        <div class="table-wrap">
+          <table id="mc-journal">
+            <thead><tr><th>Tanggal</th><th>Rilis</th><th>Prev→Act</th><th>Bias</th>
+              <th>+1hr</th><th>+3hr</th><th>+7hr</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+    </div><!-- /view-macro -->
   </main>
 
   <footer class="foot">
