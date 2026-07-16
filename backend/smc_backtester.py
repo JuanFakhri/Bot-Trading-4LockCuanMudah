@@ -54,6 +54,9 @@ def backtest_symbol_smc(symbol, htf, dtf, ltf, usdtd_daily, btcd_dir_daily,
     # only; shorts keep the tested 3R exit. Default off (validated via OOS PF).
     long_struct_tp = bool(params.get("long_struct_tp", False))
     res_lookback = int(params.get("res_lookback", 40))
+    # "Strengthen long" via conviction: demand a higher Setup Score for LONGs only
+    # (weak longs were ~50% coin-flips). Defaults to score_th = no change.
+    long_score_th = float(params.get("long_score_th", score_th))
 
     if ltf is None or len(ltf) < 250 or len(htf) < config.EMA_SLOW + 30:
         return []
@@ -222,7 +225,8 @@ def backtest_symbol_smc(symbol, htf, dtf, ltf, usdtd_daily, btcd_dir_daily,
                  + W["btcd"] * btcd_ok + W["usdtd"] * usdtd_ok)
         if not vol_ok or not atr_exp:   # volume spike + volatility expansion (hard)
             continue
-        if score < score_th:
+        th = long_score_th if machine == "long" else score_th   # asymmetric long gate
+        if score < th:
             continue
 
         # ---- build trade: SL beyond swing +/-1 ATR (cap 6%), risk 1% ----

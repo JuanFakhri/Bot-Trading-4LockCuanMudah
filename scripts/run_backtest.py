@@ -45,6 +45,9 @@ MACRO_GATE = os.getenv("BACKTEST_MACRO_GATE", "0") == "1"
 MACRO_REQUIRE_ON = os.getenv("BACKTEST_MACRO_REQUIRE_ON", "0") == "1"
 # "Strengthen long": TP the long runner at the real resistance instead of flat 3R.
 LONG_STRUCT_TP = os.getenv("BACKTEST_LONG_STRUCT_TP", "0") == "1"
+# "Strengthen long" via conviction: higher Setup Score required for LONGs only.
+_lst = os.getenv("BACKTEST_LONG_SCORE_TH", "").strip()
+LONG_SCORE_TH = float(_lst) if _lst else SCORE_TH
 # When set, do NOT rewrite the live learning brain (data/state.json). Used for the
 # macro-gate A/B so an unvalidated change never leaks into the live bot.
 NO_PERSIST = os.getenv("BACKTEST_NO_PERSIST", "0") == "1"
@@ -159,7 +162,7 @@ async def main():
                 sym, htf, dtf, ltf, usdtd_daily, btcd_dir_daily,
                 {"score_th": SCORE_TH, "macro_gate": MACRO_GATE,
                  "macro_require_on": MACRO_REQUIRE_ON, "macro_bias_daily": macro_bias_daily,
-                 "long_struct_tp": LONG_STRUCT_TP})
+                 "long_struct_tp": LONG_STRUCT_TP, "long_score_th": LONG_SCORE_TH})
             all_trades.extend(trades)
             print(f"[backtest] {sym}: {len(trades)} trades")
         except Exception as exc:
@@ -200,7 +203,8 @@ async def main():
         "params": {"lookback_days": LOOKBACK_DAYS, "htf": config.HTF, "ltf": "1h",
                    "symbols": len(SYMBOLS), "demo": config.DEMO, "strategy": "smc",
                    "score_th": SCORE_TH, "macro_gate": MACRO_GATE,
-                   "macro_require_on": MACRO_REQUIRE_ON, "long_struct_tp": LONG_STRUCT_TP},
+                   "macro_require_on": MACRO_REQUIRE_ON, "long_struct_tp": LONG_STRUCT_TP,
+                   "long_score_th": LONG_SCORE_TH},
         "summary": summary,
         "recent_trades": [
             {k: t[k] for k in ("symbol", "direction", "entry", "exit_price",

@@ -35,6 +35,10 @@ on:
         description: "1=perkuat LONG: TP runner di resisten nyata (bukan 3R statis)"
         required: false
         default: "0"
+      long_score_th:
+        description: "Ambang Setup Score khusus LONG (mis. 75; kosong = sama dengan score_th)"
+        required: false
+        default: ""
   schedule:
     - cron: "0 3 * * 0"          # tiap Minggu 03:00 UTC
 
@@ -68,6 +72,7 @@ jobs:
           BACKTEST_MACRO_REQUIRE_ON: ${{ github.event.inputs.macro_require_on || '0' }}
           BACKTEST_NO_PERSIST: ${{ github.event.inputs.no_persist || '0' }}
           BACKTEST_LONG_STRUCT_TP: ${{ github.event.inputs.long_struct_tp || '0' }}
+          BACKTEST_LONG_SCORE_TH: ${{ github.event.inputs.long_score_th || '' }}
         run: python -m scripts.run_backtest
 
       - name: Sync frontend to GitHub Pages folder
