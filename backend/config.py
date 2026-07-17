@@ -126,7 +126,11 @@ PHX_RANGE_HOLD_BARS = 12         # range must have held >= 12h (12x 1H bars)
 PHX_RANGE_RR = 1.5               # min reward:risk for a range trade
 PHX_RANGE_RSI_LO = 35            # oversold (long) / 100-this overbought (short)
 # Exits
-PHX_SL_ATR = 0.8                 # SL beyond swing/OB by 0.8 ATR (tighter -> better RR)
+# SL 1.0 ATR (was 0.8): exit-tuning sweep over 3y showed 1.0 beats 0.8 out-of-
+# sample — OOS PF 1.36->1.45, win 56.6->57.6% — because a tighter stop got shaken
+# out by noise then reversed. This is the only exit tweak that improved OOS (pure
+# trailing / no-time-stop looked great in-sample but FELL out-of-sample).
+PHX_SL_ATR = 1.0                 # SL beyond swing/OB by 1.0 ATR (fewer noise stop-outs)
 PHX_TIME_STOP_BARS = 12          # close half if < 0.5R after N bars
 PHX_COOLDOWN_BARS = 10           # per-pair cooldown after an exit
 # Risk / recovery (portfolio level)
