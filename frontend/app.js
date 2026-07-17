@@ -197,9 +197,8 @@ document.querySelectorAll(".tab").forEach(t => {
 
 async function loadBacktest() {
   let rep = null;
-  // Prefer the LIVE two-machine backtest (Phoenix long + SMC short); fall back
-  // to the legacy SMC-only report if the live one isn't there yet.
-  for (const url of ["data/live_backtest.json", "data/backtest.json", "/api/backtest"]) {
+  // The LIVE two-machine backtest (Phoenix long + SMC short).
+  for (const url of ["data/live_backtest.json", "/api/backtest"]) {
     try { const r = await fetch(url, { cache: "no-store" }); if (r.ok) { rep = await r.json(); break; } }
     catch (e) { /* try next */ }
   }
