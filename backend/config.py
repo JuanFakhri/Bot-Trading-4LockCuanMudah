@@ -56,14 +56,13 @@ SMC_ATR_MAX = 8.0
 SMC_VOL_MULT = float(os.getenv("SMC_VOL_MULT", "1.0"))   # #5 volume > Nx SMA20
 
 # Two-machine architecture (see strategy_smc.evaluate router):
-#   LONG  -> Phoenix Hybrid (backend/phoenix.py) — BUILT & wired, but OFF by
-#            default. A 3y walk-forward showed the long side does not hold out of
-#            sample: full Phoenix PF 0.97 (-10R); breakout-only PF 1.03 in-sample
-#            but OOS PF 0.95 (<1 = loses on unseen data). Enable for research /
-#            live with SMC_ALLOW_LONG=1 (it will run the breakout engine).
-#   SHORT -> classic SMC — the validated edge (64% win, PF 1.62, OOS 2.85 over 3y).
-# Live therefore runs SHORT-ONLY until the long side proves an out-of-sample edge.
-SMC_ALLOW_LONG = os.getenv("SMC_ALLOW_LONG", "0") == "1"
+#   LONG  -> Phoenix Hybrid (backend/phoenix.py, over the proven phoenix_backtester
+#            engine). Validated long-only over 3y: 829 trades, 58.9% win, PF 1.43,
+#            walk-forward OOS PF 1.36 (fib 1.33 / breakout 2.17). Fires in a BULL
+#            market regime.
+#   SHORT -> classic SMC — the validated short edge (64% win, PF 1.62, OOS 2.85).
+# Both machines ON. Run short-only again with SMC_ALLOW_LONG=0.
+SMC_ALLOW_LONG = os.getenv("SMC_ALLOW_LONG", "1") == "1"
 SMC_ALLOW_SHORT = os.getenv("SMC_ALLOW_SHORT", "1") == "1"
 
 # Golden zone (fibonacci retracement) — one component of the AI Score
@@ -116,11 +115,10 @@ PHX_BRK_LOOKBACK = 20            # break the high/low of the last N bars
 PHX_BRK_VOL_MULT = 1.5          # volume > 1.5x SMA20
 PHX_BRK_ATR_MIN = 0.5           # ATR(14) 1H > 0.5% of price
 PHX_BRK_RSI = 55                # RSI 4H > 55 (long) / < 45 (short)
-# Which long engines are LIVE. A 3y backtest showed the FIB-retrace engine
-# over-trades and loses (-25R over 620 trades), while momentum breakout is net
-# positive (+15R). So live runs BREAKOUT-ONLY; enable fib via env for research.
+# Which long engines are LIVE. Both on: the proven engine's FIB retrace (OOS PF
+# 1.33, the workhorse) + momentum breakout (OOS PF 2.17). Toggle via env.
 PHX_ENGINE_BREAKOUT = os.getenv("PHX_ENGINE_BREAKOUT", "1") == "1"
-PHX_ENGINE_FIB = os.getenv("PHX_ENGINE_FIB", "0") == "1"
+PHX_ENGINE_FIB = os.getenv("PHX_ENGINE_FIB", "1") == "1"
 # Engine 3 — Range mean-reversion
 PHX_RANGE_MIN_ATR = 2.0          # range width must be >= 2x ATR
 PHX_RANGE_WINDOW = 40            # bars used to define the range

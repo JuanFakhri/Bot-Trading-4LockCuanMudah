@@ -25,7 +25,7 @@ import os
 import pandas as pd
 
 from backend import (config, data_feed, database as db, learning,
-                     phoenix, smc_backtester)
+                     phoenix, phoenix_backtester as phx, smc_backtester)
 from scripts.run_backtest import _usdtd_timeline, _dir_series, LOOKBACK_DAYS, SYMBOLS
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -51,6 +51,9 @@ async def main():
         return
     ethbtc = await data_feed.get_klines_history("ETHBTC", "1d", LOOKBACK_DAYS + 80)
     btcd_dir_daily = _dir_series(ethbtc, usdtd_daily.index, invert=True)
+    # BTC-driven regime for the Phoenix long machine (BULL/BEAR/NEUTRAL per day)
+    btc_daily = await data_feed.get_klines_history("BTCUSDT", "1d", LOOKBACK_DAYS + 90)
+    regime_daily = phx.btc_regime_daily(btc_daily) if btc_daily is not None and not btc_daily.empty else None
 
     all_trades: list[dict] = []
     for sym in SYMBOLS:
@@ -65,8 +68,10 @@ async def main():
             shorts = smc_backtester.backtest_symbol_smc(
                 sym, htf, dtf, ltf, usdtd_daily, btcd_dir_daily,
                 {"score_th": config.SMC_SCORE_TH, "allow_long": False, "allow_short": True})
-            # LONG machine — Phoenix Hybrid
-            longs = phoenix.backtest_symbol_long(sym, htf, dtf, ltf, usdtd_daily, btcd_dir_daily)
+            # LONG machine — Phoenix Hybrid (proven engine, regime-driven)
+            longs = phoenix.backtest_symbol_long(
+                sym, htf, dtf, ltf, usdtd_daily, btcd_dir_daily,
+                {"regime_daily": regime_daily})
             all_trades.extend(shorts)
             all_trades.extend(longs)
             print(f"[live] {sym}: {len(longs)} long (Phoenix) + {len(shorts)} short (SMC)")

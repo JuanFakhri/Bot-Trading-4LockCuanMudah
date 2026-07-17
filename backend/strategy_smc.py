@@ -53,22 +53,21 @@ def evaluate(symbol: str, htf: pd.DataFrame, dtf: pd.DataFrame, ltf: pd.DataFram
              regime: dict) -> dict | None:
     """Two-machine ROUTER — the single entry point the engine calls.
 
-        LONG  regime -> Phoenix Hybrid   (``phoenix.evaluate_long``)
-        SHORT regime -> classic SMC      (``evaluate_smc_machine`` below)
+        BULL market regime -> Phoenix Hybrid  (``phoenix.evaluate_long``)
+        BEAR / short setup  -> classic SMC     (``evaluate_smc_machine`` below)
 
-    The long side runs Phoenix because the plain SMC long machine lost money
-    over 3 years; the short side keeps the validated SMC engine (the real edge).
+    The long side is gated by the BTC-driven market regime (BULL) because that is
+    exactly how the Phoenix engine was backtested; the short side keeps the
+    validated SMC per-symbol trend alignment.
     """
-    machine = _direction(htf, dtf, ltf)
-    if machine is None:
-        return None
-    if machine == "long":
-        if not config.SMC_ALLOW_LONG:
-            return None
+    reg = regime.get("regime")
+    # LONG — Phoenix, only in a BULL market regime (matches phoenix_backtester).
+    if reg == "BULL" and config.SMC_ALLOW_LONG:
         return phoenix.evaluate_long(symbol, htf, dtf, ltf, regime)
-    if not config.SMC_ALLOW_SHORT:
-        return None
-    return evaluate_smc_machine(symbol, htf, dtf, ltf, regime)
+    # SHORT — classic SMC, on a per-symbol bearish alignment (the validated edge).
+    if config.SMC_ALLOW_SHORT and _direction(htf, dtf, ltf) == "short":
+        return evaluate_smc_machine(symbol, htf, dtf, ltf, regime)
+    return None
 
 
 def evaluate_smc_machine(symbol: str, htf: pd.DataFrame, dtf: pd.DataFrame,
