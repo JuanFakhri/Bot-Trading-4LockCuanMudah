@@ -114,6 +114,11 @@ PHX_BRK_LOOKBACK = 20            # break the high/low of the last N bars
 PHX_BRK_VOL_MULT = 1.5          # volume > 1.5x SMA20
 PHX_BRK_ATR_MIN = 0.5           # ATR(14) 1H > 0.5% of price
 PHX_BRK_RSI = 55                # RSI 4H > 55 (long) / < 45 (short)
+# Which long engines are LIVE. A 3y backtest showed the FIB-retrace engine
+# over-trades and loses (-25R over 620 trades), while momentum breakout is net
+# positive (+15R). So live runs BREAKOUT-ONLY; enable fib via env for research.
+PHX_ENGINE_BREAKOUT = os.getenv("PHX_ENGINE_BREAKOUT", "1") == "1"
+PHX_ENGINE_FIB = os.getenv("PHX_ENGINE_FIB", "0") == "1"
 # Engine 3 — Range mean-reversion
 PHX_RANGE_MIN_ATR = 2.0          # range width must be >= 2x ATR
 PHX_RANGE_WINDOW = 40            # bars used to define the range

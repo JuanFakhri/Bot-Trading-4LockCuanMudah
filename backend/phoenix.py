@@ -143,15 +143,31 @@ def mesin_breakout_long(A: dict, i: int):
                 and c > ema200)
 
 
-def _long_entry(A: dict, i: int):
-    """Run both LONG engines at bar i. Returns an entry dict or None. Breakout
-    takes priority when both fire (momentum leads); otherwise the fib pull-back."""
+def _live_engines() -> set:
+    """Which long engines are enabled live (config-driven; breakout-only by
+    default — the fib engine lost money over 3y)."""
+    eng = set()
+    if config.PHX_ENGINE_BREAKOUT:
+        eng.add("breakout")
+    if config.PHX_ENGINE_FIB:
+        eng.add("fib")
+    return eng
+
+
+def _long_entry(A: dict, i: int, engines: set | None = None):
+    """Run the enabled LONG engines at bar i. Returns an entry dict or None.
+    Breakout takes priority when both fire (momentum leads); otherwise fib."""
+    if engines is None:
+        engines = _live_engines()
     c, l, atr = A["c"][i], A["l"][i], A["atr"][i]
     if not (np.isfinite(atr) and atr > 0 and c > 0):
         return None
 
-    brk = mesin_breakout_long(A, i)
-    fib_fired, ratio, triggers = mesin_fib_long(A, i)
+    brk = mesin_breakout_long(A, i) if "breakout" in engines else False
+    if "fib" in engines:
+        fib_fired, ratio, triggers = mesin_fib_long(A, i)
+    else:
+        fib_fired, ratio, triggers = False, float("nan"), 0
     if not brk and not fib_fired:
         return None
     engine = "breakout" if brk else "fib"
@@ -273,6 +289,7 @@ def backtest_symbol_long(symbol, htf, dtf, ltf, usdtd_daily=None,
     params = params or {}
     if ltf is None or len(ltf) < 250 or len(htf) < config.EMA_SLOW + 30:
         return []
+    engines = set(params["engines"]) if params.get("engines") else None   # None = live default
 
     A = _prep(htf, dtf, ltf)
     c, h, l = A["c"], A["h"], A["l"]
@@ -302,7 +319,7 @@ def backtest_symbol_long(symbol, htf, dtf, ltf, usdtd_daily=None,
         if not (A["d_bull"][i] > 0 and A["h4_bull"][i] > 0 and A["h1_bull"][i] > 0):
             continue
 
-        e = _long_entry(A, i)
+        e = _long_entry(A, i, engines)
         if e is None:
             continue
 
@@ -339,11 +356,12 @@ def evaluate_long(symbol: str, htf: pd.DataFrame, dtf: pd.DataFrame,
     if not (A["d_bull"][i] > 0 and A["h4_bull"][i] > 0 and A["h1_bull"][i] > 0):
         return None
 
-    e = _long_entry(A, i)
+    engines = _live_engines()
+    e = _long_entry(A, i, engines)
     fired = e is not None
     # even without a fire we can show an informative (ARMED/WATCHING) card
-    fib_fired, ratio, triggers = mesin_fib_long(A, i)
-    brk = mesin_breakout_long(A, i)
+    fib_fired, ratio, triggers = mesin_fib_long(A, i) if "fib" in engines else (False, float("nan"), 0)
+    brk = mesin_breakout_long(A, i) if "breakout" in engines else False
 
     if not fired:
         # build a "watching" descriptor from whichever engine is closest
