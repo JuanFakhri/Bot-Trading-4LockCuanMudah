@@ -172,10 +172,8 @@ document.querySelectorAll(".tab").forEach(t => {
     $("view-live").classList.toggle("hidden", v !== "live");
     $("view-backtest").classList.toggle("hidden", v !== "backtest");
     $("view-macro").classList.toggle("hidden", v !== "macro");
-    $("view-phoenix").classList.toggle("hidden", v !== "phoenix");
     if (v === "backtest") loadBacktest();
     if (v === "macro") loadMacro();
-    if (v === "phoenix") loadPhoenix();
   };
 });
 
@@ -527,123 +525,6 @@ function drawDualCurve(cv, curve) {
   ctx.fillStyle = muted; ctx.fillText("■ buy & hold", padL + 140, padT + 6);
 }
 
-/* ============ PHOENIX: backtest strategi multi-mesin ============ */
-(function setupPhoenixControls() {
-  const run = $("px-run");
-  const host = location.hostname, seg = location.pathname.split("/").filter(Boolean)[0];
-  if (run && host.endsWith("github.io") && seg) {
-    run.href = `https://github.com/${host.split(".")[0]}/${seg}/actions/workflows/phoenix_backtest.yml`;
-  } else if (run) {
-    run.href = "https://github.com";
-    run.textContent = "▶ Jalankan backtest (buka GitHub Actions)";
-  }
-  const ref = $("px-refresh"); if (ref) ref.onclick = () => loadPhoenix();
-})();
-
-async function loadPhoenix() {
-  let rep = null;
-  try { const r = await fetch("data/phoenix_backtest.json", { cache: "no-store" }); if (r.ok) rep = await r.json(); }
-  catch (e) { /* offline / not generated yet */ }
-  renderPhoenix(rep);
-}
-
-const ENGINE_LABEL = { fib: "🔁 FIB Retrace", breakout: "🚀 Momentum Breakout", range: "📦 Range MR" };
-
-function renderPhoenix(rep) {
-  const s = (rep && rep.summary) || {};
-  const ov = s.overall || {}, pf = s.portfolio || {};
-  const has = (ov.trades || 0) > 0;
-  $("px-empty").classList.toggle("hidden", has);
-  $("px-body").style.display = has ? "" : "none";
-  if (!has) return;
-
-  const p = rep.params || {};
-  $("px-meta").textContent = `${p.lookback_days || "?"} hari · ${p.symbols || "?"} simbol · trigger ${p.ltf || "1h"}`
-    + (p.regime_days ? ` · regime: ${Object.entries(p.regime_days).map(([k, v]) => `${k} ${v}h`).join(" · ")}` : "")
-    + (rep.generated_ts ? ` · dibuat ${new Date(rep.generated_ts).toLocaleString("id-ID")}` : "")
-    + (p.demo ? " · (DEMO)" : "");
-
-  const sign = v => (v >= 0 ? "+" : "") + v;
-  const ret = pf.final_return_pct ?? 0;
-  const retEl = $("px-ret"); retEl.textContent = sign(ret) + "%";
-  retEl.className = "m-val " + (ret >= 0 ? "o-win" : "o-loss");
-  $("px-dd").textContent = (pf.max_drawdown_pct ?? 0) + "%";
-  $("px-win").textContent = (ov.win_rate ?? 0) + "%";
-  $("px-pf").textContent = ov.profit_factor ?? "–";
-  $("px-exp").textContent = sign(ov.expectancy_r ?? 0) + "R";
-  $("px-rec").textContent = "×" + (pf.recovery_episodes ?? 0);
-  $("px-taken").textContent = `${pf.n_accepted ?? 0} / ${pf.n_signals ?? 0}`;
-  $("px-days").textContent = (p.lookback_days || "?") + " hari";
-
-  drawPhoenixEquity($("px-equity"), rep.equity_curve || []);
-
-  // per-engine table
-  const eng = s.by_engine || {};
-  document.querySelector("#px-engines tbody").innerHTML = ["fib", "breakout", "range"].map(k => {
-    const e = eng[k] || {};
-    if (!e.trades) return `<tr><td>${ENGINE_LABEL[k]}</td><td colspan="5" class="empty">tidak ada trade</td></tr>`;
-    return `<tr><td>${ENGINE_LABEL[k]}</td><td>${e.trades}</td>
-      <td class="${e.win_rate >= 50 ? "o-win" : "o-loss"}">${e.win_rate}%</td>
-      <td class="${e.profit_factor >= 1 ? "o-win" : "o-loss"}">${e.profit_factor}</td>
-      <td>${sign(e.expectancy_r)}R</td>
-      <td class="${e.total_r >= 0 ? "o-win" : "o-loss"}">${sign(e.total_r)}R</td></tr>`;
-  }).join("");
-
-  // per-regime table
-  const reg = s.by_regime || {};
-  document.querySelector("#px-regimes tbody").innerHTML = ["BULL", "BEAR", "NEUTRAL"].map(k => {
-    const e = reg[k] || {};
-    if (!e.trades) return `<tr><td>${k}</td><td colspan="4" class="empty">–</td></tr>`;
-    return `<tr><td>${k}</td><td>${e.trades}</td>
-      <td class="${e.win_rate >= 50 ? "o-win" : "o-loss"}">${e.win_rate}%</td>
-      <td class="${e.profit_factor >= 1 ? "o-win" : "o-loss"}">${e.profit_factor}</td>
-      <td class="${e.total_r >= 0 ? "o-win" : "o-loss"}">${sign(e.total_r)}R</td></tr>`;
-  }).join("");
-
-  // recent trades journal
-  document.querySelector("#px-journal tbody").innerHTML = (rep.recent_trades || []).map(t => {
-    const d = t.exit_ts ? new Date(t.exit_ts).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "2-digit" }) : "–";
-    const oc = t.outcome === "WIN" ? "o-win" : t.outcome === "LOSS" ? "o-loss" : "";
-    return `<tr><td class="small">${d}</td><td>${t.symbol}</td>
-      <td class="small">${ENGINE_LABEL[t.engine] || t.engine}${t.recovering ? " ·🛟" : ""}</td>
-      <td>${t.direction}</td><td class="small">${t.regime}</td><td>${t.rr}</td>
-      <td class="${oc}">${t.outcome}</td>
-      <td class="${(t.r || 0) >= 0 ? "o-win" : "o-loss"}">${(t.r >= 0 ? "+" : "") + t.r}R</td></tr>`;
-  }).join("");
-}
-
-function drawPhoenixEquity(cv, curve) {
-  if (!cv) return;
-  const dpr = window.devicePixelRatio || 1;
-  const W = cv.clientWidth || 600, H = cv.clientHeight || 240;
-  cv.width = W * dpr; cv.height = H * dpr;
-  const ctx = cv.getContext("2d");
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.clearRect(0, 0, W, H);
-  if (!curve.length) return;
-  const padL = 48, padB = 22, padT = 12, padR = 12;
-  const plotW = W - padL - padR, plotH = H - padT - padB;
-  const vs = curve.map(p => p.eq);
-  let lo = Math.min(0, ...vs), hi = Math.max(0, ...vs);
-  if (hi === lo) hi = lo + 1;
-  const x = i => padL + plotW * (i / Math.max(1, curve.length - 1));
-  const y = v => padT + plotH * (1 - (v - lo) / (hi - lo));
-  const muted = cssVar("--muted"), green = cssVar("--green"), red = cssVar("--red");
-  ctx.strokeStyle = muted; ctx.globalAlpha = 0.4; ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(padL, y(0)); ctx.lineTo(W - padR, y(0)); ctx.stroke();
-  ctx.globalAlpha = 1;
-  ctx.fillStyle = muted; ctx.font = "10px system-ui"; ctx.textAlign = "right"; ctx.textBaseline = "middle";
-  ctx.fillText(hi.toFixed(1) + "%", padL - 5, y(hi));
-  ctx.fillText(lo.toFixed(1) + "%", padL - 5, y(lo));
-  const end = vs[vs.length - 1];
-  const col = end >= 0 ? green : red;
-  ctx.beginPath();
-  curve.forEach((p, i) => { const px = x(i), py = y(p.eq); i ? ctx.lineTo(px, py) : ctx.moveTo(px, py); });
-  ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.stroke();
-  ctx.lineTo(x(curve.length - 1), y(0)); ctx.lineTo(x(0), y(0)); ctx.closePath();
-  ctx.fillStyle = col; ctx.globalAlpha = 0.12; ctx.fill(); ctx.globalAlpha = 1;
-}
-
 /* ============ TRADE SAYA (personal tracker, disimpan di perangkat) ============ */
 const MT_KEY = "fib-my-trades";
 const MY_DAILY_LIMIT = 10;   // batas jurnal "Trade Saya" (manual, bukan cap strategi bot=5)
@@ -880,9 +761,22 @@ function computeMyStats() {
   };
 }
 
+// Only show signals that are genuine recommendations: the strategy actually
+// fired (ENTRY) or is armed (ARMED), the self-learning brain did NOT block the
+// pattern (proven-losing patterns are hidden), and confidence clears the "yakin"
+// bar. WATCHING / blocked / low-confidence signals are not shown.
+const REC_MIN_CONF = 0.5;
+function isRecommended(x) {
+  return x.allowed !== false
+    && (x.confidence || 0) >= REC_MIN_CONF
+    && (x.state === "ENTRY" || x.state === "ARMED");
+}
 function renderSignals(list) {
   const grid = $("signals");
-  const shown = list.filter(x => x.state !== "WATCHING" || x.confidence >= 0.5).slice(0, 30);
+  const shown = list.filter(isRecommended)
+    .sort((a, b) => (a.state === b.state ? (b.confidence || 0) - (a.confidence || 0)
+                     : a.state === "ENTRY" ? -1 : 1))
+    .slice(0, 30);
   $("signals-empty").classList.toggle("hidden", shown.length > 0);
   grid.innerHTML = shown.map(cardHTML).join("");
   // draw candlestick charts after the cards are in the DOM

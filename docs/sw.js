@@ -1,7 +1,7 @@
 /* NestSMC by Draftnest — service worker (installable PWA).
    Shell is cache-first; live data (data/*.json, /api/*) is always network-first
    so signals & backtest stay fresh. */
-const CACHE = "nestsmc-v4";
+const CACHE = "nestsmc-v5";
 const SHELL = [
   "./", "index.html", "style.css", "app.js",
   "manifest.webmanifest", "icon-192.png", "icon-512.png",
