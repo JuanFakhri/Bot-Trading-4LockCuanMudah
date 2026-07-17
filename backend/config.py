@@ -55,10 +55,13 @@ SMC_ATR_MAX = 8.0
 #   1.5 -> ATR+Vol : 18 trades/730d, PF 2.60, OOS 2.72  (fewer, higher quality)
 SMC_VOL_MULT = float(os.getenv("SMC_VOL_MULT", "1.0"))   # #5 volume > Nx SMA20
 
-# Active machines. 3-year backtest showed the LONG machine loses (40% win, -3R)
-# while SHORT is the edge (64% win, +8R): short-only lifts PF 1.23->1.62 and
-# OOS 1.83->2.85. So the live bot runs SHORT-ONLY. Re-enable long via env.
-SMC_ALLOW_LONG = os.getenv("SMC_ALLOW_LONG", "0") == "1"
+# Two-machine architecture (see strategy_smc.evaluate router):
+#   LONG  -> Phoenix Hybrid (backend/phoenix.py). The plain SMC long machine lost
+#            money over 3y (40% win, -3R), so the long side now runs Phoenix's
+#            FIB-retrace + momentum-breakout engines instead.
+#   SHORT -> classic SMC (the validated edge: 64% win, +8R over 3y).
+# Toggle either machine via env (e.g. SMC_ALLOW_LONG=0 to run short-only again).
+SMC_ALLOW_LONG = os.getenv("SMC_ALLOW_LONG", "1") == "1"
 SMC_ALLOW_SHORT = os.getenv("SMC_ALLOW_SHORT", "1") == "1"
 
 # Golden zone (fibonacci retracement) — one component of the AI Score
@@ -93,9 +96,10 @@ LEARN_PRIOR_BETA = 1.0          # Bayesian prior losses
 CONFIDENCE_FLOOR = 0.15         # signals below this confidence are hidden
 
 # --------------------------------------------------------------------------
-# Phoenix Hybrid — multi-engine RESEARCH strategy (backtest only; NOT wired to
-# the live signal engine). Evaluated via scripts/backtest_phoenix.py and shown
-# in the "Phoenix" tab. Tuning lives here; nothing here changes live trading.
+# Phoenix Hybrid — the LIVE LONG machine (backend/phoenix.py). Two entry engines
+# fire in a BULL regime: FIB retrace + momentum breakout. Backtested via
+# scripts/backtest_phoenix.py (Phoenix-long + SMC-short combined). Tuning here
+# changes live long entries.
 # --------------------------------------------------------------------------
 PHX_NEUTRAL_BAND = 0.02          # BTC EMA50 flat within ±2% over N days -> NEUTRAL
 PHX_NEUTRAL_DAYS = 5

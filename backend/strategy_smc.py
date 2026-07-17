@@ -16,7 +16,7 @@ from datetime import datetime, timezone
 import numpy as np
 import pandas as pd
 
-from . import config, indicators
+from . import config, indicators, phoenix
 
 # Setup-Score weights (#15) — identical to the backtester.
 W = {"ema": 10, "rsi": 5, "adx": 10, "fib": 15, "sweep": 15, "choch": 15,
@@ -31,9 +31,50 @@ def _last_pivot(piv: np.ndarray, values: np.ndarray, n: int, pl: int):
     return np.nan, -1
 
 
+def _direction(htf: pd.DataFrame, dtf: pd.DataFrame, ltf: pd.DataFrame) -> str | None:
+    """Pick the machine from multi-TF trend alignment (#19): all three of
+    1D / 4H / 1H EMA50-vs-EMA200 must agree, else no trade."""
+    if len(ltf) < 250 or len(htf) < config.EMA_SLOW + 30 or len(dtf) < config.EMA_SLOW + 5:
+        return None
+    d_bull = indicators.ema(dtf["close"], config.EMA_FAST).iloc[-1] \
+        > indicators.ema(dtf["close"], config.EMA_SLOW).iloc[-1]
+    h4_bull = indicators.ema(htf["close"], config.EMA_FAST).iloc[-1] \
+        > indicators.ema(htf["close"], config.EMA_SLOW).iloc[-1]
+    h1_bull = indicators.ema(ltf["close"], config.EMA_FAST).iloc[-1] \
+        > indicators.ema(ltf["close"], config.EMA_SLOW).iloc[-1]
+    if d_bull and h4_bull and h1_bull:
+        return "long"
+    if (not d_bull) and (not h4_bull) and (not h1_bull):
+        return "short"
+    return None
+
+
 def evaluate(symbol: str, htf: pd.DataFrame, dtf: pd.DataFrame, ltf: pd.DataFrame,
              regime: dict) -> dict | None:
-    """Evaluate the latest 1H bar. ``ltf`` MUST be 1H candles (SMC entry TF)."""
+    """Two-machine ROUTER — the single entry point the engine calls.
+
+        LONG  regime -> Phoenix Hybrid   (``phoenix.evaluate_long``)
+        SHORT regime -> classic SMC      (``evaluate_smc_machine`` below)
+
+    The long side runs Phoenix because the plain SMC long machine lost money
+    over 3 years; the short side keeps the validated SMC engine (the real edge).
+    """
+    machine = _direction(htf, dtf, ltf)
+    if machine is None:
+        return None
+    if machine == "long":
+        if not config.SMC_ALLOW_LONG:
+            return None
+        return phoenix.evaluate_long(symbol, htf, dtf, ltf, regime)
+    if not config.SMC_ALLOW_SHORT:
+        return None
+    return evaluate_smc_machine(symbol, htf, dtf, ltf, regime)
+
+
+def evaluate_smc_machine(symbol: str, htf: pd.DataFrame, dtf: pd.DataFrame,
+                         ltf: pd.DataFrame, regime: dict) -> dict | None:
+    """The SMC machine (short side). Evaluates the latest 1H bar. ``ltf`` MUST
+    be 1H candles (SMC entry TF)."""
     if len(ltf) < 250 or len(htf) < config.EMA_SLOW + 30 or len(dtf) < config.EMA_SLOW + 5:
         return None
 
@@ -73,9 +114,9 @@ def evaluate(symbol: str, htf: pd.DataFrame, dtf: pd.DataFrame, ltf: pd.DataFram
     machine = "long" if long_ok else "short" if short_ok else None
     if machine is None:
         return None
-    # live is SHORT-only (LONG machine lost money over 3y; see config)
-    if (machine == "long" and not config.SMC_ALLOW_LONG) or \
-       (machine == "short" and not config.SMC_ALLOW_SHORT):
+    # This function is the SMC (short) machine. The router only calls it for
+    # SHORT; a long alignment shouldn't reach here, but guard anyway.
+    if machine == "long":
         return None
 
     # ---- swings / FVG / liquidity ----
