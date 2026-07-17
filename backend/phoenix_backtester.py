@@ -71,18 +71,22 @@ def _manage_phoenix(pos, high, low, close, ema20, sar, bars_held):
 
     cur_r = (close - entry) / risk if long else (entry - close) / risk
 
-    # ---- TP1: +1R -> take 50%, move to breakeven, arm the trail ----
+    # ---- TP1: bank a portion at +tp1_r R, move to breakeven, arm the trail ----
     if not pos["tp1_hit"] and hit(pos["tp1"], long):
-        pos["realized"] += 0.50 * 1.0
-        pos["rem"] -= 0.50
+        frac = pos.get("tp1_frac", 0.50)
+        tp1_r = (pos["tp1"] - entry) / risk if long else (entry - pos["tp1"]) / risk
+        pos["realized"] += frac * tp1_r
+        pos["rem"] -= frac
         pos["tp1_hit"] = True
         pos["stop"] = entry * (1 + config.BE_BUFFER_PCT) if long else entry * (1 - config.BE_BUFFER_PCT)
 
     # ---- time-stop: stalled trade before TP1 -> trim half once ----
-    if (not pos["tp1_hit"] and not pos["time_trim"]
-            and bars_held >= config.PHX_TIME_STOP_BARS and cur_r < 0.5):
-        pos["realized"] += 0.50 * cur_r
-        pos["rem"] -= 0.50
+    tstop = pos.get("time_stop", config.PHX_TIME_STOP_BARS)
+    if (tstop and not pos["tp1_hit"] and not pos["time_trim"]
+            and bars_held >= tstop and cur_r < 0.5):
+        trim = min(0.50, pos["rem"])
+        pos["realized"] += trim * cur_r
+        pos["rem"] -= trim
         pos["time_trim"] = True
 
     # ---- runner: TP2 at +2R / fib1.272, else trail on EMA20 or PSAR ----
@@ -107,6 +111,14 @@ def backtest_symbol_phoenix(symbol, htf, dtf, ltf, regime_daily, usdtd_daily,
     params = params or {}
     engines_on = set(params.get("engines", ENGINES))
     sides_on = set(params.get("sides", ("LONG", "SHORT")))   # research knob
+    # Exit tuning (all default to the current live behavior, so an empty params
+    # dict reproduces the validated engine exactly). Used by the exit sweep.
+    ex = params.get("exit", {})
+    sl_atr = float(ex.get("sl_atr", config.PHX_SL_ATR))
+    tp1_r = float(ex.get("tp1_r", 1.0))          # TP1 level in R
+    tp1_frac = float(ex.get("tp1_frac", 0.50))   # portion banked at TP1
+    tp2_r = float(ex.get("tp2_r", 2.0))          # runner target in R (<=0 => trail-only)
+    time_stop = int(ex.get("time_stop", config.PHX_TIME_STOP_BARS))  # 0 => off
     if ltf is None or len(ltf) < 260 or len(htf) < config.EMA_SLOW + 30:
         return []
 
@@ -202,12 +214,12 @@ def backtest_symbol_phoenix(symbol, htf, dtf, ltf, regime_daily, usdtd_daily,
                 vol_ok = (not np.isnan(vsma[i])) and v[i] > config.PHX_BRK_VOL_MULT * vsma[i]
                 if long and not np.isnan(hi20[i]) and c[i] > hi20[i] and vol_ok \
                         and c[i] > d_ema200[i] and h4_rsi[i] > config.PHX_BRK_RSI and ad_rising[i]:
-                    entry = c[i]; sl = min(l[i], swL if not np.isnan(swL) else l[i]) - config.PHX_SL_ATR * atr_1[i]
+                    entry = c[i]; sl = min(l[i], swL if not np.isnan(swL) else l[i]) - sl_atr * atr_1[i]
                     if entry - sl > 0:
                         sig = ("breakout", "LONG", entry, sl, entry + 2 * (entry - sl))
                 elif (not long) and not np.isnan(lo20[i]) and c[i] < lo20[i] and vol_ok \
                         and c[i] < d_ema200[i] and h4_rsi[i] < 100 - config.PHX_BRK_RSI and not ad_rising[i]:
-                    entry = c[i]; sl = max(h[i], swH if not np.isnan(swH) else h[i]) + config.PHX_SL_ATR * atr_1[i]
+                    entry = c[i]; sl = max(h[i], swH if not np.isnan(swH) else h[i]) + sl_atr * atr_1[i]
                     if sl - entry > 0:
                         sig = ("breakout", "SHORT", entry, sl, entry - 2 * (sl - entry))
 
@@ -241,7 +253,7 @@ def backtest_symbol_phoenix(symbol, htf, dtf, ltf, regime_daily, usdtd_daily,
                         bos = int(c[i] > h[i - 1])
                         rsi_turn = int(rsi_1[i] > rsi_1[i - 1] and rsi_1[i] > 45)
                         if bos + rsi_turn + vol_up >= config.PHX_FIB_CONFIRM_MIN:
-                            entry = c[i]; sl = aL - config.PHX_SL_ATR * atr_1[i]
+                            entry = c[i]; sl = aL - sl_atr * atr_1[i]
                             if entry - sl > 0:
                                 sig = ("fib", "LONG", entry, sl, entry + 2 * (entry - sl))
                                 fib_arm = None
@@ -249,7 +261,7 @@ def backtest_symbol_phoenix(symbol, htf, dtf, ltf, regime_daily, usdtd_daily,
                         bos = int(c[i] < l[i - 1])
                         rsi_turn = int(rsi_1[i] < rsi_1[i - 1] and rsi_1[i] < 55)
                         if bos + rsi_turn + vol_up >= config.PHX_FIB_CONFIRM_MIN:
-                            entry = c[i]; sl = aH + config.PHX_SL_ATR * atr_1[i]
+                            entry = c[i]; sl = aH + sl_atr * atr_1[i]
                             if sl - entry > 0:
                                 sig = ("fib", "SHORT", entry, sl, entry - 2 * (sl - entry))
                                 fib_arm = None
@@ -259,17 +271,24 @@ def backtest_symbol_phoenix(symbol, htf, dtf, ltf, regime_daily, usdtd_daily,
         if sig[1] not in sides_on:      # direction filter (LONG/SHORT research knob)
             continue
 
-        engine, direction, entry, sl, tp2 = sig
+        engine, direction, entry, sl, _tp2_sig = sig
         risk = abs(entry - sl)
         if risk <= 0:
             continue
-        tp1 = entry + risk if direction == "LONG" else entry - risk
+        # exit levels from the (tunable) exit params; defaults = +1R / +2R
+        if direction == "LONG":
+            tp1 = entry + tp1_r * risk
+            tp2 = entry + (tp2_r * risk if tp2_r > 0 else 1e9 * risk)   # <=0 => trail-only
+        else:
+            tp1 = entry - tp1_r * risk
+            tp2 = entry - (tp2_r * risk if tp2_r > 0 else 1e9 * risk)
         pos = {
             "symbol": symbol, "engine": engine, "direction": direction,
             "regime": reg, "entry": float(entry), "sl": float(sl), "stop": float(sl),
             "tp1": float(tp1), "tp2": float(tp2), "risk": float(risk),
             "rr": round(abs(tp2 - entry) / risk, 2),
             "tp1_hit": False, "time_trim": False, "rem": 1.0, "realized": 0.0,
+            "tp1_frac": tp1_frac, "time_stop": time_stop,
             "entry_ts": ts[i].isoformat(),
         }
         entry_bar = i
