@@ -1,0 +1,50 @@
+name: SMC news-impact study
+
+# Uji dampak macro (CPI/inflasi & suku bunga) ke BTC/ETH pakai data FRED (gratis)
+# + Binance, selama 3 tahun. Menulis docs/data/news_impact.json. Riset, tidak
+# menyentuh bot live.
+on:
+  workflow_dispatch:
+    inputs:
+      days:
+        description: "Hari data historis (mis. 1095 = 3 tahun)"
+        required: false
+        default: "1095"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: smc-news-impact
+  cancel-in-progress: false
+
+jobs:
+  news:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Run news-impact study
+        env:
+          BACKTEST_DAYS: ${{ github.event.inputs.days || '1095' }}
+        run: python -m scripts.news_impact
+      - name: Commit results
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -f docs/data/news_impact.json
+          if git diff --cached --quiet; then
+            echo "Tidak ada perubahan."
+          else
+            git commit -m "chore: hasil news-impact study [skip ci]"
+            for i in 1 2 3 4; do
+              git pull --rebase origin claude/fib-hybrid-trading-bot-elzm69 && git push && break
+              echo "push retry $i"; sleep 3
+            done
+          fi
