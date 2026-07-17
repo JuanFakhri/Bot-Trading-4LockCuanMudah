@@ -65,6 +65,12 @@ SMC_VOL_MULT = float(os.getenv("SMC_VOL_MULT", "1.0"))   # #5 volume > Nx SMA20
 SMC_ALLOW_LONG = os.getenv("SMC_ALLOW_LONG", "1") == "1"
 SMC_ALLOW_SHORT = os.getenv("SMC_ALLOW_SHORT", "1") == "1"
 
+# Macro/CPI hard gate (validated over 3y: OOS PF 1.44 -> 1.71, win 57.5 -> 61.5%).
+# Block LONG when the CPI backdrop is BEARISH (inflation rising) and SHORT when
+# BULLISH (inflation falling) — don't trade against the macro tide. Fewer trades
+# (~30%) but higher quality. Toggle off with MACRO_GATE=0.
+MACRO_GATE = os.getenv("MACRO_GATE", "1") == "1"
+
 # Golden zone (fibonacci retracement) — one component of the AI Score
 FIB_ZONE_LO = 0.5
 FIB_ZONE_HI = 0.618

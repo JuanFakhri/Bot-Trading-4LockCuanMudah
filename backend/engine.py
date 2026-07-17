@@ -38,6 +38,12 @@ class Engine:
         self.scanning = True
         try:
             self.regime = await market_filter.compute_regime()
+            # macro backdrop for the CPI gate (block trades that fight inflation trend)
+            try:
+                cpi = await data_feed.get_cpi_bias()
+                self.regime["cpi_bias"] = cpi.get("bias", "NETRAL") if cpi.get("ok") else "NETRAL"
+            except Exception:
+                self.regime["cpi_bias"] = "NETRAL"
             await self._update_open_trades()
 
             results: list[dict] = []

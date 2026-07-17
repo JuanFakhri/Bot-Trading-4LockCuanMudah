@@ -81,6 +81,33 @@ async def _usdtd_timeline():
     return pd.Series(np.nan, index=idx)
 
 
+async def _cpi_dir_daily(idx):
+    """Daily CPI-bias (BULLISH=disinflation / BEARISH=rising inflation), from FRED
+    CPIAUCSL YoY trend, lagged ~45d for the release (no lookahead), reindexed to
+    the daily backtest index. Mirrors the live get_cpi_bias rule."""
+    import io
+    if config.DEMO:
+        return pd.Series("NETRAL", index=idx)
+    try:
+        r = await data_feed._client.get(
+            "https://fred.stlouisfed.org/graph/fredgraph.csv?id=CPIAUCSL", timeout=30.0)
+        df = pd.read_csv(io.StringIO(r.text)); df.columns = ["date", "value"]
+        df["value"] = pd.to_numeric(df["value"], errors="coerce")
+        df["date"] = pd.to_datetime(df["date"], errors="coerce")
+        df = df.dropna().set_index("date").sort_index()
+        yoy = df["value"] / df["value"].shift(12) - 1
+        delta = yoy.diff()
+        d = pd.Series("NETRAL", index=yoy.index)
+        d[delta < -0.0005] = "BULLISH"
+        d[delta > 0.0005] = "BEARISH"
+        d.index = d.index + pd.Timedelta(days=45)
+        d.index = d.index.tz_localize("UTC")
+        return d.reindex(idx, method="ffill").fillna("NETRAL")
+    except Exception as exc:
+        print(f"[live] cpi failed: {exc}")
+        return pd.Series("NETRAL", index=idx)
+
+
 def _machine_summary(trades, machine):
     return smc_backtester.summarize([t for t in trades if t.get("machine") == machine])
 
@@ -123,6 +150,16 @@ async def main():
             print(f"[live] {sym}: {len(longs)} long (Phoenix) + {len(shorts)} short (SMC)")
         except Exception as exc:
             print(f"[live] {sym} error: {exc}")
+
+    # ---- Macro/CPI gate (live): drop trades that fight the inflation backdrop ----
+    if config.MACRO_GATE:
+        cpi = await _cpi_dir_daily(usdtd_daily.index)
+        cpi_map = {d.strftime("%Y-%m-%d"): v for d, v in cpi.items()}
+        before = len(all_trades)
+        all_trades = [t for t in all_trades if not (
+            (t["direction"] == "LONG" and cpi_map.get(t["entry_ts"][:10]) == "BEARISH") or
+            (t["direction"] == "SHORT" and cpi_map.get(t["entry_ts"][:10]) == "BULLISH"))]
+        print(f"[live] macro gate: {before} -> {len(all_trades)} trades")
 
     summary = smc_backtester.summarize(all_trades)
     long_sum = _machine_summary(all_trades, "long")

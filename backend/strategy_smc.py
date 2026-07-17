@@ -61,11 +61,17 @@ def evaluate(symbol: str, htf: pd.DataFrame, dtf: pd.DataFrame, ltf: pd.DataFram
     validated SMC per-symbol trend alignment.
     """
     reg = regime.get("regime")
+    cpi_bias = regime.get("cpi_bias", "NETRAL")
+    gate = config.MACRO_GATE
     # LONG — Phoenix, only in a BULL market regime (matches phoenix_backtester).
     if reg == "BULL" and config.SMC_ALLOW_LONG:
+        if gate and cpi_bias == "BEARISH":       # don't long into a rising-inflation backdrop
+            return None
         return phoenix.evaluate_long(symbol, htf, dtf, ltf, regime)
     # SHORT — classic SMC, on a per-symbol bearish alignment (the validated edge).
     if config.SMC_ALLOW_SHORT and _direction(htf, dtf, ltf) == "short":
+        if gate and cpi_bias == "BULLISH":       # don't short into a falling-inflation backdrop
+            return None
         return evaluate_smc_machine(symbol, htf, dtf, ltf, regime)
     return None
 
