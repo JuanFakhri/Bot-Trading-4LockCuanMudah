@@ -186,7 +186,7 @@ document.querySelectorAll(".tab").forEach(t => {
   const seg = location.pathname.split("/").filter(Boolean)[0]; // repo name
   if (run && host.endsWith("github.io") && seg) {
     const user = host.split(".")[0];
-    run.href = `https://github.com/${user}/${seg}/actions/workflows/backtest.yml`;
+    run.href = `https://github.com/${user}/${seg}/actions/workflows/live_backtest.yml`;
   } else if (run) {
     run.href = "https://github.com";
     run.textContent = "▶ Jalankan backtest (buka GitHub Actions)";
@@ -197,7 +197,9 @@ document.querySelectorAll(".tab").forEach(t => {
 
 async function loadBacktest() {
   let rep = null;
-  for (const url of ["data/backtest.json", "/api/backtest"]) {
+  // Prefer the LIVE two-machine backtest (Phoenix long + SMC short); fall back
+  // to the legacy SMC-only report if the live one isn't there yet.
+  for (const url of ["data/live_backtest.json", "data/backtest.json", "/api/backtest"]) {
     try { const r = await fetch(url, { cache: "no-store" }); if (r.ok) { rep = await r.json(); break; } }
     catch (e) { /* try next */ }
   }
@@ -216,8 +218,8 @@ function renderBacktest(rep) {
   $("bt-totalr").textContent = (s.total_r >= 0 ? "+" : "") + (s.total_r ?? 0) + "R";
   $("bt-dd").textContent = (s.max_drawdown_r ?? 0) + "R";
   const p = rep.params || {};
-  $("bt-meta").textContent = `Strategi: ${(p.strategy || "smc").toUpperCase()}`
-    + (p.score_th != null ? ` (Skor Setup ≥ ${p.score_th})` : "")
+  const isLive = rep.by_machine != null;
+  $("bt-meta").textContent = `Strategi: ${isLive ? "Phoenix (long) + SMC (short)" : (p.strategy || "smc").toUpperCase()}`
     + ` · ${p.lookback_days || "?"} hari · ${p.symbols || "?"} simbol · trigger ${p.ltf || "1h"}`
     + (rep.generated_ts ? ` · dibuat ${new Date(rep.generated_ts).toLocaleString("id-ID")}` : "")
     + (p.demo ? " · (DEMO)" : "");
@@ -238,7 +240,7 @@ function renderBacktest(rep) {
         <div class="meta">win ${Math.round((l.win_rate || 0) * 100)}% · ${l.samples} sampel</div></div>`).join("")
     : `<p class="muted small">Belum ada pelajaran (butuh ≥5 sampel per pola).</p>`;
 
-  renderOptimization(rep.params);
+  renderOptimization(rep);
   renderWalkforward(rep.walkforward);
   renderBtMetrics(s);
 
@@ -259,17 +261,45 @@ function renderBacktest(rep) {
     : `<tr><td colspan="9" class="empty">Belum ada trade backtest.</td></tr>`;
 }
 
-function renderOptimization(p) {
+function renderOptimization(rep) {
   const el = $("bt-opt");
   if (!el) return;
-  p = p || {};
+  rep = rep || {};
+  const p = rep.params || {};
+  const bm = rep.by_machine || null;
+  const eng = rep.by_long_engine || {};
+  const wr = (m) => (m && m.trades) ? `${m.win_rate}% · PF ${m.profit_factor} · ${m.trades} trade` : "–";
+  if (!bm) {   // legacy SMC-only report
+    el.innerHTML = `
+      <div class="opt-box on">
+        ✅ <b>Strategi SMC + Skor Setup</b> — entry hanya saat konfluensi lolos ambang.
+        <div class="opt-params">
+          <span class="opt-chip">Skor Setup ≥ ${p.score_th ?? 60}</span>
+          <span class="opt-chip">Trigger 1H</span>
+          <span class="opt-chip">SL swing ± ATR</span>
+          <span class="opt-chip">TP 1R/2R/3R</span>
+        </div>
+      </div>`;
+    return;
+  }
+  const L = bm.long_phoenix || {}, S = bm.short_smc || {};
   el.innerHTML = `
     <div class="opt-box on">
-      ✅ <b>Strategi SMC + Skor Setup</b> — entry hanya saat konfluensi lolos ambang.
+      🔵 <b>Mesin LONG · Phoenix Hybrid</b> <span class="muted small">(regime BULL)</span>
+      <div class="muted small" style="margin:3px 0 6px">${wr(L)}</div>
+      <div class="opt-params">
+        <span class="opt-chip">FIB retrace ${eng.fib ? `· PF ${eng.fib.profit_factor}` : ""}</span>
+        <span class="opt-chip">Momentum breakout ${eng.breakout ? `· PF ${eng.breakout.profit_factor}` : ""}</span>
+        <span class="opt-chip">SL 0.8 ATR</span>
+        <span class="opt-chip">TP1 +1R → BE, runner +2R</span>
+      </div>
+    </div>
+    <div class="opt-box on" style="margin-top:10px">
+      🔴 <b>Mesin SHORT · SMC</b> <span class="muted small">(regime BEAR)</span>
+      <div class="muted small" style="margin:3px 0 6px">${wr(S)}</div>
       <div class="opt-params">
         <span class="opt-chip">Skor Setup ≥ ${p.score_th ?? 60}</span>
-        <span class="opt-chip">Trigger 1H</span>
-        <span class="opt-chip">SL swing ± ATR</span>
+        <span class="opt-chip">sweep→CHOCH→BOS→FVG→OB</span>
         <span class="opt-chip">TP 1R/2R/3R</span>
       </div>
     </div>`;

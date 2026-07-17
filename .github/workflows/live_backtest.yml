@@ -18,6 +18,8 @@ on:
         description: "1=jangan tulis learning state (uji dulu, tidak menyentuh live)"
         required: false
         default: "1"
+  schedule:
+    - cron: "0 3 * * 0"          # tiap Minggu 03:00 UTC — segarkan tab Backtest + otak-belajar
 
 permissions:
   contents: write
@@ -44,7 +46,9 @@ jobs:
         env:
           BACKTEST_DAYS: ${{ github.event.inputs.days || '1095' }}
           BACKTEST_SYMBOLS: ${{ github.event.inputs.symbols || '' }}
-          BACKTEST_NO_PERSIST: ${{ github.event.inputs.no_persist || '1' }}
+          # manual runs default to 1 (safe); the weekly schedule persists (0) so
+          # the live learning brain is rebuilt from the live two-machine strategy
+          BACKTEST_NO_PERSIST: ${{ github.event.inputs.no_persist || (github.event_name == 'schedule' && '0' || '1') }}
         run: python -m scripts.backtest_live
 
       - name: Commit results

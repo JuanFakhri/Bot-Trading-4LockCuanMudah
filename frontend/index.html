@@ -142,11 +142,12 @@
 
     <div id="view-backtest" class="hidden">
       <div class="bt-intro panel">
-        <h2>🔬 Backtest strategi FIB pada data historis</h2>
-        <p class="muted small">Menguji strategi pada data masa lalu Binance. <b>Dari hasil ini bot belajar</b>:
-          pola yang berulang rugi otomatis diblokir, pola yang menang diprioritaskan — dan pelajaran itu
-          dipakai di sinyal live. Jalankan backtest baru lewat tombol di bawah (atur <b>days</b> mis. 365 &
-          <b>symbols</b> mis. ETHUSDT,SOLUSDT di form GitHub), lalu <b>↻ Muat ulang hasil</b>.</p>
+        <h2>🔬 Backtest strategi bot live — 2 mesin</h2>
+        <p class="muted small">Menguji <b>strategi yang sama persis dengan bot live</b>: mesin
+          <b>LONG = Phoenix Hybrid</b> (regime BULL) + mesin <b>SHORT = SMC</b> (regime BEAR), pada data
+          historis Binance. <b>Dari hasil ini bot belajar</b>: pola yang berulang rugi diblokir, pola menang
+          diprioritaskan — dipakai di sinyal live. Jalankan backtest baru lewat tombol di bawah (atur
+          <b>days</b> mis. 1095), lalu <b>↻ Muat ulang hasil</b>.</p>
         <p id="bt-meta" class="muted small"></p>
         <div class="bt-controls">
           <a id="bt-run" class="btn" target="_blank" rel="noopener">▶ Jalankan backtest baru</a>
@@ -174,7 +175,7 @@
         <section class="panel">
           <div class="panel-head"><h2>Kurva Ekuitas (kumulatif R)</h2></div>
           <canvas id="bt-equity" class="equity"></canvas>
-          <p id="bt-empty" class="empty">Belum ada hasil backtest. Jalankan workflow "SMC backtest" di GitHub Actions.</p>
+          <p id="bt-empty" class="empty">Belum ada hasil backtest. Jalankan workflow "Live backtest (Phoenix long + SMC short)" di GitHub Actions.</p>
         </section>
         <aside class="side">
           <section class="panel">

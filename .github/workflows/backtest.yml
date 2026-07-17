@@ -43,8 +43,9 @@ on:
         description: "1=perkuat LONG: wajib sweep-reclaim support + BOS (reversal nyata)"
         required: false
         default: "0"
-  schedule:
-    - cron: "0 3 * * 0"          # tiap Minggu 03:00 UTC
+  # No schedule: this SMC-only backtest is manual/research only. The weekly
+  # refresh + learning rebuild is owned by live_backtest.yml (Phoenix + SMC), so
+  # this workflow no longer overwrites the live learning brain on a cron.
 
 permissions:
   contents: write
