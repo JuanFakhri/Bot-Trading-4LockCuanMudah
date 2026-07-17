@@ -49,7 +49,7 @@ async def main():
     with open(STATE_PATH, "w", encoding="utf-8") as f:
         json.dump(db.export_state(), f, ensure_ascii=False, indent=0)
 
-    # 5. high-impact economic calendar + crypto-impact screen (dashboard, WIB)
+    # 5. high-impact calendar (news alert, WIB) + macro screens (events + CPI)
     try:
         from backend import macro_news
         events = await data_feed.get_economic_calendar()
@@ -60,13 +60,14 @@ async def main():
             for e in events
         ]
         screen = macro_news.aggregate_day(assessments)
+        cpi = await data_feed.get_cpi_bias()   # inflasi turun = latar bullish crypto
         with open(NEWS_PATH, "w", encoding="utf-8") as f:
             json.dump({"generated_ts": snap.get("last_scan"),
                        "alert_hours": config.NEWS_ALERT_HOURS,
-                       "screen": screen, "events": events},
+                       "screen": screen, "cpi": cpi, "events": events},
                       f, ensure_ascii=False, separators=(",", ":"))
-        print(f"[scan] news: {len(events)} high-impact events, "
-              f"screen bias={screen['bias']} ({screen['verdict']})")
+        print(f"[scan] news: {len(events)} events | screen={screen['bias']} | "
+              f"CPI bias={cpi.get('bias')} (YoY {cpi.get('prev_yoy')}->{cpi.get('yoy')})")
     except Exception as exc:
         print(f"[scan] news fetch failed: {exc}")
 

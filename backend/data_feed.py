@@ -297,5 +297,47 @@ async def get_economic_calendar() -> list[dict]:
     return out
 
 
+async def get_cpi_bias() -> dict:
+    """Macro backdrop from US CPI trend (FRED, free CSV, no key).
+
+    Backtest (3y) showed: inflation FALLING -> crypto +5.5% (BTC, 14d), inflation
+    RISING -> -2.5%. So we surface a standing bias: disinflation = bullish
+    backdrop, rising CPI = bearish. Informational screen only — does not gate
+    trades. Returns {yoy, prev_yoy, direction, bias, asof, ok}.
+    """
+    if config.DEMO:
+        return {"yoy": 2.9, "prev_yoy": 3.1, "direction": "TURUN",
+                "bias": "BULLISH", "asof": "2026-06", "ok": True}
+    try:
+        import io
+        r = await _client.get("https://fred.stlouisfed.org/graph/fredgraph.csv?id=CPIAUCSL",
+                              timeout=30.0)
+        if r.status_code != 200:
+            return {"ok": False}
+        df = pd.read_csv(io.StringIO(r.text))
+        df.columns = ["date", "value"]
+        df["value"] = pd.to_numeric(df["value"], errors="coerce")
+        df = df.dropna().reset_index(drop=True)
+        if len(df) < 14:
+            return {"ok": False}
+        # year-over-year inflation for the last two available months
+        v = df["value"]
+        yoy_now = (v.iloc[-1] / v.iloc[-13] - 1) * 100
+        yoy_prev = (v.iloc[-2] / v.iloc[-14] - 1) * 100
+        delta = yoy_now - yoy_prev
+        if delta < -0.05:
+            direction, bias = "TURUN", "BULLISH"
+        elif delta > 0.05:
+            direction, bias = "NAIK", "BEARISH"
+        else:
+            direction, bias = "STABIL", "NETRAL"
+        return {"yoy": round(float(yoy_now), 2), "prev_yoy": round(float(yoy_prev), 2),
+                "direction": direction, "bias": bias,
+                "asof": str(df["date"].iloc[-1])[:7], "ok": True}
+    except Exception as exc:
+        print(f"[data_feed] cpi bias failed: {exc}")
+        return {"ok": False}
+
+
 async def close():
     await _client.aclose()

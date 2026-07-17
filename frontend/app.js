@@ -102,12 +102,29 @@ connect();
 
 /* ============ NEWS ALERT (ForexFactory High-Impact, waktu WIB) ============ */
 let newsEvents = [];
+let cpiBias = null;
 async function loadNews() {
   try {
     const r = await fetch("data/news.json", { cache: "no-store" });
-    if (r.ok) { const d = await r.json(); newsEvents = d.events || []; }
+    if (r.ok) { const d = await r.json(); newsEvents = d.events || []; cpiBias = d.cpi || null; }
   } catch (e) { /* offline: keep last */ }
+  renderCpiBias();
   renderNewsAlert();
+}
+function renderCpiBias() {
+  const el = $("cpi-bias");
+  if (!el) return;
+  const c = cpiBias;
+  if (!c || !c.ok) { el.className = "cpi-bias hidden"; el.innerHTML = ""; return; }
+  const map = { BULLISH: ["ok", "📉", "latar BULLISH crypto"],
+                BEARISH: ["warn", "📈", "latar BEARISH crypto"],
+                NETRAL:  ["neutral", "➖", "latar NETRAL"] };
+  const [cls, icon, txt] = map[c.bias] || map.NETRAL;
+  const arrow = c.direction === "TURUN" ? "turun" : c.direction === "NAIK" ? "naik" : "flat";
+  el.className = "cpi-bias " + cls;
+  el.innerHTML = `<span class="cb-tag">${icon} Bias Makro (CPI)</span>
+    <span class="cb-main">Inflasi <b>${arrow}</b> ${c.prev_yoy}% → ${c.yoy}% · <b>${txt}</b></span>
+    <span class="cb-src">CPI YoY · FRED · ${c.asof}</span>`;
 }
 function fmtWIB(d) {
   return d.toLocaleString("id-ID", { weekday: "short", day: "2-digit", month: "short",

@@ -164,6 +164,20 @@ a.btn { text-decoration: none; display: inline-flex; align-items: center; }
 .badge.state-watching { background: var(--panel); color: var(--muted); }
 .badge.score { background: rgba(99,102,241,.18); color: var(--accent); }
 
+/* ---- CPI macro bias screen ---- */
+.cpi-bias { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px;
+  border-radius: 12px; padding: 9px 13px; margin: 10px 0 8px;
+  border: 1px solid var(--border); background: var(--panel); font-size: 12.5px; }
+.cpi-bias.hidden { display: none; }
+.cpi-bias.ok { border-color: var(--green); background: rgba(124,137,255,.10); }
+.cpi-bias.warn { border-color: var(--red); background: rgba(255,107,107,.10); }
+.cpi-bias.neutral { border-color: var(--border); }
+.cpi-bias .cb-tag { font-weight: 800; }
+.cpi-bias.ok .cb-tag { color: var(--green); }
+.cpi-bias.warn .cb-tag { color: var(--red); }
+.cpi-bias .cb-main { color: var(--text); }
+.cpi-bias .cb-src { color: var(--muted); font-size: 11px; margin-left: auto; }
+
 /* ---- News alert (ForexFactory high-impact, WIB) ---- */
 .news-alert { border-radius: 14px; padding: 12px 14px; margin: 10px 0 14px;
   border: 1px solid var(--border); background: var(--panel); }
