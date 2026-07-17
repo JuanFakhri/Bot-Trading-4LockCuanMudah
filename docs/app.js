@@ -765,7 +765,7 @@ function computeMyStats() {
 // fired (ENTRY) or is armed (ARMED), the self-learning brain did NOT block the
 // pattern (proven-losing patterns are hidden), and confidence clears the "yakin"
 // bar. WATCHING / blocked / low-confidence signals are not shown.
-const REC_MIN_CONF = 0.55;
+const REC_MIN_CONF = 0.5;
 function isRecommended(x) {
   return x.allowed !== false
     && (x.confidence || 0) >= REC_MIN_CONF
