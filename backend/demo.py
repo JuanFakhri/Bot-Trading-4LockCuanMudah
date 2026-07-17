@@ -60,7 +60,8 @@ def klines(symbol: str, interval: str, limit: int) -> pd.DataFrame:
         # LTF: mild recent dip so RSI lands in the ARM zone, then a green tick
         drift = rng.normal(0, base * 0.002, n).cumsum()
         close = base * 1.2 + drift
-        close[-6:] -= np.linspace(0, base * 0.02, 6)
+        m = min(6, n)                    # guard tiny requests (e.g. limit=3)
+        close[-m:] -= np.linspace(0, base * 0.02, m)
         close[-1] += base * 0.015      # last candle bounces green
 
     close = np.abs(close) + 0.001

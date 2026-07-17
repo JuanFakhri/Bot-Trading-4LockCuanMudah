@@ -80,10 +80,22 @@ async def compute_regime() -> dict:
     # the short machine additionally requires USDT.D at resistance (pos>0.7, C.4).
     btc_rising = None
     regime = "NEUTRAL"
-    if btc_ema50 is not None and len(btc) > config.EMA_FAST + 5:
+    if btc_ema50 is not None and len(btc) > config.EMA_FAST + config.PHX_NEUTRAL_DAYS + 2:
         ema50 = indicators.ema(btc["close"], config.EMA_FAST)
-        btc_rising = bool(ema50.iloc[-1] > ema50.iloc[-4])
-        regime = "BULL" if btc_rising else "BEAR"
+        prev = float(ema50.iloc[-1 - config.PHX_NEUTRAL_DAYS])
+        chg = (float(ema50.iloc[-1]) - prev) / abs(prev) if prev else 0.0
+        btc_rising = chg > 0
+        # SAME definition as the backtest (phoenix_backtester.btc_regime_daily):
+        # a real trend (> +/-band over N days) -> BULL/BEAR, otherwise NEUTRAL.
+        # This makes live trade exactly the regimes the strategy was validated on
+        # (strong trend only); flat/sideways -> NEUTRAL, bot idles (no trade),
+        # instead of the old loose 3-bar slope that traded every single day.
+        if chg > config.PHX_NEUTRAL_BAND:
+            regime = "BULL"
+        elif chg < -config.PHX_NEUTRAL_BAND:
+            regime = "BEAR"
+        else:
+            regime = "NEUTRAL"
 
     alt_bias = "LONG" if regime == "BULL" else "SHORT" if regime == "BEAR" else "NEUTRAL"
     decider = "BTC EMA50 1D"
