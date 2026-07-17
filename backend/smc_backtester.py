@@ -38,8 +38,11 @@ def backtest_symbol_smc(symbol, htf, dtf, ltf, usdtd_daily, btcd_dir_daily,
     atr_min = float(params.get("atr_min_pct", 0.3))
     atr_max = float(params.get("atr_max_pct", 8.0))
     use_session = bool(params.get("use_session", True))
-    allow_long = bool(params.get("allow_long", True))    # research knob (live = both)
-    allow_short = bool(params.get("allow_short", True))
+    # allow_long/allow_short default to the LIVE machine config (short-only): a
+    # 3y backtest showed the LONG machine loses money, so live runs SHORT-only.
+    # Pass allow_long=True to study the long machine in isolation.
+    allow_long = bool(params.get("allow_long", config.SMC_ALLOW_LONG))    # default = live
+    allow_short = bool(params.get("allow_short", config.SMC_ALLOW_SHORT))
     # Macro-calendar gate (#13, previously deferred): a daily crypto-policy bias
     # from macro_news (RISK_ON = easing = bullish, RISK_OFF = tightening). When on,
     # LONGs are only taken when policy is NOT risk-off and SHORTs only when NOT

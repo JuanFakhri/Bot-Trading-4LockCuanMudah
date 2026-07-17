@@ -73,6 +73,10 @@ def evaluate(symbol: str, htf: pd.DataFrame, dtf: pd.DataFrame, ltf: pd.DataFram
     machine = "long" if long_ok else "short" if short_ok else None
     if machine is None:
         return None
+    # live is SHORT-only (LONG machine lost money over 3y; see config)
+    if (machine == "long" and not config.SMC_ALLOW_LONG) or \
+       (machine == "short" and not config.SMC_ALLOW_SHORT):
+        return None
 
     # ---- swings / FVG / liquidity ----
     swH, _ = _last_pivot(piv_hi, h, n, pl)

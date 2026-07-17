@@ -55,6 +55,12 @@ SMC_ATR_MAX = 8.0
 #   1.5 -> ATR+Vol : 18 trades/730d, PF 2.60, OOS 2.72  (fewer, higher quality)
 SMC_VOL_MULT = float(os.getenv("SMC_VOL_MULT", "1.0"))   # #5 volume > Nx SMA20
 
+# Active machines. 3-year backtest showed the LONG machine loses (40% win, -3R)
+# while SHORT is the edge (64% win, +8R): short-only lifts PF 1.23->1.62 and
+# OOS 1.83->2.85. So the live bot runs SHORT-ONLY. Re-enable long via env.
+SMC_ALLOW_LONG = os.getenv("SMC_ALLOW_LONG", "0") == "1"
+SMC_ALLOW_SHORT = os.getenv("SMC_ALLOW_SHORT", "1") == "1"
+
 # Golden zone (fibonacci retracement) — one component of the AI Score
 FIB_ZONE_LO = 0.5
 FIB_ZONE_HI = 0.618
