@@ -107,68 +107,41 @@ def evaluate_smc_machine(symbol: str, htf: pd.DataFrame, dtf: pd.DataFrame,
     price = float(c[i])
     atr_val = float(atr_1[i])
 
-    # ---- direction from multi-TF alignment (#19) ----
-    long_ok = bool(d_bull and h4_bull and h1_bull)
-    short_ok = bool((not d_bull) and (not h4_bull) and (not h1_bull))
-    machine = "long" if long_ok else "short" if short_ok else None
-    if machine is None:
-        return None
-    # This function is the SMC (short) machine. The router only calls it for
-    # SHORT; a long alignment shouldn't reach here, but guard anyway.
-    if machine == "long":
+    # ---- SMC is the SHORT machine: require a fully bearish 1D+4H+1H alignment ----
+    if d_bull or h4_bull or h1_bull:
         return None
 
-    # ---- swings / FVG / liquidity ----
+    # ---- swings / bearish FVG / liquidity ----
     swH, _ = _last_pivot(piv_hi, h, n, pl)
     swL, _ = _last_pivot(piv_lo, l, n, pl)
     if np.isnan(swH) or np.isnan(swL) or (swH - swL) <= 0:
         return None
-    fvg_bull_lo = fvg_bull_hi = np.nan
     fvg_bear_lo = fvg_bear_hi = np.nan
     for k in range(2, n):
-        if l[k] > h[k - 2]:
-            fvg_bull_lo, fvg_bull_hi = h[k - 2], l[k]
         if h[k] < l[k - 2]:
             fvg_bear_lo, fvg_bear_hi = h[k], l[k - 2]
-    lowest = float(pd.Series(l[:i]).rolling(10, min_periods=3).min().iloc[-1]) if i >= 3 else np.nan
     highest = float(pd.Series(h[:i]).rolling(10, min_periods=3).max().iloc[-1]) if i >= 3 else np.nan
 
     # macro from regime
     usdtd_rising = bool(regime.get("usdtd_rising"))
     btcd_dir = regime.get("btcd_dir", "STABIL")
 
-    mid = (swH + swL) / 2
-    discount = price < mid
-    premium = price > mid
+    premium = price > (swH + swL) / 2
 
-    # fib golden zone of the last swing
-    if machine == "long":
-        ratio = (swH - price) / (swH - swL)
-    else:
-        ratio = (price - swL) / (swH - swL)
+    # fib golden zone of the last swing (short side)
+    ratio = (price - swL) / (swH - swL)
     in_fib = config.FIB_ZONE_LO <= ratio <= config.FIB_ZONE_HI
 
-    # ---- SMC signals (heuristic, same as backtest) ----
-    if machine == "long":
-        sweep = (not np.isnan(lowest)) and l[i] < lowest and c[i] > lowest
-        choch = c[i] > swH and c[i - 1] <= swH
-        bos = c[i] > swH
-        fvg = (not np.isnan(fvg_bull_lo)) and l[i] <= fvg_bull_hi and c[i] >= fvg_bull_lo
-        ob = c[i - 1] < o[i - 1] and bos
-        ema_ok = c[i] > ema200_1[i] and ema50_1[i] > ema200_1[i]
-        rsi_ok = h4_rsi > 50
-        btcd_ok = btcd_dir == "TURUN"
-        usdtd_ok = not usdtd_rising
-    else:
-        sweep = (not np.isnan(highest)) and h[i] > highest and c[i] < highest
-        choch = c[i] < swL and c[i - 1] >= swL
-        bos = c[i] < swL
-        fvg = (not np.isnan(fvg_bear_lo)) and h[i] >= fvg_bear_lo and c[i] <= fvg_bear_hi
-        ob = c[i - 1] > o[i - 1] and bos
-        ema_ok = c[i] < ema200_1[i] and ema50_1[i] < ema200_1[i]
-        rsi_ok = h4_rsi < 50
-        btcd_ok = btcd_dir == "NAIK"
-        usdtd_ok = usdtd_rising
+    # ---- SMC signals (short, heuristic — same as backtest) ----
+    sweep = (not np.isnan(highest)) and h[i] > highest and c[i] < highest
+    choch = c[i] < swL and c[i - 1] >= swL
+    bos = c[i] < swL
+    fvg = (not np.isnan(fvg_bear_lo)) and h[i] >= fvg_bear_lo and c[i] <= fvg_bear_hi
+    ob = c[i - 1] > o[i - 1] and bos
+    ema_ok = c[i] < ema200_1[i] and ema50_1[i] < ema200_1[i]
+    rsi_ok = h4_rsi < 50
+    btcd_ok = btcd_dir == "NAIK"
+    usdtd_ok = usdtd_rising
 
     # v1.1: ablation-validated filters (PF 1.41->2.60, win 62->72%, DD -6->-3.4R)
     vol_ok = (not np.isnan(vsma[i])) and v[i] > config.SMC_VOL_MULT * vsma[i]   # #5 volume 1.5x
@@ -178,7 +151,7 @@ def evaluate_smc_machine(symbol: str, htf: pd.DataFrame, dtf: pd.DataFrame,
     atr_ok = config.SMC_ATR_MIN <= atr_pct <= config.SMC_ATR_MAX
     hours = ltf.index[i].hour
     in_session = 7 <= hours < 22
-    pd_ok = discount if machine == "long" else premium
+    pd_ok = premium
 
     score = (W["ema"] * ema_ok + W["rsi"] * rsi_ok + W["adx"] * adx_ok
              + W["fib"] * in_fib + W["sweep"] * sweep + W["choch"] * choch
@@ -189,9 +162,8 @@ def evaluate_smc_machine(symbol: str, htf: pd.DataFrame, dtf: pd.DataFrame,
 
     # ---- checklist (why) for the UI ----
     checklist = [
-        {"rule": "Trend align 1D+4H+1H", "ok": True,
-         "detail": "bull" if machine == "long" else "bear"},
-        {"rule": f"{'Discount' if machine=='long' else 'Premium'} zone", "ok": bool(pd_ok)},
+        {"rule": "Trend align 1D+4H+1H", "ok": True, "detail": "bear"},
+        {"rule": "Premium zone", "ok": bool(pd_ok)},
         {"rule": "ADX > 25 (trending)", "ok": bool(adx_ok), "detail": f"adx={adx_1[i]:.0f}"},
         {"rule": f"Volume > {config.SMC_VOL_MULT}x SMA20", "ok": bool(vol_ok)},
         {"rule": "ATR expansion (> SMA20)", "ok": bool(atr_exp)},
@@ -220,24 +192,15 @@ def evaluate_smc_machine(symbol: str, htf: pd.DataFrame, dtf: pd.DataFrame,
     else:
         state = "WATCHING"
 
-    # ---- build the trade plan (SMC: SL beyond swing +/-1 ATR, cap 6%; 1/2/3R) ----
+    # ---- build the trade plan (SMC short: SL beyond swing +1 ATR, cap 6%; 1/2/3R) ----
     entry = price
-    if machine == "long":
-        sl = max(min(swL, entry) - atr_val, entry * (1 - config.SL_CAP_PCT))
-        risk = entry - sl
-    else:
-        sl = min(max(swH, entry) + atr_val, entry * (1 + config.SL_CAP_PCT))
-        risk = sl - entry
+    sl = min(max(swH, entry) + atr_val, entry * (1 + config.SL_CAP_PCT))
+    risk = sl - entry
     if risk <= 0:
         return None
-    if machine == "long":
-        tp1, tp2, tp3 = entry + risk, entry + 2 * risk, entry + 3 * risk
-    else:
-        tp1, tp2, tp3 = entry - risk, entry - 2 * risk, entry - 3 * risk
-
-    direction = "LONG" if machine == "long" else "SHORT"
-    be = entry * (1 + config.BE_BUFFER_PCT) if machine == "long" \
-        else entry * (1 - config.BE_BUFFER_PCT)
+    tp1, tp2, tp3 = entry - risk, entry - 2 * risk, entry - 3 * risk
+    direction = "SHORT"
+    be = entry * (1 - config.BE_BUFFER_PCT)
     plan = {
         "entry": round(entry, 8), "sl": round(sl, 8),
         "tp1": round(tp1, 8), "tp2": round(tp2, 8), "tp3": round(tp3, 8),
@@ -249,14 +212,14 @@ def evaluate_smc_machine(symbol: str, htf: pd.DataFrame, dtf: pd.DataFrame,
 
     # feature signature (identical keys/buckets to the backtest so lessons transfer)
     features = {
-        "machine": machine, "regime": "BULL" if machine == "long" else "BEAR",
+        "machine": "short", "regime": "BEAR",
         "fib_bucket": "0.5-0.55" if ratio < 0.55 else "0.55-0.618" if ratio <= 0.618 else "deep",
         "rsi_htf_bucket": "hi" if h4_rsi > 55 else "mid" if h4_rsi > 45 else "lo",
         "rsi_ltf_bucket": "na", "dow": int(ltf.index[i].weekday()),
         "usdtd_pos_bucket": "na",
         "score_bucket": "85+" if score >= 85 else "70-85" if score >= 70 else "lo",
-        "ad_rising": bool(sweep and choch) if machine == "long" else None,
-        "sar_confirm": bool(sweep and choch) if machine == "short" else None,
+        "ad_rising": None,
+        "sar_confirm": bool(sweep and choch),
     }
 
     # opposing liquidity levels for the UI (swing highs above / lows below)
@@ -273,10 +236,10 @@ def evaluate_smc_machine(symbol: str, htf: pd.DataFrame, dtf: pd.DataFrame,
                                              tail["low"], tail["close"])]
 
     return {
-        "symbol": symbol, "machine": machine, "direction": direction,
+        "symbol": symbol, "machine": "short", "direction": direction,
         "state": state, "price": price, "atr": atr_val,
-        "impulse_start": float(swL if machine == "long" else swH),
-        "impulse_end": float(swH if machine == "long" else swL),
+        "impulse_start": float(swH),
+        "impulse_end": float(swL),
         "retrace_ratio": round(ratio, 3),
         "score": score,
         "fib": {"0.5": round((swH + swL) / 2, 8), "ext_1.272": round(tp3, 8)},

@@ -4,8 +4,8 @@ This mirrors exactly what the live engine trades now (see strategy_smc.evaluate)
   * LONG  entries come from backend.phoenix.backtest_symbol_long
   * SHORT entries come from smc_backtester.backtest_symbol_smc (allow_long=False)
 
-It reuses run_backtest's real-data pipeline (USDT.D + BTC.D timelines, Binance
-klines), combines both machines, and reports the blended win-rate / PF plus a
+It builds the real-data pipeline (USDT.D + BTC.D timelines, Binance klines),
+combines both machines, and reports the blended win-rate / PF plus a
 per-machine breakdown so the long (Phoenix) and short (SMC) edges are visible
 separately. Walk-forward (train 70% / test 30%) gives the honest OOS number.
 
@@ -24,15 +24,61 @@ import os
 
 import pandas as pd
 
-from backend import (config, data_feed, database as db, learning,
+import numpy as np
+import pandas as pd
+
+from backend import (config, data_feed, database as db, indicators, learning,
                      phoenix, phoenix_backtester as phx, smc_backtester)
-from scripts.run_backtest import _usdtd_timeline, _dir_series, LOOKBACK_DAYS, SYMBOLS
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STATE_PATH = os.path.join(ROOT, "data", "state.json")
 OUT_PATH = os.path.join(ROOT, "docs", "data", "live_backtest.json")
 
+LOOKBACK_DAYS = int(os.getenv("BACKTEST_DAYS", "180"))
+_env_syms = os.getenv("BACKTEST_SYMBOLS", "").strip()
+SYMBOLS = [s.strip().upper() for s in _env_syms.split(",") if s.strip()] or config.WATCHLIST
 NO_PERSIST = os.getenv("BACKTEST_NO_PERSIST", "0") == "1"
+
+
+def _dir_series(df, idx, invert=False):
+    """Per-day NAIK/TURUN/STABIL from an EMA50 slope (deadband 0.5%), aligned to idx."""
+    if df is None or df.empty:
+        return pd.Series("STABIL", index=idx)
+    ema = indicators.ema(df["close"], config.EMA_FAST)
+    pct = (ema - ema.shift(3)) / ema.shift(3).abs()
+    d = pd.Series("STABIL", index=ema.index)
+    d[pct > 0.005] = "NAIK"
+    d[pct < -0.005] = "TURUN"
+    if invert:
+        d = d.map({"NAIK": "TURUN", "TURUN": "NAIK", "STABIL": "STABIL"})
+    return d.reindex(idx, method="ffill").fillna("STABIL")
+
+
+async def _usdtd_timeline():
+    """USDT.D 20-day range position over the backtest window (CoinGecko free)."""
+    idx = pd.date_range(end=pd.Timestamp.utcnow().normalize(),
+                        periods=LOOKBACK_DAYS + 60, freq="D", tz="UTC")
+    if config.DEMO:
+        vals = 0.5 + 0.35 * np.sin(np.linspace(0, 6.28 * 3, len(idx)))
+        return pd.Series(vals, index=idx)
+    try:
+        h = await data_feed._client.get(
+            config.COINGECKO_BASE + "/coins/tether/market_chart",
+            params={"vs_currency": "usd", "days": "365", "interval": "daily"})
+        if h.status_code == 200:
+            caps = h.json().get("market_caps", [])
+            if len(caps) > 25:
+                s = pd.Series([c[1] for c in caps],
+                              index=pd.to_datetime([c[0] for c in caps], unit="ms", utc=True))
+                lo = s.rolling(config.USDTD_LOOKBACK, min_periods=5).min()
+                hi = s.rolling(config.USDTD_LOOKBACK, min_periods=5).max()
+                pos = ((s - lo) / (hi - lo).replace(0, np.nan)).clip(0, 1).fillna(0.5)
+                pos.index = pos.index.normalize()
+                pos = pos[~pos.index.duplicated(keep="last")]
+                return pos.reindex(idx)
+    except Exception as exc:
+        print(f"[live] usdtd history failed: {exc}")
+    return pd.Series(np.nan, index=idx)
 
 
 def _machine_summary(trades, machine):
