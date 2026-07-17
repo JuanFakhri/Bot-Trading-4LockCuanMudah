@@ -56,12 +56,14 @@ SMC_ATR_MAX = 8.0
 SMC_VOL_MULT = float(os.getenv("SMC_VOL_MULT", "1.0"))   # #5 volume > Nx SMA20
 
 # Two-machine architecture (see strategy_smc.evaluate router):
-#   LONG  -> Phoenix Hybrid (backend/phoenix.py). The plain SMC long machine lost
-#            money over 3y (40% win, -3R), so the long side now runs Phoenix's
-#            FIB-retrace + momentum-breakout engines instead.
-#   SHORT -> classic SMC (the validated edge: 64% win, +8R over 3y).
-# Toggle either machine via env (e.g. SMC_ALLOW_LONG=0 to run short-only again).
-SMC_ALLOW_LONG = os.getenv("SMC_ALLOW_LONG", "1") == "1"
+#   LONG  -> Phoenix Hybrid (backend/phoenix.py) — BUILT & wired, but OFF by
+#            default. A 3y walk-forward showed the long side does not hold out of
+#            sample: full Phoenix PF 0.97 (-10R); breakout-only PF 1.03 in-sample
+#            but OOS PF 0.95 (<1 = loses on unseen data). Enable for research /
+#            live with SMC_ALLOW_LONG=1 (it will run the breakout engine).
+#   SHORT -> classic SMC — the validated edge (64% win, PF 1.62, OOS 2.85 over 3y).
+# Live therefore runs SHORT-ONLY until the long side proves an out-of-sample edge.
+SMC_ALLOW_LONG = os.getenv("SMC_ALLOW_LONG", "0") == "1"
 SMC_ALLOW_SHORT = os.getenv("SMC_ALLOW_SHORT", "1") == "1"
 
 # Golden zone (fibonacci retracement) — one component of the AI Score
