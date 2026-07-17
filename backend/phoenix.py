@@ -57,9 +57,35 @@ def backtest_symbol_long(symbol, htf, dtf, ltf, usdtd_daily=None,
     if regime_daily is None:
         return []
     engines = params.get("engines") or _live_engines() or ["fib", "breakout"]
-    return phx.backtest_symbol_phoenix(
+    trades = phx.backtest_symbol_phoenix(
         symbol, htf, dtf, ltf, regime_daily, usdtd_daily,
         {"engines": engines, "sides": ["LONG"]})
+    # the proven engine's trades carry no learning signature / machine tag —
+    # attach both so the learning brain can bucket them and the per-machine
+    # reporting counts them as the long machine (same keys as the SMC machine)
+    for t in trades:
+        t.setdefault("machine", "long")
+        t.setdefault("features", _trade_features(t))
+    return trades
+
+
+def _trade_features(t: dict) -> dict:
+    """Learning signature for a completed Phoenix long trade (post-hoc, from the
+    trade fields). Same KEYS the SMC machine uses so lessons interoperate."""
+    try:
+        dow = int(pd.Timestamp(t["entry_ts"]).weekday())
+    except Exception:
+        dow = 0
+    engine = t.get("engine", "fib")
+    return {
+        "machine": "long", "regime": t.get("regime", "BULL"),
+        "fib_bucket": "breakout" if engine == "breakout" else "golden",
+        "rsi_htf_bucket": "na", "rsi_ltf_bucket": "na", "dow": dow,
+        "usdtd_pos_bucket": "na",
+        "score_bucket": "85+" if engine == "breakout" else "70-85",
+        "ad_rising": True if engine == "breakout" else None,
+        "sar_confirm": None, "engine": engine,
+    }
 
 
 # --------------------------------------------------------------------------
