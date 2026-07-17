@@ -26,6 +26,18 @@ LOOKBACK_DAYS = int(os.getenv("PHOENIX_DAYS", "1095"))
 SYMBOLS = config.WATCHLIST
 
 
+# Strict range variants — give mean-reversion a fair last shot. The key new
+# lever is adx_max (only trade when the market is genuinely NOT trending).
+VARIANTS = [
+    ("R0 baseline (no ADX filter)",        {}),
+    ("R1 +ADX<20 only",                    {"adx_max": 20}),
+    ("R2 strict (ADX18, wide, RSI25, RR2)", {"adx_max": 18, "min_atr": 3.5, "rsi_lo": 25,
+                                             "near_frac": 0.10, "rr_min": 2.0, "cooldown": 24}),
+    ("R3 ultra (ADX15, very wide, RSI20)",  {"adx_max": 15, "min_atr": 4.0, "rsi_lo": 20,
+                                             "near_frac": 0.08, "rr_min": 2.0, "cooldown": 48}),
+]
+
+
 def _oos(trades, frac=0.7):
     srt = sorted(trades, key=lambda t: t["exit_ts"])
     cut = int(len(srt) * frac)
@@ -43,38 +55,40 @@ async def main():
     rc = regime_daily.value_counts().to_dict()
     print(f"[range] BTC regime days: {rc}")
 
-    all_trades = []
+    # fetch each symbol's frames once, reuse across variants
+    data = {}
     for sym in SYMBOLS:
         try:
             htf = await data_feed.get_klines_history(sym, config.HTF, LOOKBACK_DAYS)
             dtf = await data_feed.get_klines_history(sym, config.DTF, LOOKBACK_DAYS + 60)
             ltf = await data_feed.get_klines_history(sym, "1h", LOOKBACK_DAYS)
-            if htf.empty or dtf.empty or ltf.empty:
-                continue
-            tr = phx.backtest_symbol_phoenix(sym, htf, dtf, ltf, regime_daily, None,
-                                             {"engines": ["range"], "sides": ["LONG", "SHORT"]})
-            all_trades += tr
-            print(f"[range] {sym}: {len(tr)} range trades")
+            if not (htf.empty or dtf.empty or ltf.empty):
+                data[sym] = (htf, dtf, ltf)
         except Exception as exc:
-            print(f"[range] {sym} error: {exc}")
+            print(f"[range] {sym} fetch error: {exc}")
+    print(f"[range] fetched {len(data)} symbols")
 
-    overall = phx._stats(all_trades)
-    longs = phx._stats([t for t in all_trades if t["direction"] == "LONG"])
-    shorts = phx._stats([t for t in all_trades if t["direction"] == "SHORT"])
-    tr, te = _oos(all_trades)
+    results = []
+    for name, rg in VARIANTS:
+        trades = []
+        for sym, (htf, dtf, ltf) in data.items():
+            trades += phx.backtest_symbol_phoenix(
+                sym, htf, dtf, ltf, regime_daily, None,
+                {"engines": ["range"], "sides": ["LONG", "SHORT"], "range": rg})
+        overall = phx._stats(trades)
+        tr, te = _oos(trades)
+        results.append({"name": name, "range": rg, "overall": overall,
+                        "oos_train": tr, "oos_test": te})
+        print(f"[range] {name:38s} | all {overall['trades']:>5} tr PF {overall['profit_factor']:<4} "
+              f"win {overall['win_rate']:<4}% totR {overall['total_r']:<8} | OOS PF {te['profit_factor']:<4} totR {te['total_r']}")
+
     report = {"generated_ts": pd.Timestamp.utcnow().isoformat(),
-              "params": {"lookback_days": LOOKBACK_DAYS, "symbols": len(SYMBOLS),
-                         "regime_days": {str(k): int(v) for k, v in rc.items()},
-                         "range_min_atr": config.PHX_RANGE_MIN_ATR, "range_rr": config.PHX_RANGE_RR,
-                         "range_window": config.PHX_RANGE_WINDOW, "range_rsi_lo": config.PHX_RANGE_RSI_LO},
-              "overall": overall, "long": longs, "short": shorts,
-              "oos_train": tr, "oos_test": te}
+              "params": {"lookback_days": LOOKBACK_DAYS, "symbols": len(data),
+                         "regime_days": {str(k): int(v) for k, v in rc.items()}},
+              "results": results}
     with open(OUT_PATH, "w", encoding="utf-8") as f:
         json.dump(report, f, ensure_ascii=False, separators=(",", ":"))
-
-    print(f"[range] OVERALL: {overall['trades']} tr, win {overall['win_rate']}%, PF {overall['profit_factor']}, {overall['total_r']}R")
-    print(f"[range]   LONG {longs['trades']} tr PF {longs['profit_factor']} | SHORT {shorts['trades']} tr PF {shorts['profit_factor']}")
-    print(f"[range]   IN-SAMPLE PF {tr['profit_factor']} ({tr['trades']} tr) | OOS PF {te['profit_factor']} win {te['win_rate']}% ({te['trades']} tr)")
+    print("[range] done")
     await data_feed.close()
 
 

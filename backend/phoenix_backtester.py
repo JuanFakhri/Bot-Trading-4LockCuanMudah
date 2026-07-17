@@ -119,6 +119,14 @@ def backtest_symbol_phoenix(symbol, htf, dtf, ltf, regime_daily, usdtd_daily,
     tp1_frac = float(ex.get("tp1_frac", 0.50))   # portion banked at TP1
     tp2_r = float(ex.get("tp2_r", 2.0))          # runner target in R (<=0 => trail-only)
     time_stop = int(ex.get("time_stop", config.PHX_TIME_STOP_BARS))  # 0 => off
+    # Range-engine tuning (defaults reproduce current behavior; ADX/hold filters off)
+    rg = params.get("range", {})
+    r_min_atr = float(rg.get("min_atr", config.PHX_RANGE_MIN_ATR))
+    r_rsi_lo = float(rg.get("rsi_lo", config.PHX_RANGE_RSI_LO))
+    r_near = float(rg.get("near_frac", 0.15))
+    r_rr = float(rg.get("rr_min", config.PHX_RANGE_RR))
+    r_adx_max = float(rg.get("adx_max", 999.0))      # only trade when ADX below this (999 = off)
+    r_cooldown = int(rg.get("cooldown", config.PHX_COOLDOWN_BARS))
     if ltf is None or len(ltf) < 260 or len(htf) < config.EMA_SLOW + 30:
         return []
 
@@ -129,6 +137,7 @@ def backtest_symbol_phoenix(symbol, htf, dtf, ltf, regime_daily, usdtd_daily,
     ema20_1 = indicators.ema(ltf["close"], 20).to_numpy()
     rsi_1 = indicators.rsi(ltf["close"], config.RSI_LEN).to_numpy()
     atr_1 = indicators.atr(ltf, config.ATR_LEN).to_numpy()
+    adx_1 = indicators.adx(ltf, 14).to_numpy() if r_adx_max < 900 else None  # only when filtering
     sar_1 = indicators.parabolic_sar(ltf).to_numpy()
     ad_1 = indicators.ad_line(ltf)
     ad_rising = (ad_1 > ad_1.shift(3)).to_numpy()
@@ -181,7 +190,8 @@ def backtest_symbol_phoenix(symbol, htf, dtf, ltf, regime_daily, usdtd_daily,
                 pos.update(outcome=("WIN" if done > 0.05 else "LOSS" if done < -0.05 else "BE"),
                            r=round(done, 3), exit_price=float(c[i]), exit_ts=ts[i].isoformat())
                 trades.append(pos)
-                cooldown_until = i + config.PHX_COOLDOWN_BARS
+                cooldown_until = i + (r_cooldown if pos.get("engine") == "range"
+                                      else config.PHX_COOLDOWN_BARS)
                 pos = None
             continue
         if i < cooldown_until or np.isnan(atr_1[i]) or atr_1[i] <= 0:
@@ -193,17 +203,21 @@ def backtest_symbol_phoenix(symbol, htf, dtf, ltf, regime_daily, usdtd_daily,
         sig = None  # (engine, direction, entry, sl, tp2)
 
         # ==================== Engine 3: Range (NEUTRAL / low vol) ============
-        if "range" in engines_on and (reg == "NEUTRAL" or not vol_live):
+        # ADX filter (optional): only mean-revert when the market is genuinely
+        # NOT trending — the key missing filter (a rolling max/min always exists,
+        # even mid-trend, which is why the naive range engine catches knives).
+        adx_ok = (adx_1 is None) or (not np.isnan(adx_1[i]) and adx_1[i] < r_adx_max)
+        if "range" in engines_on and adx_ok and (reg == "NEUTRAL" or not vol_live):
             res, sup = res_r[i], sup_r[i]
-            if not (np.isnan(res) or np.isnan(sup)) and (res - sup) >= config.PHX_RANGE_MIN_ATR * atr_1[i]:
-                near = 0.15 * (res - sup)
-                if c[i] <= sup + near and rsi_1[i] < config.PHX_RANGE_RSI_LO:      # buy support
+            if not (np.isnan(res) or np.isnan(sup)) and (res - sup) >= r_min_atr * atr_1[i]:
+                near = r_near * (res - sup)
+                if c[i] <= sup + near and rsi_1[i] < r_rsi_lo:      # buy support
                     entry = c[i]; sl = sup - atr_1[i]; tp = (res + sup) / 2
-                    if entry - sl > 0 and (tp - entry) / (entry - sl) >= config.PHX_RANGE_RR:
+                    if entry - sl > 0 and (tp - entry) / (entry - sl) >= r_rr:
                         sig = ("range", "LONG", entry, sl, tp)
-                elif c[i] >= res - near and rsi_1[i] > 100 - config.PHX_RANGE_RSI_LO:  # sell resistance
+                elif c[i] >= res - near and rsi_1[i] > 100 - r_rsi_lo:  # sell resistance
                     entry = c[i]; sl = res + atr_1[i]; tp = (res + sup) / 2
-                    if sl - entry > 0 and (entry - tp) / (sl - entry) >= config.PHX_RANGE_RR:
+                    if sl - entry > 0 and (entry - tp) / (sl - entry) >= r_rr:
                         sig = ("range", "SHORT", entry, sl, tp)
 
         # ==================== Trend engines (BULL / BEAR + live vol) =========
