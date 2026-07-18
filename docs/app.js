@@ -696,7 +696,7 @@ function render(s) {
   renderSignals(s.signals || []);
   checkSignalNotifs(s.signals || []);
   renderMarket(s.regime);
-  renderRisk(s.risk);
+  renderRisk(s.risk, s.stats);
   renderLessons(s.lessons || [], s.blocked || []);
   renderJournal(s.recent_trades || []);
   if (s.last_scan) $("last-scan").textContent = "scan: " + new Date(s.last_scan).toLocaleTimeString("id-ID");
@@ -730,15 +730,17 @@ function renderKpis(st = {}, risk = {}) {
     el.textContent = (m.total_r >= 0 ? "+" : "") + m.total_r + "R";
     el.style.color = m.total_r > 0 ? "var(--green)" : m.total_r < 0 ? "var(--red)" : "var(--text)";
   } else {
-    $("kl-pnl").textContent = "PnL hari ini";
+    // Bot mode: no daily caps — show cumulative Total R (real) instead.
+    $("kl-today").textContent = "Total trade";
+    $("kl-pnl").textContent = "Total R (real)";
     $("k-winrate").textContent = (st.win_rate ?? 0) + "%";
     $("k-pf").textContent = st.profit_factor ?? "–";
     $("k-resolved").textContent = st.resolved ?? 0;
     $("k-open").textContent = st.open ?? 0;
-    $("k-today").textContent = `${risk.trades_today ?? 0}/${risk.max_trades ?? 5}`;
-    const pnl = risk.pnl_today_pct ?? 0;
-    el.textContent = (pnl >= 0 ? "+" : "") + pnl + "%";
-    el.style.color = pnl > 0 ? "var(--green)" : pnl < 0 ? "var(--red)" : "var(--text)";
+    $("k-today").textContent = st.resolved ?? 0;
+    const tr = st.total_r ?? 0;
+    el.textContent = (tr >= 0 ? "+" : "") + tr + "R";
+    el.style.color = tr > 0 ? "var(--green)" : tr < 0 ? "var(--red)" : "var(--text)";
   }
 }
 
@@ -880,8 +882,7 @@ function cardHTML(s) {
       <div><span class="lbl">Entry</span><span>${fmt(p.entry)}</span></div>
       <div><span class="lbl lv-sl">SL</span><span class="lv-sl">${fmt(p.sl)}</span></div>
       <div><span class="lbl lv-tp">TP1</span><span class="lv-tp">${fmt(p.tp1)}</span></div>
-      <div><span class="lbl lv-tp">TP2 ${p.tp_source === "likuiditas" ? "💧" : ""}</span><span class="lv-tp">${fmt(p.tp2)}</span></div>
-      ${p.tp3 != null ? `<div><span class="lbl lv-tp">TP3</span><span class="lv-tp">${fmt(p.tp3)}</span></div>` : ""}
+      <div><span class="lbl lv-tp">TP2 (maks)</span><span class="lv-tp">${fmt(p.tp2)}</span></div>
       <div><span class="lbl">RR</span><span>${p.rr ?? "–"}${p.rr_ok ? " ✓" : ""}</span></div>
       <div><span class="lbl">Ukuran</span><span>${fmt(p.position_size, 4)}</span></div>
     </div>
@@ -921,14 +922,14 @@ function renderMarket(r = {}) {
   }).join("");
 }
 
-function renderRisk(r = {}) {
-  const box = r.halted
-    ? `<div class="halt">⛔ Entry baru DIHENTIKAN (circuit breaker)</div>`
-    : `<div class="ok-box">✅ Entry baru diizinkan</div>`;
+function renderRisk(r = {}, stats = {}) {
+  // No daily trade cap and no win/loss circuit breaker — the bot trades freely.
+  // Only open positions and cumulative real Total R are tracked.
+  const tr = stats.total_r ?? r.total_r ?? 0;
+  const box = `<div class="ok-box">✅ Entry bebas — tanpa batas trade harian / menang-kalah</div>`;
   $("risk").innerHTML = box + [
-    ["Trade hari ini", `${r.trades_today ?? 0} / ${r.max_trades ?? 5}`],
-    ["Stop-loss hari ini", `${r.stops_today ?? 0} / 2`],
-    ["PnL hari ini", `${r.pnl_today_pct ?? 0}%`],
+    ["Posisi terbuka", `${stats.open ?? 0}`],
+    ["Total R (real)", `${tr >= 0 ? "+" : ""}${tr}R`],
     ["Risiko / trade", "2%"],
   ].map(([k, v]) => `<div class="row"><span class="muted">${k}</span><span class="v">${v}</span></div>`).join("");
 }

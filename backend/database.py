@@ -184,5 +184,6 @@ def stats_summary() -> dict:
         "losses": losses,
         "win_rate": round(wins / total * 100, 1) if total else 0.0,
         "profit_factor": round(pf, 2),
+        "total_r": round(sum(r["r_multiple"] for r in rows if r["r_multiple"]), 2),
         "open": len(open_trades()),
     }

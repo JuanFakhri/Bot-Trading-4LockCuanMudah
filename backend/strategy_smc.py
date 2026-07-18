@@ -204,14 +204,14 @@ def evaluate_smc_machine(symbol: str, htf: pd.DataFrame, dtf: pd.DataFrame,
     risk = sl - entry
     if risk <= 0:
         return None
-    tp1, tp2, tp3 = entry - risk, entry - 2 * risk, entry - 3 * risk
+    tp1, tp2 = entry - risk, entry - 2 * risk       # max target +2R (no TP3)
     direction = "SHORT"
     be = entry * (1 - config.BE_BUFFER_PCT)
     plan = {
         "entry": round(entry, 8), "sl": round(sl, 8),
-        "tp1": round(tp1, 8), "tp2": round(tp2, 8), "tp3": round(tp3, 8),
+        "tp1": round(tp1, 8), "tp2": round(tp2, 8),
         "breakeven": round(be, 8), "risk_per_unit": round(risk, 8),
-        "rr": round(abs(tp3 - entry) / risk, 2), "rr_ok": True,
+        "rr": round(abs(tp2 - entry) / risk, 2), "rr_ok": True,
         "tp_source": "smc", "position_size": round((1000.0 * config.RISK_PER_TRADE) / risk, 6),
         "risk_pct": config.RISK_PER_TRADE, "sl_pct": round(abs(entry - sl) / entry, 4),
     }
@@ -248,7 +248,7 @@ def evaluate_smc_machine(symbol: str, htf: pd.DataFrame, dtf: pd.DataFrame,
         "impulse_end": float(swL),
         "retrace_ratio": round(ratio, 3),
         "score": score,
-        "fib": {"0.5": round((swH + swL) / 2, 8), "ext_1.272": round(tp3, 8)},
+        "fib": {"0.5": round((swH + swL) / 2, 8), "ext_1.272": round(tp2, 8)},
         "swing_highs": [round(x, 8) for x in swing_highs[:6]],
         "swing_lows": [round(x, 8) for x in swing_lows[:6]],
         "checklist": checklist, "trigger": trigger,

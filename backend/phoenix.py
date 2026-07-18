@@ -187,8 +187,7 @@ def _scan_long(A: dict, engines: list) -> dict | None:
             risk = entry - sl
             return {"engine": engine, "entry": float(entry), "sl": float(sl),
                     "tp1": float(entry + risk), "tp2": float(tp2),
-                    "tp3": float(entry + 3 * risk), "risk": float(risk),
-                    "armed": fib_arm is not None}
+                    "risk": float(risk), "armed": fib_arm is not None}
     return None
 
 
@@ -260,13 +259,13 @@ def evaluate_long(symbol: str, htf: pd.DataFrame, dtf: pd.DataFrame,
         sl = price * (1 - config.SL_CAP_PCT)
         risk = max(price - sl, 1e-9)
         e = {"engine": "fib" if armed else "breakout", "entry": price, "sl": sl,
-             "tp1": price + risk, "tp2": price + 2 * risk, "tp3": price + 3 * risk,
+             "tp1": price + risk, "tp2": price + 2 * risk,
              "risk": risk, "armed": armed}
     else:
         state = "ENTRY"
 
     entry, sl = e["entry"], e["sl"]
-    tp1, tp2, tp3 = e["tp1"], e["tp2"], e["tp3"]
+    tp1, tp2 = e["tp1"], e["tp2"]
     risk = e["risk"]
     be = entry * (1 + config.BE_BUFFER_PCT)
     atr_pct = (atr_val / price * 100) if price else 0.0
@@ -293,7 +292,7 @@ def evaluate_long(symbol: str, htf: pd.DataFrame, dtf: pd.DataFrame,
 
     plan = {
         "entry": round(entry, 8), "sl": round(sl, 8),
-        "tp1": round(tp1, 8), "tp2": round(tp2, 8), "tp3": round(tp3, 8),
+        "tp1": round(tp1, 8), "tp2": round(tp2, 8),
         "breakeven": round(be, 8), "risk_per_unit": round(risk, 8),
         "rr": round(abs(tp2 - entry) / risk, 2), "rr_ok": True,
         "tp_source": "phoenix",
@@ -318,7 +317,7 @@ def evaluate_long(symbol: str, htf: pd.DataFrame, dtf: pd.DataFrame,
         "impulse_start": price, "impulse_end": price,
         "retrace_ratio": None,
         "score": 85 if e["engine"] == "breakout" else 75,
-        "fib": {"0.5": price, "ext_1.272": round(tp3, 8)},
+        "fib": {"0.5": price, "ext_1.272": round(tp2, 8)},
         "swing_highs": [round(x, 8) for x in swing_highs[:6]],
         "swing_lows": [round(x, 8) for x in swing_lows[:6]],
         "checklist": checklist, "trigger": trigger,

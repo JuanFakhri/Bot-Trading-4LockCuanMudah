@@ -246,16 +246,13 @@ def backtest_symbol_smc(symbol, htf, dtf, ltf, usdtd_daily, btcd_dir_daily,
             risk = entry - sl
             if risk <= 0:
                 continue
-            tp1, tp2, tp3 = entry + risk, entry + 2 * risk, entry + 3 * risk
-            if long_struct_tp and not np.isnan(res_hi[i]) and res_hi[i] > entry:
-                # runner banks at the real resistance, but keep RR sane: >=2R, <=6R
-                tp3 = min(max(res_hi[i], entry + 2 * risk), entry + 6 * risk)
+            tp1, tp2 = entry + risk, entry + 2 * risk       # max target +2R (no TP3)
         else:
             sl = min(max(swH, entry) + atr_1[i], entry * (1 + config.SL_CAP_PCT))
             risk = sl - entry
             if risk <= 0:
                 continue
-            tp1, tp2, tp3 = entry - risk, entry - 2 * risk, entry - 3 * risk
+            tp1, tp2 = entry - risk, entry - 2 * risk
 
         features = {
             "machine": machine, "regime": "BULL" if machine == "long" else "BEAR",
@@ -270,8 +267,8 @@ def backtest_symbol_smc(symbol, htf, dtf, ltf, usdtd_daily, btcd_dir_daily,
         pos = {
             "symbol": symbol, "direction": "LONG" if machine == "long" else "SHORT",
             "machine": machine, "entry": float(entry), "sl": float(sl),
-            "tp1": float(tp1), "tp2": float(tp2), "tp3": float(tp3),
-            "rr": round(abs(tp3 - entry) / risk, 2), "risk": float(risk),
+            "tp1": float(tp1), "tp2": float(tp2),
+            "rr": round(abs(tp2 - entry) / risk, 2), "risk": float(risk),
             "score": int(score), "tp1_hit": False, "tp2_hit": False,
             "rem": 1.0, "realized": 0.0, "stop": float(sl), "tp_source": "smc",
             "entry_ts": ts[i].isoformat(), "features": features,
@@ -353,38 +350,28 @@ def summarize(trades: list[dict]) -> dict:
 
 
 def _manage_smc(pos, bar_high, bar_low, close, ema20):
-    """3-tier exit (30/30/40) + EMA20 trail. Returns final blended R when the
-    position fully closes, else None."""
+    """2-tier exit capped at +2R (max RR 2), identical to the LIVE tracker:
+    take 50% at +1R and move to breakeven, close the rest at +2R. No TP3, no
+    trail beyond 2R. Returns final blended R when fully closed, else None."""
     entry, risk = pos["entry"], pos["risk"] or 1e-9
     long = pos["direction"] == "LONG"
 
     def hit(level, up):  # did price reach `level` this bar
         return bar_high >= level if up else bar_low <= level
 
-    # stop-out of the remaining size
+    # stop-out (or breakeven after TP1) of the remaining size
     stopped = bar_low <= pos["stop"] if long else bar_high >= pos["stop"]
     if stopped:
         r_stop = (pos["stop"] - entry) / risk if long else (entry - pos["stop"]) / risk
         pos["realized"] += pos["rem"] * r_stop
         return pos["realized"]
 
-    if not pos["tp1_hit"] and hit(pos["tp1"], long):        # +1R, close 30%
-        pos["realized"] += 0.30 * (1.0 if long else 1.0)
-        pos["rem"] -= 0.30
+    if not pos["tp1_hit"] and hit(pos["tp1"], long):        # +1R, bank 50%, -> BE
+        pos["realized"] += 0.50 * 1.0
+        pos["rem"] -= 0.50
         pos["tp1_hit"] = True
         pos["stop"] = entry * (1 + config.BE_BUFFER_PCT) if long else entry * (1 - config.BE_BUFFER_PCT)
-    if pos["tp1_hit"] and not pos["tp2_hit"] and hit(pos["tp2"], long):   # +2R, close 30%
-        pos["realized"] += 0.30 * 2.0
-        pos["rem"] -= 0.30
-        pos["tp2_hit"] = True
-    if pos["tp2_hit"]:                                       # trail remaining 40% on EMA20
-        if hit(pos["tp3"], long):
-            r3 = (pos["tp3"] - entry) / risk if long else (entry - pos["tp3"]) / risk
-            pos["realized"] += pos["rem"] * r3
-            return pos["realized"]
-        trail_break = close < ema20 if long else close > ema20
-        if trail_break:
-            r_exit = (close - entry) / risk if long else (entry - close) / risk
-            pos["realized"] += pos["rem"] * r_exit
-            return pos["realized"]
+    if pos["tp1_hit"] and hit(pos["tp2"], long):            # +2R, close the rest (MAX target)
+        pos["realized"] += pos["rem"] * 2.0
+        return pos["realized"]
     return None
