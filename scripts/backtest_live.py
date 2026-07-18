@@ -151,14 +151,9 @@ async def main():
         except Exception as exc:
             print(f"[live] {sym} error: {exc}")
 
-    # ---- SHORT regime gate: live only shorts in a BTC BEAR regime (engine scans
-    # BULL/BEAR; router does short only when regime != BULL). Match that. ----
-    if regime_daily is not None:
-        reg_map = {d.strftime("%Y-%m-%d"): v for d, v in regime_daily.items()}
-        before = len(all_trades)
-        all_trades = [t for t in all_trades if not (
-            t["direction"] == "SHORT" and reg_map.get(t["entry_ts"][:10]) != "BEAR")]
-        print(f"[live] short BEAR-gate: {before} -> {len(all_trades)} trades")
+    # SMC short is validated on a per-symbol bearish alignment in ANY BTC regime
+    # (PF 1.62) — it is NOT gated to a BTC BEAR regime. Phoenix long stays gated
+    # to BTC BULL via its own regime_daily. (Matches the live router below.)
 
     # ---- Macro/CPI gate (live): drop trades that fight the inflation backdrop ----
     if config.MACRO_GATE:

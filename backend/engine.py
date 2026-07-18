@@ -46,15 +46,17 @@ class Engine:
                 self.regime["cpi_bias"] = "NETRAL"
             await self._update_open_trades()
 
+            # Scan every regime: the router fires Phoenix LONG only in BTC BULL,
+            # but the SMC SHORT is a per-symbol bearish setup that is valid in any
+            # BTC regime (including NEUTRAL) — so we must scan there too.
             results: list[dict] = []
-            if self.regime.get("regime") in ("BULL", "BEAR"):
-                for sym in config.WATCHLIST:
-                    try:
-                        sig = await self._eval_symbol(sym)
-                        if sig:
-                            results.append(sig)
-                    except Exception as exc:  # never let one symbol kill the scan
-                        print(f"[engine] {sym} eval error: {exc}")
+            for sym in config.WATCHLIST:
+                try:
+                    sig = await self._eval_symbol(sym)
+                    if sig:
+                        results.append(sig)
+                except Exception as exc:  # never let one symbol kill the scan
+                    print(f"[engine] {sym} eval error: {exc}")
             # rank: ENTRY first, then by confidence
             order = {"ENTRY": 0, "ARMED": 1, "WATCHING": 2}
             results.sort(key=lambda s: (order.get(s["state"], 3), -s["confidence"]))
