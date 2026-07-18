@@ -64,6 +64,14 @@ def backtest_symbol_smc(symbol, htf, dtf, ltf, usdtd_daily, btcd_dir_daily,
     # a liquidity sweep below support that reclaims AND a change-of-character / BOS —
     # not a bare EMA-aligned dip. Longs only; default off.
     long_reversal_hard = bool(params.get("long_reversal_hard", False))
+    # SHORT relaxation knobs (research only): loosen the short machine to test if
+    # MORE trades can come WITHOUT losing win-rate. Defaults reproduce the LIVE
+    # short exactly (triple-TF bearish alignment, vol>=SMC_VOL_MULT, ADX>25).
+    #   short_align: "triple" (1D+4H+1H bearish, live) | "dual_dh4" (1D+4H only,
+    #                drop the 1H requirement) | "dual_h4h1" (4H+1H only, drop 1D)
+    short_align = str(params.get("short_align", "triple"))
+    short_vol_mult = float(params.get("short_vol_mult", config.SMC_VOL_MULT))
+    short_adx_min = float(params.get("short_adx_min", 25))
 
     if ltf is None or len(ltf) < 250 or len(htf) < config.EMA_SLOW + 30:
         return []
@@ -158,7 +166,12 @@ def backtest_symbol_smc(symbol, htf, dtf, ltf, usdtd_daily, btcd_dir_daily,
 
         # ---- direction from multi-TF alignment (#19) ----
         long_ok = d_bull[i] > 0 and h4_bull[i] > 0 and h1_bull[i] > 0
-        short_ok = d_bull[i] == 0 and h4_bull[i] == 0 and h1_bull[i] == 0
+        if short_align == "dual_dh4":       # drop the 1H bearish requirement
+            short_ok = d_bull[i] == 0 and h4_bull[i] == 0
+        elif short_align == "dual_h4h1":    # drop the 1D bearish requirement
+            short_ok = h4_bull[i] == 0 and h1_bull[i] == 0
+        else:                                # "triple" — live behavior
+            short_ok = d_bull[i] == 0 and h4_bull[i] == 0 and h1_bull[i] == 0
         machine = "long" if long_ok else "short" if short_ok else None
         if machine is None:
             continue
@@ -221,9 +234,11 @@ def backtest_symbol_smc(symbol, htf, dtf, ltf, usdtd_daily, btcd_dir_daily,
             usdtd_ok = usdtd[i] > usdtd_prev[i]                  # USDT.D higher (rising)
 
         # v1.1 ablation-validated filters (PF 1.41->2.60, DD -6->-3.4R over 730d)
-        vol_ok = (not np.isnan(vsma[i])) and v[i] > config.SMC_VOL_MULT * vsma[i]   # #5
+        _vmult = short_vol_mult if machine == "short" else config.SMC_VOL_MULT
+        vol_ok = (not np.isnan(vsma[i])) and v[i] > _vmult * vsma[i]                # #5
         atr_exp = (not np.isnan(atr_sma[i])) and atr_1[i] > atr_sma[i]              # #4
-        adx_ok = adx_1[i] > 25                                   # #3
+        _adx_min = short_adx_min if machine == "short" else 25
+        adx_ok = adx_1[i] > _adx_min                            # #3
 
         # ---- Setup Score (#15) ----
         score = (W["ema"] * ema_ok + W["rsi"] * rsi_ok + W["adx"] * adx_ok
