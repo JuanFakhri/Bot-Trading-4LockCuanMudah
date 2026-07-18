@@ -1,0 +1,4 @@
+# Live-execution deps — install ONLY on the VPS that runs real/testnet trading.
+# The GitHub Actions signal scanner does NOT need these (keeps that job light).
+#   pip install -r requirements.txt -r requirements-exec.txt
+ccxt==4.5.66

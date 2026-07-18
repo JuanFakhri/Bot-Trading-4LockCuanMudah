@@ -7,3 +7,9 @@ data/*.db
 data/*.db-journal
 .DS_Store
 *.log
+
+# secrets — never commit real keys
+.env
+deploy/.env
+*.env
+!deploy/.env.example
