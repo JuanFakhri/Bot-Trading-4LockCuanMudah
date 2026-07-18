@@ -43,10 +43,18 @@ PIVOT_LEN = 5           # left/right bars for swing pivot
 # Strategy: SMC + AI-Score confluence (the only strategy; backtest-validated —
 # PF 1.41 over 69 trades at score_th 60, walk-forward OOS PF 1.90).
 # --------------------------------------------------------------------------
-SMC_SCORE_TH = float(os.getenv("SMC_SCORE_TH", "60"))   # AI-Score gate for a live entry
+SMC_SCORE_TH = float(os.getenv("SMC_SCORE_TH", "60"))   # AI-Score gate (long research / legacy)
 # Threshold sweep (730d, real data): 55 -> PF 1.44 / OOS 2.09 / DD -12.5R (aggressive);
 # 60 -> PF 1.41 / OOS 1.90 / DD -6.0R (best risk-adjusted, DEFAULT); 65/70 -> OOS
 # collapses on a tiny sample (overfit). 60 keeps the edge with half the drawdown.
+# SHORT machine score gate — lowered 60 -> 50 after the short-relaxation sweep
+# (scripts/research_short, 3y standalone + OOS): the real short edge is the
+# triple-TF bearish alignment (a hard gate); the extra score>=60 on top just
+# starved the sample. Dropping to 50 gave MORE trades AND higher quality:
+#   short 25 -> 136 trades, win 60.0 -> 61.0%, PF 1.46 -> 1.67, totR +4.6 -> +35.4,
+#   OOS 8tr/87.5% -> 41tr/78.0%/PF 3.93. score 55 was NON-monotonic (rejected);
+#   removing session/vol/macro all hurt (rejected). Long (Phoenix) is untouched.
+SMC_SHORT_SCORE_TH = float(os.getenv("SMC_SHORT_SCORE_TH", "50"))
 SMC_ATR_MIN = 0.3       # entry only when 1H ATR is 0.3%..8% of price (#14)
 SMC_ATR_MAX = 8.0
 # v1.1 ablation-validated entry filters. ATR expansion (atr > atr-SMA20, enforced

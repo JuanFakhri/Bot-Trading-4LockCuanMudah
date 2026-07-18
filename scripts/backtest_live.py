@@ -140,7 +140,7 @@ async def main():
             # SHORT machine — classic SMC, longs disabled
             shorts = smc_backtester.backtest_symbol_smc(
                 sym, htf, dtf, ltf, usdtd_daily, btcd_dir_daily,
-                {"score_th": config.SMC_SCORE_TH, "allow_long": False, "allow_short": True})
+                {"score_th": config.SMC_SHORT_SCORE_TH, "allow_long": False, "allow_short": True})
             # LONG machine — Phoenix Hybrid (proven engine, regime-driven)
             longs = phoenix.backtest_symbol_long(
                 sym, htf, dtf, ltf, usdtd_daily, btcd_dir_daily,
@@ -206,7 +206,7 @@ async def main():
         "generated_ts": pd.Timestamp.utcnow().isoformat(),
         "params": {"lookback_days": LOOKBACK_DAYS, "htf": config.HTF, "ltf": "1h",
                    "symbols": len(SYMBOLS), "demo": config.DEMO,
-                   "strategy": "phoenix-long + smc-short", "score_th": config.SMC_SCORE_TH},
+                   "strategy": "phoenix-long + smc-short", "score_th": config.SMC_SHORT_SCORE_TH},
         "summary": summary,
         "by_machine": {"long_phoenix": long_sum, "short_smc": short_sum},
         "by_long_engine": engine_split,

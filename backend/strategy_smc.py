@@ -167,7 +167,7 @@ def evaluate_smc_machine(symbol: str, htf: pd.DataFrame, dtf: pd.DataFrame,
              + W["bos"] * bos + W["fvg"] * fvg + W["ob"] * ob
              + W["btcd"] * btcd_ok + W["usdtd"] * usdtd_ok)
     score = int(score)
-    score_th = float(config.SMC_SCORE_TH)
+    score_th = float(config.SMC_SHORT_SCORE_TH)   # short machine gate (sweep: 50)
 
     # ---- checklist (why) for the UI ----
     checklist = [
