@@ -33,6 +33,14 @@ async def _shutdown():
         if t:
             t.cancel()
     await data_feed.close()
+    # close the exchange client if the executor was ever started (EXEC_ENABLED)
+    if os.getenv("EXEC_ENABLED", "0") == "1":
+        try:
+            from . import executor
+            if executor._singleton and executor._singleton.api:
+                await executor._singleton.api.close()
+        except Exception:
+            pass
 
 
 async def _broadcaster():

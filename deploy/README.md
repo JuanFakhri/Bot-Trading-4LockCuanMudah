@@ -6,9 +6,19 @@ money until you explicitly flip the switches.
 
 ## Status
 - **Fase 1 — DONE (read-only):** Bybit adapter + connectivity check.
-- Fase 2 — executor (sizing 2% risk, market entry) in DRY_RUN.
-- Fase 3 — position manager (SL / TP1 50% / TP2, SL→breakeven) + reconciler, tiny real money.
-- Fase 4 — systemd 24/7 + kill-switch + alerts, scale up.
+- **Fase 2 — DONE (DRY_RUN):** executor sizes each ENTRY (2% risk, 7x) and LOGS the
+  full order plan (entry + SL + TP1 50% + TP2). No orders sent; live sending guarded.
+- Fase 3 — position manager (place orders, SL→breakeven after TP1, reconcile), tiny real money.
+- Fase 4 — kill-switch + alerts, scale up.
+
+### Try Fase 2 now (offline, no keys)
+```bash
+python -m scripts.exec_demo        # prints example LONG + SHORT order plans
+```
+On the VPS/uDroid, set `EXEC_ENABLED=1` in `.env` and run the bot
+(`uvicorn backend.main:app ...`): every ENTRY signal now logs its order plan in
+the journal (`journalctl -u nestsmc -f` or the tmux window). Still DRY_RUN —
+nothing is sent until Fase 3.
 
 ## Why Bybit (not MEXC)
 MEXC blocks **futures order placement via API** for retail accounts (the contract

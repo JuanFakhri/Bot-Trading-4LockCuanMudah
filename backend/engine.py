@@ -105,6 +105,7 @@ class Engine:
                     self._open_trade(sig, plan)
                     sig["actionable"] = True
                     sig["gate"] = "ENTRY dibuka"
+                    await self._maybe_execute(sig)
                 else:
                     sig["gate"] = why
             else:
@@ -113,6 +114,20 @@ class Engine:
             sig["gate"] = f"Dihindari oleh pembelajaran: {verdict['reason']}"
 
         return sig
+
+    async def _maybe_execute(self, sig: dict):
+        """When EXEC_ENABLED=1 (VPS with ccxt installed), hand the ENTRY to the
+        executor which sizes + logs the exchange order plan (DRY_RUN by default).
+        Imported lazily so the GitHub Actions scan — which does NOT install ccxt —
+        never touches this path."""
+        import os
+        if os.getenv("EXEC_ENABLED", "0") != "1":
+            return
+        try:
+            from . import executor
+            await executor.get().on_entry(sig)
+        except Exception as exc:
+            print(f"[engine] executor error: {exc}")
 
     # ------------------------------------------------------------- trade mgmt
     def _has_open(self, symbol: str) -> bool:
