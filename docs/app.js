@@ -779,13 +779,64 @@ function renderSignals(list) {
     .sort((a, b) => (a.state === b.state ? (b.confidence || 0) - (a.confidence || 0)
                      : a.state === "ENTRY" ? -1 : 1))
     .slice(0, 30);
-  $("signals-empty").classList.toggle("hidden", shown.length > 0);
+  const empty = shown.length === 0;
+  $("signals-empty").classList.toggle("hidden", !empty);
+  if (empty) $("signals-empty").innerHTML = emptyStateHTML(list || []);
   grid.innerHTML = shown.map(cardHTML).join("");
   // draw candlestick charts after the cards are in the DOM
   requestAnimationFrame(() => shown.forEach(s => {
     const cv = document.getElementById("chart-" + s.symbol);
     if (cv && s.candles && s.candles.length) drawChart(cv, s);
   }));
+}
+
+// When there are no recommended signals, explain WHY instead of looking dead:
+// which machine-gate is open/closed right now (regime for LONG, macro/CPI for
+// SHORT) and how many symbols are being watched but haven't cleared the bar.
+function emptyStateHTML(list) {
+  const reg = (lastSnap && lastSnap.regime) || {};
+  const regime = reg.regime || "NEUTRAL";
+  const cpi = reg.cpi_bias || "NETRAL";
+  const longOpen = regime === "BULL";
+  const shortOpen = cpi !== "BULLISH";           // macro gate blocks SHORT when CPI BULLISH
+  const gate = (open, title, need, now, lockWhy) => `
+    <div class="gate ${open ? "open" : "lock"}">
+      <div class="gate-h">${open ? "🔓" : "🔒"} <b>${title}</b>
+        <span class="gate-st">${open ? "izin terbuka" : "terkunci"}</span></div>
+      <div class="gate-b">${open
+        ? `Boleh dagang — menunggu setup yang lolos.`
+        : lockWhy} <span class="muted">(butuh ${need} · sekarang <b>${now}</b>)</span></div>
+    </div>`;
+  // how many symbols the scan is watching (produced a candidate but not recommended)
+  const watched = list.length;
+  const shorts = list.filter(s => (s.direction || "").toUpperCase() === "SHORT").length;
+  const longs = watched - shorts;
+  const watchLine = watched
+    ? `<p class="es-watch">👀 ${watched} koin sedang dipantau${
+        shorts ? ` (${shorts} arah short${longs ? `, ${longs} long` : ""})` : ""
+      } — belum lolos ambang keyakinan / setup.</p>`
+    : `<p class="es-watch">Tidak ada kandidat setup di scan terakhir.</p>`;
+  const both = !longOpen && !shortOpen;
+  const summary = both
+    ? `Kedua mesin sedang <b>dikunci kondisi pasar</b>. Bot menunggu — ini normal, sesuai prinsip <b>kualitas &gt; kuantitas</b>.`
+    : `Mesin yang izinnya terbuka belum menemukan setup yang lolos. Bot menunggu peluang berkualitas.`;
+  const asof = lastSnap && lastSnap.last_scan
+    ? new Date(lastSnap.last_scan).toLocaleString("id-ID",
+        { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Asia/Jakarta" }) + " WIB"
+    : "";
+  return `
+    <div class="empty-state">
+      <div class="es-title">Belum ada sinyal — ini alasannya</div>
+      <div class="gates">
+        ${gate(longOpen, "▲ Mesin LONG · Phoenix", "regime BULL", regime,
+               "Pasar belum tren naik (BULL).")}
+        ${gate(shortOpen, "▼ Mesin SHORT · SMC", "inflasi tidak turun", "CPI " + cpi,
+               "Inflasi sedang turun (CPI BULLISH) — jangan short lawan arus makro.")}
+      </div>
+      ${watchLine}
+      <p class="es-sum">${summary}</p>
+      ${asof ? `<p class="es-asof muted">Scan terakhir: ${asof}</p>` : ""}
+    </div>`;
 }
 
 /* ---------- candlestick chart (dependency-free, theme-aware) ---------- */

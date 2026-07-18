@@ -287,6 +287,23 @@ th { color: var(--muted); font-weight: 600; font-size: 12px; }
 .o-be { color: var(--amber); font-weight: 700; }
 
 .empty { text-align: center; color: var(--muted); padding: 30px; }
+/* informative "why no signals" panel */
+.empty-state { text-align: left; max-width: 640px; margin: 0 auto; padding: 8px 4px; }
+.es-title { font-weight: 700; font-size: 15px; color: var(--text); margin-bottom: 12px; }
+.gates { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 560px) { .gates { grid-template-columns: 1fr; } }
+.gate { border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; background: var(--panel-2); }
+.gate.open { border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); }
+.gate.lock { opacity: .92; }
+.gate-h { display: flex; align-items: center; gap: 7px; font-size: 13.5px; color: var(--text); }
+.gate-st { margin-left: auto; font-size: 11px; text-transform: uppercase; letter-spacing: .05em;
+  padding: 1px 8px; border-radius: 20px; font-weight: 600; }
+.gate.open .gate-st { background: color-mix(in srgb, var(--accent) 22%, transparent); color: var(--accent); }
+.gate.lock .gate-st { background: color-mix(in srgb, var(--red) 18%, transparent); color: var(--red); }
+.gate-b { font-size: 12.5px; color: var(--muted); margin-top: 6px; line-height: 1.5; }
+.es-watch { font-size: 13px; color: var(--text); margin: 14px 0 4px; }
+.es-sum { font-size: 13px; color: var(--muted); margin: 8px 0 0; line-height: 1.55; }
+.es-asof { font-size: 11.5px; margin: 10px 0 0; }
 .hidden { display: none; }
 
 .foot { text-align: center; padding: 20px; color: var(--muted); font-size: 12px;
