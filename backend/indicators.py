@@ -25,6 +25,16 @@ def rsi(close: pd.Series, length: int = 14) -> pd.Series:
     return out.fillna(50.0)
 
 
+def macd(close: pd.Series, fast: int = 12, slow: int = 26, signal: int = 9):
+    """Standard MACD. Returns (macd_line, signal_line, histogram), each aligned
+    to the input index. macd_line = EMA(fast) - EMA(slow); histogram = macd -
+    signal. Momentum is bullish when histogram > 0 (and macd > signal)."""
+    macd_line = ema(close, fast) - ema(close, slow)
+    signal_line = ema(macd_line, signal)
+    hist = macd_line - signal_line
+    return macd_line, signal_line, hist
+
+
 def true_range(df: pd.DataFrame) -> pd.Series:
     high, low, close = df["high"], df["low"], df["close"]
     prev_close = close.shift(1)

@@ -72,6 +72,22 @@ def backtest_symbol_smc(symbol, htf, dtf, ltf, usdtd_daily, btcd_dir_daily,
     short_align = str(params.get("short_align", "triple"))
     short_vol_mult = float(params.get("short_vol_mult", config.SMC_VOL_MULT))
     short_adx_min = float(params.get("short_adx_min", 25))
+    # ---- HIGH-PROBABILITY confluence knobs (research only; all default OFF so the
+    # live backtest is byte-identical until an A/B proves a knob helps) ----
+    # MACD (12/26/9) momentum confirmation on the 1H entry TF. As a HARD gate
+    # (use_macd) a short needs bearish momentum (hist<0 & macd<signal), a long the
+    # reverse. As a SCORE component (macd_as_score) it just adds points.
+    use_macd = bool(params.get("use_macd", False))
+    macd_as_score = bool(params.get("macd_as_score", False))
+    macd_pts = float(params.get("macd_pts", 10))
+    # EMA20 fast-trend gate: price must be on the correct side of the 1H EMA20.
+    use_ema20_gate = bool(params.get("use_ema20_gate", False))
+    # RSI as a HARD gate (not just a score point): short needs 1H RSI<50, long >50.
+    rsi_hard = bool(params.get("rsi_hard", False))
+    # Breakout + RETEST: after the BOS, demand price pulled back to the broken
+    # level (within retest_atr * ATR) before continuing — a higher-quality entry.
+    use_retest = bool(params.get("use_retest", False))
+    retest_atr = float(params.get("retest_atr", 0.5))
 
     if ltf is None or len(ltf) < 250 or len(htf) < config.EMA_SLOW + 30:
         return []
@@ -87,6 +103,9 @@ def backtest_symbol_smc(symbol, htf, dtf, ltf, usdtd_daily, btcd_dir_daily,
     atr_1 = indicators.atr(ltf, config.ATR_LEN).to_numpy()
     atr_sma = pd.Series(atr_1).rolling(20, min_periods=5).mean().to_numpy()   # v1.1 #4
     adx_1 = indicators.adx(ltf, 14).to_numpy()
+    _macd_line, _macd_sig, _macd_hist = indicators.macd(ltf["close"])
+    macd_line_1 = _macd_line.to_numpy()
+    macd_hist_1 = _macd_hist.to_numpy()
     vsma = ltf["volume"].rolling(20, min_periods=5).mean().to_numpy()
     piv_hi, piv_lo = indicators.find_pivots(ltf, config.PIVOT_LEN)
     piv_hi = piv_hi.to_numpy(); piv_lo = piv_lo.to_numpy()
@@ -240,12 +259,37 @@ def backtest_symbol_smc(symbol, htf, dtf, ltf, usdtd_daily, btcd_dir_daily,
         _adx_min = short_adx_min if machine == "short" else 25
         adx_ok = adx_1[i] > _adx_min                            # #3
 
+        # ---- HIGH-PROBABILITY confluence (research knobs, default OFF) ----
+        if machine == "long":
+            macd_ok = macd_hist_1[i] > 0                        # bullish momentum
+            ema20_ok = c[i] > ema20_1[i]                        # above fast EMA
+            rsi_hard_ok = rsi_1[i] > 50
+            # retest: bar wicked back down to broken resistance (swH) & closed above
+            retest_ok = bos and (l[i] <= swH + retest_atr * atr_1[i]) and c[i] > swH
+        else:
+            macd_ok = macd_hist_1[i] < 0                        # bearish momentum
+            ema20_ok = c[i] < ema20_1[i]                        # below fast EMA
+            rsi_hard_ok = rsi_1[i] < 50
+            # retest: bar wicked back up to broken support (swL) & closed below
+            retest_ok = bos and (h[i] >= swL - retest_atr * atr_1[i]) and c[i] < swL
+
         # ---- Setup Score (#15) ----
         score = (W["ema"] * ema_ok + W["rsi"] * rsi_ok + W["adx"] * adx_ok
                  + W["fib"] * in_fib + W["sweep"] * sweep + W["choch"] * choch
                  + W["bos"] * bos + W["fvg"] * fvg + W["ob"] * ob
                  + W["btcd"] * btcd_ok + W["usdtd"] * usdtd_ok)
+        if macd_as_score:                # MACD as extra confluence points
+            score += macd_pts * macd_ok
         if not vol_ok or not atr_exp:   # volume spike + volatility expansion (hard)
+            continue
+        # HIGH-PROBABILITY hard gates (each default OFF)
+        if use_macd and not macd_ok:
+            continue
+        if use_ema20_gate and not ema20_ok:
+            continue
+        if rsi_hard and not rsi_hard_ok:
+            continue
+        if use_retest and not retest_ok:
             continue
         # strengthen long: require a genuine sweep-reclaim + structure break
         if machine == "long" and long_reversal_hard and not (sweep and (choch or bos)):
