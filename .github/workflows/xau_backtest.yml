@@ -1,6 +1,6 @@
 name: XauBotSniper backtest (numpang jalan)
 
-# Workflow sementara: menjalankan backtest repo XauBotSniper dari sini karena
+# (rerun) Workflow sementara: menjalankan backtest repo XauBotSniper dari sini karena
 # Actions di repo XauBotSniper (repo baru) belum aktif. Hasil disimpan ke
 # data/xau_backtest.json di branch ini, lalu disalin ke XauBotSniper.
 on:
