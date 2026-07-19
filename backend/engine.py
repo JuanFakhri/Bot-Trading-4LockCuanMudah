@@ -45,6 +45,7 @@ class Engine:
             except Exception:
                 self.regime["cpi_bias"] = "NETRAL"
             await self._update_open_trades()
+            await self._maybe_reconcile()
 
             # Scan every regime: the router fires Phoenix LONG only in BTC BULL,
             # but the SMC SHORT is a per-symbol bearish setup that is valid in any
@@ -114,6 +115,19 @@ class Engine:
             sig["gate"] = f"Dihindari oleh pembelajaran: {verdict['reason']}"
 
         return sig
+
+    async def _maybe_reconcile(self):
+        """When live trading, advance/clean up real positions each scan (SL->BE
+        after TP1, close-out cleanup). Lazy + EXEC_ENABLED-gated like _maybe_execute."""
+        import os
+        if os.getenv("EXEC_ENABLED", "0") != "1":
+            return
+        try:
+            from . import executor
+            executor.get()          # ensure the manager exists to re-attach on restart
+            await executor.reconcile()
+        except Exception as exc:
+            print(f"[engine] reconcile error: {exc}")
 
     async def _maybe_execute(self, sig: dict):
         """When EXEC_ENABLED=1 (VPS with ccxt installed), hand the ENTRY to the

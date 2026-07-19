@@ -6,10 +6,23 @@ money until you explicitly flip the switches.
 
 ## Status
 - **Fase 1 — DONE (read-only):** Bybit adapter + connectivity check.
-- **Fase 2 — DONE (DRY_RUN):** executor sizes each ENTRY (2% risk, 7x) and LOGS the
-  full order plan (entry + SL + TP1 50% + TP2). No orders sent; live sending guarded.
-- Fase 3 — position manager (place orders, SL→breakeven after TP1, reconcile), tiny real money.
-- Fase 4 — kill-switch + alerts, scale up.
+- **Fase 2 — DONE (DRY_RUN):** executor sizes each ENTRY ($3 risk / 2% / …) and LOGS the
+  full order plan (entry + SL + TP1 50% + TP2). No orders sent.
+- **Fase 3 — DONE (testnet-first):** position manager places real orders + manages the
+  lifecycle (SL→breakeven after TP1, reconcile every scan, kill-switch). Validate on
+  testnet with `scripts.bybit_smoke` before mainnet.
+- Fase 4 — alerts (Telegram) + scale up.
+
+### Validate the live path on TESTNET (Fase 3)
+```bash
+# one-shot smoke test: opens a tiny position, attaches SL/TP, then closes it
+EXCHANGE_TESTNET=1 LIVE_TRADING=1 EXEC_DRY_RUN=0 \
+  BYBIT_API_KEY=... BYBIT_API_SECRET=... \
+  python -m scripts.bybit_smoke ETHUSDT
+```
+When that works, run the bot itself with `LIVE_TRADING=1 EXEC_DRY_RUN=0` on testnet:
+each ENTRY opens a real (testnet) position and the manager moves SL to breakeven
+after TP1. Kill-switch any time: `touch data/EXEC_KILL`.
 
 ### Try Fase 2 now (offline, no keys)
 ```bash

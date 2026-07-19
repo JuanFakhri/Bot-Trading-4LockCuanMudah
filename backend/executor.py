@@ -114,10 +114,15 @@ def format_plan(p: dict) -> str:
 
 
 class Executor:
-    """Builds + logs order plans from ENTRY signals. DRY_RUN only in Fase 2."""
+    """Builds + logs order plans from ENTRY signals; in live mode hands them to
+    the position manager (Fase 3)."""
 
     def __init__(self, api: "xb.BybitFutures | None" = None):
         self.api = api
+        self.pm = None
+        if api is not None:
+            from . import position_manager
+            self.pm = position_manager.PositionManager(api)
 
     async def _equity(self) -> float:
         if self.api and getattr(self.api.ex, "apiKey", ""):
@@ -154,10 +159,13 @@ class Executor:
             except Exception:
                 pass
         print(format_plan(p))
-        # Hard guard: real order sending is Fase 3, not Fase 2.
+        # FASE 3: when live, hand the plan to the position manager (real orders).
+        # Otherwise this stays a pure DRY-RUN log.
         if xb.LIVE_TRADING and not xb.DRY_RUN:
-            raise RuntimeError(
-                "Live order sending belum aktif (Fase 3). Set EXEC_DRY_RUN=1 dulu.")
+            try:
+                await self.pm.open_position(p)
+            except Exception as exc:
+                print(f"[exec] open_position failed: {exc}")
         return p
 
 
@@ -170,3 +178,10 @@ def get() -> Executor:
     if _singleton is None:
         _singleton = Executor(xb.BybitFutures())
     return _singleton
+
+
+async def reconcile():
+    """Advance live positions (SL->breakeven after TP1, clean up closed). Called
+    once per scan by the engine when live trading is active."""
+    if xb.LIVE_TRADING and not xb.DRY_RUN and _singleton is not None and _singleton.pm:
+        await _singleton.pm.reconcile()
