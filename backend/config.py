@@ -24,6 +24,9 @@ WATCHLIST: list[str] = [
     "THETAUSDT", "WLDUSDT", "CRVUSDT", "GALAUSDT", "FLOWUSDT",
     "XTZUSDT", "MANAUSDT", "DYDXUSDT", "SEIUSDT", "KAVAUSDT",
     "CHZUSDT", "STXUSDT",
+    # batch 4 (9, backtest-validated profit): dropped PYTH/WIF/STRK/TON/JUP.
+    "GMTUSDT", "APEUSDT", "PEPEUSDT", "ENAUSDT", "UNIUSDT",
+    "ORDIUSDT", "PENDLEUSDT", "FETUSDT", "ONDOUSDT",
 ]
 
 # Higher-time-frame (bias & fibonacci) and lower-time-frame (trigger).
