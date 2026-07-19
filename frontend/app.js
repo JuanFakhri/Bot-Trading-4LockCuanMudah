@@ -788,6 +788,54 @@ function renderSignals(list) {
     const cv = document.getElementById("chart-" + s.symbol);
     if (cv && s.candles && s.candles.length) drawChart(cv, s);
   }));
+  renderWatching(list || [], shown);
+}
+
+// WATCHING (heads-up): coins the bot is monitoring but that have NOT cleared
+// the recommendation bar yet — shown as a compact strip so you can see what's
+// closest to firing. ARMED ranks above WATCHING; within each, higher score /
+// confidence first. We exclude anything already shown as a full card above.
+function renderWatching(list, shown) {
+  const box = $("watching");
+  const el = $("watching-list");
+  if (!box || !el) return;
+  const shownSet = new Set(shown.map(s => s.symbol));
+  const cand = list
+    .filter(s => !shownSet.has(s.symbol))
+    .filter(s => s.state === "ARMED" || s.state === "WATCHING")
+    // only genuine heads-up: not blocked by the brain, and actually has a score
+    .filter(s => s.allowed !== false && (s.score != null || s.state === "ARMED"))
+    .sort((a, b) => {
+      const rank = x => (x.state === "ARMED" ? 0 : 1);
+      return rank(a) - rank(b)
+        || (b.score || 0) - (a.score || 0)
+        || (b.confidence || 0) - (a.confidence || 0);
+    })
+    .slice(0, 12);
+  box.classList.toggle("hidden", cand.length === 0);
+  if (!cand.length) { el.innerHTML = ""; return; }
+  el.innerHTML = cand.map(watchRowHTML).join("");
+}
+
+function watchRowHTML(s) {
+  const dir = (s.direction || "").toLowerCase();
+  const conf = Math.round((s.confidence || 0) * 100);
+  // for ARMED show "hampir" (almost), for WATCHING show what's missing via score gap
+  const armed = s.state === "ARMED";
+  const near = armed ? "hampir memicu" : "dipantau";
+  // biggest failing rule, if any, gives a hint of what's blocking
+  const checks = (s.checklist || []).concat(s.trigger || []);
+  const miss = checks.find(c => !c.ok);
+  const missTxt = miss ? miss.rule : "";
+  return `
+  <div class="watch-row ${s.state.toLowerCase()}" data-symbol="${s.symbol}">
+    <span class="wr-sym">${s.symbol}</span>
+    <span class="badge ${dir}">${s.direction}</span>
+    <span class="badge state-${s.state.toLowerCase()}">${armed ? "⚡ " : ""}${s.state}</span>
+    ${s.score != null ? `<span class="wr-score" title="Skor Setup (entry ≥60)">Skor ${s.score}</span>` : ""}
+    <span class="wr-conf" title="Keyakinan (belajar)">${conf}%</span>
+    <span class="wr-near muted">${near}${missTxt ? ` · ${missTxt}` : ""}</span>
+  </div>`;
 }
 
 // When there are no recommended signals, explain WHY instead of looking dead:
