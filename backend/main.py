@@ -8,7 +8,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from . import config, data_feed
+from . import config, data_feed, telegram
 from .engine import engine, run_loop
 
 app = FastAPI(title="SMC Bot", version="1.0")
@@ -25,6 +25,8 @@ async def _startup():
     global _loop_task, _broadcast_task
     _loop_task = asyncio.create_task(run_loop())
     _broadcast_task = asyncio.create_task(_broadcaster())
+    if telegram.enabled():
+        await telegram.send("🤖 <b>NestSMC aktif</b> — memantau pasar & siap kirim sinyal.")
 
 
 @app.on_event("shutdown")
@@ -33,6 +35,7 @@ async def _shutdown():
         if t:
             t.cancel()
     await data_feed.close()
+    await telegram.close()
     # close the exchange client if the executor was ever started (EXEC_ENABLED)
     if os.getenv("EXEC_ENABLED", "0") == "1":
         try:

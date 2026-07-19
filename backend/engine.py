@@ -16,7 +16,7 @@ import json
 from datetime import datetime, timezone
 
 from . import (config, data_feed, database as db, learning, market_filter, risk,
-               strategy_smc)
+               strategy_smc, telegram)
 
 _BAR_SEC = {"15m": 900, "1h": 3600, "4h": 14400, "1d": 86400}
 
@@ -107,6 +107,8 @@ class Engine:
                     sig["actionable"] = True
                     sig["gate"] = "ENTRY dibuka"
                     await self._maybe_execute(sig)
+                    if telegram.enabled():
+                        await telegram.send(telegram.entry_msg(sig, plan))
                 else:
                     sig["gate"] = why
             else:
@@ -201,6 +203,9 @@ class Engine:
             t["symbol"], r_multiple, _BAR_SEC[config.LTF], now.timestamp()
         )
         print(f"[engine] resolved {t['symbol']} {outcome} r={r_multiple:.2f}")
+        if telegram.enabled():
+            asyncio.create_task(telegram.send(
+                telegram.exit_msg(t["symbol"], t["direction"], outcome, r_multiple, exit_price)))
 
     # --------------------------------------------------------------- snapshot
     def snapshot(self) -> dict:
