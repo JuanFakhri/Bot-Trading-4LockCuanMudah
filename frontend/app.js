@@ -793,6 +793,17 @@ function renderSignals(list) {
 // When there are no recommended signals, explain WHY instead of looking dead:
 // which machine-gate is open/closed right now (regime for LONG, macro/CPI for
 // SHORT) and how many symbols are being watched but haven't cleared the bar.
+// BTC trend across 1D/4H/1H (display only — trade regime still uses 1D).
+function btcTfHTML(tf = {}) {
+  const chip = (t) => {
+    const s = tf[t] || "–";
+    const cls = s === "BULL" ? "tf-bull" : s === "BEAR" ? "tf-bear" : "tf-flat";
+    const arr = s === "BULL" ? "↑" : s === "BEAR" ? "↓" : "→";
+    return `<span class="tfchip ${cls}">${t.toUpperCase()} ${arr} ${s}</span>`;
+  };
+  return `<div class="btc-tf">${chip("1d")}${chip("4h")}${chip("1h")}</div>`;
+}
+
 function emptyStateHTML(list) {
   const reg = (lastSnap && lastSnap.regime) || {};
   const regime = reg.regime || "NEUTRAL";
@@ -827,6 +838,8 @@ function emptyStateHTML(list) {
   return `
     <div class="empty-state">
       <div class="es-title">Belum ada sinyal — ini alasannya</div>
+      <div class="es-btctf">Tren BTC: ${btcTfHTML(reg.btc_tf)}
+        <span class="muted xsmall">keputusan LONG pakai 1D (uji: 4H/1H malah rugi)</span></div>
       <div class="gates">
         ${gate(longOpen, "▲ Mesin LONG · Phoenix", "regime BULL", regime,
                "Pasar belum tren naik (BULL).")}
@@ -964,6 +977,7 @@ function renderMarket(r = {}) {
       r.alt_bias === "LONG" ? true : r.alt_bias === "SHORT" ? false : null],
     [r.usdtd_consolidating ? "— matriks BTC.D (aktif) —" : "— info —", "arah BTC & dominance", null],
     ["Arah BTC", r.btc_dir ? r.btc_dir.toLowerCase() : "–", dirCls(r.btc_dir)],
+    ["Tren BTC 1D·4H·1H", btcTfHTML(r.btc_tf), null],
     ["BTC.D", r.btcd_value != null ? `${r.btcd_value}% (${(r.btcd_dir || "").toLowerCase()})` : "–", null],
     ["Prediksi ALT (matriks)", r.alt_prediction || "–", altCls],
   ];

@@ -34,6 +34,24 @@ _ALT_MATRIX = {
 }
 
 
+def _tf_trend(df, bars: int, band: float) -> str:
+    """BULL/BEAR/NEUTRAL from EMA50 change over `bars`, flat within +/-band.
+    Same rule as the trading regime, applied per timeframe (DISPLAY ONLY — the
+    trade decision still uses BTC 1D; a regime sweep proved 4H/1H gating loses)."""
+    if df is None or len(df) < config.EMA_FAST + bars + 2:
+        return "NEUTRAL"
+    ema = indicators.ema(df["close"], config.EMA_FAST)
+    prev = float(ema.iloc[-1 - bars])
+    if prev == 0:
+        return "NEUTRAL"
+    chg = (float(ema.iloc[-1]) - prev) / abs(prev)
+    if chg > band:
+        return "BULL"
+    if chg < -band:
+        return "BEAR"
+    return "NEUTRAL"
+
+
 def _direction(ema, lookback: int = 3, deadband: float = 0.005) -> str:
     """NAIK / TURUN / STABIL from an EMA series slope with a flat deadband."""
     if ema is None or len(ema) <= lookback:
@@ -52,6 +70,8 @@ def _direction(ema, lookback: int = 3, deadband: float = 0.005) -> str:
 
 async def compute_regime() -> dict:
     btc = await data_feed.get_klines("BTCUSDT", config.DTF, limit=260)
+    btc4h = await data_feed.get_klines("BTCUSDT", "4h", limit=260)
+    btc1h = await data_feed.get_klines("BTCUSDT", "1h", limit=400)
     ethbtc = await data_feed.get_klines("ETHBTC", config.DTF, limit=120)
     usdtd = await data_feed.get_usdt_dominance()
     btcd = await data_feed.get_btc_dominance()
@@ -112,8 +132,16 @@ async def compute_regime() -> dict:
     usdtd_target = ("di resistance" if at_resistance else "di support" if at_support
                     else "menuju resistance" if usdtd.get("rising") else "menuju support")
 
+    _band, _days = config.PHX_NEUTRAL_BAND, config.PHX_NEUTRAL_DAYS
+    btc_tf = {
+        "1d": _tf_trend(btc, _days, _band),          # 5 daily bars
+        "4h": _tf_trend(btc4h, _days * 6, _band),    # 5 days = 30x 4H bars
+        "1h": _tf_trend(btc1h, _days * 24, _band),   # 5 days = 120x 1H bars
+    }
+
     return {
         "regime": regime,
+        "btc_tf": btc_tf,
         "alt_bias": alt_bias,
         "alt_prediction": alt_pred,
         "usdtd_target": usdtd_target,
