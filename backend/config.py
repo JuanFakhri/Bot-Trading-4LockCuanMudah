@@ -34,6 +34,14 @@ KLIMIT = 400        # candles pulled per request
 
 SCAN_INTERVAL_SEC = int(os.getenv("SCAN_INTERVAL_SEC", "60"))
 
+# Candle-close alignment: on top of the regular SCAN_INTERVAL_SEC loop (which
+# keeps open-position TP/SL management responsive), snap one scan to a few
+# seconds AFTER each 1H candle close so a fresh ENTRY is acted on with ~5s
+# latency instead of up to a full interval. Pure scheduling — signals & win-rate
+# are identical (the strategy still decides on the closed 1H bar).
+SCAN_ALIGN_1H = os.getenv("SCAN_ALIGN_1H", "1") == "1"
+SCAN_ALIGN_BUFFER_SEC = int(os.getenv("SCAN_ALIGN_BUFFER_SEC", "5"))
+
 # Demo mode: feed synthetic data through the real pipeline (no external API).
 DEMO = os.getenv("BOT_DEMO", "0") == "1"
 

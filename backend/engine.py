@@ -231,7 +231,21 @@ class Engine:
 engine = Engine()
 
 
+def _next_sleep_sec() -> float:
+    """Seconds to sleep before the next scan. Normally SCAN_INTERVAL_SEC, but if a
+    1H candle closes sooner, sleep only until just after that close (buffer) so a
+    fresh ENTRY is caught with ~buffer latency. Position TP/SL management stays
+    responsive because the cap is still SCAN_INTERVAL_SEC."""
+    base = config.SCAN_INTERVAL_SEC
+    if not config.SCAN_ALIGN_1H:
+        return base
+    now = datetime.now(timezone.utc).timestamp()
+    to_close = 3600 - (now % 3600)           # seconds to the next 1H boundary
+    aligned = to_close + config.SCAN_ALIGN_BUFFER_SEC
+    return max(1.0, min(base, aligned))
+
+
 async def run_loop():
     while True:
         await engine.scan()
-        await asyncio.sleep(config.SCAN_INTERVAL_SEC)
+        await asyncio.sleep(_next_sleep_sec())
