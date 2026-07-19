@@ -25,9 +25,18 @@ from backend import executor, position_manager
 
 
 async def main():
-    if not (xb.TESTNET and xb.LIVE_TRADING and not xb.DRY_RUN):
-        print("[smoke] refuse: need EXCHANGE_TESTNET=1 LIVE_TRADING=1 EXEC_DRY_RUN=0")
+    if not (xb.LIVE_TRADING and not xb.DRY_RUN):
+        print("[smoke] refuse: need LIVE_TRADING=1 EXEC_DRY_RUN=0")
         return
+    allow_main = os.getenv("SMOKE_ALLOW_MAINNET", "0") == "1"
+    if not xb.TESTNET and not allow_main:
+        print("[smoke] refuse: MAINNET / REAL MONEY. To validate ONE tiny real trade, "
+              "set SMOKE_ALLOW_MAINNET=1 explicitly. (Isolated margin caps the loss "
+              "to your margin.)")
+        return
+    if not xb.TESTNET:
+        print("[smoke] ⚠️  MAINNET — a tiny REAL position will open then close. "
+              "Loss is capped to isolated margin.")
     watch = (sys.argv[1] if len(sys.argv) > 1 else "ETHUSDT").upper()
     api = xb.BybitFutures()
     pm = position_manager.PositionManager(api)
@@ -38,10 +47,10 @@ async def main():
         # tiny synthetic trade: SL 1% away, TP1 +1%, TP2 +2% (LONG)
         entry, sl, tp1, tp2 = last, last * 0.99, last * 1.01, last * 1.02
         eq = await api.equity_usdt()
-        print(f"[smoke] {symbol} last={last} testnet equity={eq} USDT")
+        print(f"[smoke] {symbol} last={last} equity={eq} USDT")
         plan = executor.build_plan(symbol, "LONG", entry, sl, tp1, tp2, eq)
         print(executor.format_plan(plan))
-        print("[smoke] placing entry + SL/TP on TESTNET ...")
+        print("[smoke] placing entry + SL/TP on the exchange ...")
         st = await pm.open_position(plan)
         if not st:
             print("[smoke] open refused/failed — check qty/min-notional above")
