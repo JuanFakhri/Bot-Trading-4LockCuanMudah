@@ -17,11 +17,13 @@ WATCHLIST: list[str] = [
     "ETHUSDT", "SOLUSDT", "BNBUSDT", "XRPUSDT", "ADAUSDT",
     "AVAXUSDT", "LINKUSDT", "DOGEUSDT", "DOTUSDT", "NEARUSDT",
     "APTUSDT", "ARBUSDT", "OPUSDT", "INJUSDT", "SUIUSDT",
-    # +10 (expanded 2026-07): a 30-coin backtest doubled signals (706->1366)
-    # but 5 new coins lost money (FIL/AAVE/LTC/ATOM/TRX) and diluted quality.
-    # Keeping only the profitable additions -> more signals, all coins positive.
+    # batch 2 (10, backtest-validated profit): dropped FIL/AAVE/LTC/ATOM/TRX.
     "ETCUSDT", "HBARUSDT", "ICPUSDT", "RUNEUSDT", "GRTUSDT",
     "IMXUSDT", "LDOUSDT", "ALGOUSDT", "SANDUSDT", "AXSUSDT",
+    # batch 3 (12, backtest-validated profit over 3y): dropped SNX/EGLD/TIA.
+    "THETAUSDT", "WLDUSDT", "CRVUSDT", "GALAUSDT", "FLOWUSDT",
+    "XTZUSDT", "MANAUSDT", "DYDXUSDT", "SEIUSDT", "KAVAUSDT",
+    "CHZUSDT", "STXUSDT",
 ]
 
 # Higher-time-frame (bias & fibonacci) and lower-time-frame (trigger).
