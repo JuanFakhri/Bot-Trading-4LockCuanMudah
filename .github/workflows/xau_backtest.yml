@@ -37,7 +37,7 @@ jobs:
       - name: Jalankan backtest
         working-directory: xau
         env:
-          BACKTEST_DAYS: ${{ github.event.inputs.days || '365' }}
+          BACKTEST_DAYS: ${{ github.event.inputs.days || '730' }}
         run: python -m bot.backtest
 
       - name: Simpan hasil ke branch ini
