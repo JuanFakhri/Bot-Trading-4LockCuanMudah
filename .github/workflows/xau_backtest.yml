@@ -10,6 +10,9 @@ on:
         description: "Berapa hari data historis"
         required: false
         default: "365"
+  push:
+    branches: [claude/trading-bot-multi-timeframe-w8y4y4]
+    paths: [".github/workflows/xau_backtest.yml"]
 
 permissions:
   contents: write
