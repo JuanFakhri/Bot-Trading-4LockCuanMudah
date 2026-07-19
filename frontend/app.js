@@ -791,10 +791,12 @@ function renderSignals(list) {
   renderWatching(list || [], shown);
 }
 
-// WATCHING (heads-up): coins the bot is monitoring but that have NOT cleared
-// the recommendation bar yet — shown as a compact strip so you can see what's
-// closest to firing. ARMED ranks above WATCHING; within each, higher score /
-// confidence first. We exclude anything already shown as a full card above.
+// WATCHING (heads-up): coins the bot is monitoring but that have NOT cleared the
+// recommendation bar yet. Inclusion is gated by the LEARNING score (confidence
+// from the self-learning brain) > 40% — NOT the machine Setup Score. So the strip
+// lists what the brain rates highest, ranked by that learning score. We exclude
+// anything already shown as a full card above.
+const WATCH_MIN_CONF = 0.40;          // skor pembelajaran (belajar) > 40%
 function renderWatching(list, shown) {
   const box = $("watching");
   const el = $("watching-list");
@@ -803,14 +805,13 @@ function renderWatching(list, shown) {
   const cand = list
     .filter(s => !shownSet.has(s.symbol))
     .filter(s => s.state === "ARMED" || s.state === "WATCHING")
-    // only genuine heads-up: not blocked by the brain, and actually has a score
-    .filter(s => s.allowed !== false && (s.score != null || s.state === "ARMED"))
-    .sort((a, b) => {
-      const rank = x => (x.state === "ARMED" ? 0 : 1);
-      return rank(a) - rank(b)
-        || (b.score || 0) - (a.score || 0)
-        || (b.confidence || 0) - (a.confidence || 0);
-    })
+    // gate on the LEARNING score (confidence), not the machine score, and not
+    // blocked by the brain.
+    .filter(s => s.allowed !== false && (s.confidence || 0) > WATCH_MIN_CONF)
+    // rank by the learning score (highest brain confidence first); ENTRY-ready
+    // ARMED breaks ties.
+    .sort((a, b) => (b.confidence || 0) - (a.confidence || 0)
+        || (a.state === "ARMED" ? -1 : 1))
     .slice(0, 12);
   box.classList.toggle("hidden", cand.length === 0);
   if (!cand.length) { el.innerHTML = ""; return; }
@@ -832,8 +833,8 @@ function watchRowHTML(s) {
     <span class="wr-sym">${s.symbol}</span>
     <span class="badge ${dir}">${s.direction}</span>
     <span class="badge state-${s.state.toLowerCase()}">${armed ? "⚡ " : ""}${s.state}</span>
-    ${s.score != null ? `<span class="wr-score" title="Skor Setup (entry ≥60)">Skor ${s.score}</span>` : ""}
-    <span class="wr-conf" title="Keyakinan (belajar)">${conf}%</span>
+    <span class="wr-conf" title="Skor pembelajaran (belajar) — dasar daftar ini">🧠 ${conf}%</span>
+    ${s.score != null ? `<span class="wr-score muted" title="Skor Setup mesin (info)">mesin ${s.score}</span>` : ""}
     <span class="wr-near muted">${near}${missTxt ? ` · ${missTxt}` : ""}</span>
   </div>`;
 }
