@@ -26,22 +26,48 @@ EXEC_ENABLED = os.getenv("EXEC_ENABLED", "0") == "1"
 DRY_EQUITY = float(os.getenv("EXEC_DRY_EQUITY", "1000"))
 TP1_FRAC = 0.5   # bank 50% at TP1, rest rides to TP2
 
+# How big to size each trade:
+#   risk_pct     -> lose EXEC_RISK_PCT of equity at SL   (%-based; grows with account)
+#   risk_usd     -> lose exactly EXEC_FIXED_USD at SL    (fixed $ risk = 1R; ties to
+#                   backtest R directly, e.g. +122R * $3 ~= $366). RECOMMENDED small-acct.
+#   margin_usd   -> commit EXEC_FIXED_USD as margin      (position = fixed_usd * leverage)
+#   notional_usd -> position value = EXEC_FIXED_USD
+SIZE_MODE = os.getenv("EXEC_SIZE_MODE", "risk_pct")
+FIXED_USD = float(os.getenv("EXEC_FIXED_USD", "3"))
+
 
 def size_position(equity: float, entry: float, sl: float,
+                  leverage: float = xb.LEVERAGE, mode: str | None = None,
+                  fixed_usd: float | None = None,
                   risk_pct: float = xb.RISK_PCT) -> tuple[float, float]:
-    """Contracts so a stop-out loses exactly risk_pct of equity (linear USDT perp:
-    PnL = qty * price_move, so qty = risk_amount / stop_distance)."""
+    """Return (qty, risk_amt) for the chosen sizing mode. `risk_amt` is always the
+    $ lost if SL is hit (= 1R). Linear USDT perp: PnL = qty * price_move."""
+    mode = mode or SIZE_MODE
+    fixed_usd = FIXED_USD if fixed_usd is None else fixed_usd
     stop_dist = abs(entry - sl)
-    if stop_dist <= 0 or equity <= 0:
+    if entry <= 0:
         return 0.0, 0.0
-    risk_amt = equity * risk_pct
-    return risk_amt / stop_dist, risk_amt
+    if mode == "risk_usd":                       # fixed $ risk (= 1R)
+        risk_amt = fixed_usd
+        qty = risk_amt / stop_dist if stop_dist > 0 else 0.0
+    elif mode == "margin_usd":                   # fixed margin committed
+        qty = (fixed_usd * leverage) / entry
+        risk_amt = qty * stop_dist
+    elif mode == "notional_usd":                 # fixed position value
+        qty = fixed_usd / entry
+        risk_amt = qty * stop_dist
+    else:                                        # risk_pct (default)
+        if equity <= 0:
+            return 0.0, 0.0
+        risk_amt = equity * risk_pct
+        qty = risk_amt / stop_dist if stop_dist > 0 else 0.0
+    return qty, risk_amt
 
 
 def build_plan(symbol: str, direction: str, entry: float, sl: float,
                tp1: float, tp2: float, equity: float,
                leverage: float = xb.LEVERAGE) -> dict:
-    qty, risk_amt = size_position(equity, entry, sl)
+    qty, risk_amt = size_position(equity, entry, sl, leverage)
     is_long = direction.upper() == "LONG"
     open_side = "buy" if is_long else "sell"
     close_side = "sell" if is_long else "buy"
@@ -53,6 +79,7 @@ def build_plan(symbol: str, direction: str, entry: float, sl: float,
         "symbol": symbol, "direction": direction.upper(),
         "leverage": leverage, "margin_mode": xb.MARGIN_MODE,
         "equity": round(equity, 2), "risk_pct": xb.RISK_PCT,
+        "size_mode": SIZE_MODE, "fixed_usd": FIXED_USD,
         "risk_amt": round(risk_amt, 2),
         "qty": qty, "notional": round(notional, 2), "margin": round(margin, 2),
         "orders": [
@@ -71,9 +98,9 @@ def format_plan(p: dict) -> str:
     mode = "DRY-RUN" if xb.DRY_RUN else "LIVE"
     lines = [
         f"[exec] {mode} order plan — {p['symbol']} {p['direction']}",
-        (f"[exec]   equity={p['equity']} risk={p['risk_pct']*100:.1f}%={p['risk_amt']} "
-         f"lev={p['leverage']:g}x {p['margin_mode']} | qty={p['qty']:.6g} "
-         f"notional={p['notional']} margin={p['margin']}"),
+        (f"[exec]   size={p['size_mode']} risk≈${p['risk_amt']} (=1R) "
+         f"equity={p['equity']} lev={p['leverage']:g}x {p['margin_mode']} | "
+         f"qty={p['qty']:.6g} notional={p['notional']} margin={p['margin']}"),
     ]
     for o in p["orders"]:
         px = o.get("price", o.get("trigger"))
