@@ -1,0 +1,35 @@
+name: Setup sheet — entry/SL/TP per coin
+
+# Compute the current trade plan (dir/entry/SL/TP1/TP2/RR/state) for every coin
+# in the live watchlist and print a table. Read-only; also writes
+# docs/data/setup_sheet.json. Inspect the job log for the sheet.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: setup-sheet
+  cancel-in-progress: false
+
+jobs:
+  sheet:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Build setup sheet
+        run: python -m scripts.setup_sheet
+      - name: Commit sheet json
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/data/setup_sheet.json || true
+          git commit -m "chore: setup sheet (entry/SL/TP per coin) [skip ci]" || true
+          git push || true
