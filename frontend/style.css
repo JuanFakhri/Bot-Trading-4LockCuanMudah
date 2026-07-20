@@ -171,15 +171,26 @@ a.btn { text-decoration: none; display: inline-flex; align-items: center; }
 .watch-head h3 { margin: 0; font-size: 14px; }
 .watch-list { display: flex; flex-direction: column; gap: 6px; }
 .watch-row {
-  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  display: flex; flex-direction: column; gap: 5px;
   background: var(--panel-2); border: 1px solid var(--border);
   border-radius: 10px; padding: 7px 11px; font-size: 12.5px;
 }
 .watch-row.armed { border-color: color-mix(in srgb, var(--amber) 45%, var(--border)); }
+.wr-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .wr-sym { font-weight: 700; font-family: "JetBrains Mono", ui-monospace, monospace; min-width: 78px; }
-.wr-score { font-weight: 700; color: var(--accent); }
-.wr-conf { font-weight: 700; }
+.wr-score { font-weight: 700; }
+.wr-conf { font-weight: 800; color: var(--accent-2); }
 .wr-near { margin-left: auto; font-size: 11.5px; }
+.wr-lvls { display: flex; gap: 12px; flex-wrap: wrap;
+  font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 11.5px;
+  border-top: 1px dashed var(--border); padding-top: 5px; }
+.wr-lvls .lv-sl { color: var(--red); }
+.wr-lvls .lv-tp { color: var(--green); }
+.watch-warn {
+  background: rgba(255,140,0,.12); border: 1px solid color-mix(in srgb, var(--amber) 50%, var(--border));
+  color: var(--text); border-radius: 10px; padding: 8px 11px; font-size: 12px;
+  line-height: 1.45; margin-bottom: 2px;
+}
 
 /* ---- CPI macro bias screen ---- */
 .cpi-bias { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px;

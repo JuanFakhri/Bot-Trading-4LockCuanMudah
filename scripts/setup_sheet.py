@@ -18,10 +18,13 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+from datetime import datetime, timezone
 
-from backend import config, data_feed, market_filter, phoenix, strategy_smc
+from backend import (config, data_feed, database as db, learning, market_filter,
+                     phoenix, strategy_smc)
 
 OUT = os.path.join(os.path.dirname(__file__), "..", "docs", "data", "setup_sheet.json")
+STATE_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "state.json")
 
 
 async def _plan_for(sym, regime):
@@ -39,17 +42,31 @@ async def _plan_for(sym, regime):
         return None
     if not sig or not sig.get("plan"):
         return None
+    # LEARNING score (confidence) from the trained brain — same call the live
+    # engine makes. This is the number the dashboard watching list gates on (>40%).
+    verdict = learning.evaluate(sig.get("features", {}))
     p = sig["plan"]
     price = float(ltf["close"].iloc[-1])
     return {
         "symbol": sym, "direction": sig.get("direction"), "state": sig.get("state"),
         "score": sig.get("score"), "price": round(price, 8),
+        "confidence": round(verdict.get("confidence", 0.0), 4),
+        "allowed": verdict.get("allowed", True),
+        "learn_reason": verdict.get("reason", ""),
         "entry": p["entry"], "sl": p["sl"], "tp1": p["tp1"], "tp2": p["tp2"],
         "rr": p["rr"],
     }
 
 
 async def main():
+    # restore the trained learning brain so confidence reflects real priors
+    if os.path.exists(STATE_PATH):
+        try:
+            with open(STATE_PATH) as f:
+                db.import_state(json.load(f))
+        except Exception as exc:
+            print(f"[setup] state restore skipped: {exc}")
+
     regime = await market_filter.compute_regime()
     try:
         cpi = await data_feed.get_cpi_bias()
@@ -67,10 +84,15 @@ async def main():
             print(f"[setup] {sym} error: {exc}")
 
     order = {"ENTRY": 0, "ARMED": 1, "WATCHING": 2}
-    rows.sort(key=lambda r: (order.get(r["state"], 3), -(r["score"] or 0)))
+    rows.sort(key=lambda r: (order.get(r["state"], 3), -(r.get("confidence") or 0)))
 
+    short_open = regime.get("cpi_bias") != "BULLISH"
+    long_open = regime.get("regime") == "BULL"
     with open(OUT, "w") as f:
-        json.dump({"regime": regime.get("regime"), "cpi_bias": regime.get("cpi_bias"),
+        json.dump({"generated_ts": datetime.now(timezone.utc).isoformat(),
+                   "regime": regime.get("regime"), "cpi_bias": regime.get("cpi_bias"),
+                   "short_gate_open": short_open, "long_gate_open": long_open,
+                   "gate_locked": not (short_open or long_open),
                    "count": len(rows), "rows": rows}, f, ensure_ascii=False,
                   separators=(",", ":"))
 
