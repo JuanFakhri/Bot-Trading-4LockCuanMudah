@@ -95,25 +95,42 @@ def _diag() -> str:
     )
 
 
-def _watch() -> str:
+def _pack(header: str, blocks: list[str], limit: int = 3500) -> list[str]:
+    """Pack a header + list of blocks into as few Telegram messages as possible,
+    each under `limit` chars, never splitting a block across messages."""
+    msgs: list[str] = []
+    cur = header
+    for b in blocks:
+        if len(cur) + len(b) + 2 > limit:
+            msgs.append(cur)
+            cur = b
+        else:
+            cur = cur + "\n\n" + b if cur else b
+    if cur:
+        msgs.append(cur)
+    # tag part numbers when there is more than one message
+    if len(msgs) > 1:
+        msgs = [m + f"\n<i>({i}/{len(msgs)})</i>" for i, m in enumerate(msgs, 1)]
+    return msgs
+
+
+def _watch() -> list[str]:
     rows = [w for w in (engine.watch or [])
             if w.get("allowed") is not False and (w.get("confidence") or 0) > 0.40]
     rows.sort(key=lambda w: -(w.get("confidence") or 0))
     if not rows:
-        return "👀 Belum ada koin selaras untuk dipantau saat ini."
+        return ["👀 Belum ada koin selaras untuk dipantau saat ini."]
     _, _, long_open, short_open = _gates()
     head = f"👀 <b>Koin Dipantau</b> ({len(rows)}) — skor belajar &gt;40%"
     if not (long_open or short_open):
         head += "\n⚠️ Gerbang makro <b>TERKUNCI</b> — daftar prospektif, bot belum entry."
-    lines = [head]
-    for w in rows[:15]:
+    blocks = []
+    for i, w in enumerate(rows, 1):
         conf = round((w.get("confidence") or 0) * 100)
-        lines.append(
-            f"\n<b>{w['symbol']}</b> {w['direction']} · 🧠 {conf}% · skor {w.get('score')}\n"
+        blocks.append(
+            f"{i}. <b>{w['symbol']}</b> {w['direction']} · 🧠 {conf}% · skor {w.get('score')}\n"
             f"E {w['entry']} · <b>SL</b> {w['sl']} · TP1 {w['tp1']} · TP2 {w['tp2']} (RR {w['rr']})")
-    if len(rows) > 15:
-        lines.append(f"\n… dan {len(rows) - 15} koin lain.")
-    return "\n".join(lines)
+    return _pack(head, blocks)
 
 
 def _coins() -> str:
@@ -185,28 +202,29 @@ def _balance() -> str:
             "jadi tidak ada saldo bursa. (Aman, uang tak tersentuh.)")
 
 
-async def _dispatch(cmd: str) -> str | None:
+async def _dispatch(cmd: str) -> list[str] | None:
+    """Return a LIST of messages to send (long replies are split across several)."""
     cmd = cmd.lower().split("@")[0].strip()
     if cmd in ("/start", "/help"):
-        return HELP
+        return [HELP]
     if cmd == "/status":
-        return _status()
+        return [_status()]
     if cmd == "/pnl":
-        return _pnl()
+        return [_pnl()]
     if cmd == "/position":
-        return _position()
+        return [_position()]
     if cmd in ("/watch", "/koin"):
-        return _watch()
+        return _watch()                 # already a list (auto-split)
     if cmd in ("/coins", "/list"):
-        return _coins()
+        return [_coins()]
     if cmd in ("/news", "/berita"):
-        return _news()
+        return [_news()]
     if cmd in ("/history", "/riwayat"):
-        return _history()
+        return [_history()]
     if cmd == "/diag":
-        return _diag()
+        return [_diag()]
     if cmd == "/balance":
-        return _balance()
+        return [_balance()]
     return None
 
 
@@ -233,9 +251,10 @@ async def poll_commands():
                     continue
                 if chat != str(telegram.CHAT_ID):     # only obey the owner
                     continue
-                reply = await _dispatch(text)
-                if reply:
-                    await telegram.send(reply)
+                replies = await _dispatch(text)
+                for msg in (replies or []):
+                    await telegram.send(msg)
+                    await asyncio.sleep(0.3)     # keep order, avoid flood limit
         except Exception as exc:
             print(f"[telegram-cmd] poll error: {exc}")
             await asyncio.sleep(5)
