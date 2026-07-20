@@ -107,4 +107,10 @@ async def index():
     return FileResponse(os.path.join(FRONTEND_DIR, "index.html"))
 
 
+# serve docs/data (setup_sheet.json, live_backtest.json, news.json, ...) so the
+# realtime dashboard's prospective WATCHING list + backtest tab work off-server too.
+_DATA_DIR = os.path.join(FRONTEND_DIR, "..", "docs", "data")
+if os.path.isdir(_DATA_DIR):
+    app.mount("/data", StaticFiles(directory=_DATA_DIR), name="data")
+
 app.mount("/", StaticFiles(directory=FRONTEND_DIR), name="static")
