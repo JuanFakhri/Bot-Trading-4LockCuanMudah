@@ -9,10 +9,14 @@ Security: only the owner chat is obeyed; messages from anyone else are ignored.
 from __future__ import annotations
 
 import asyncio
+import json
 import os
+from datetime import datetime, timedelta, timezone
 
 from . import config, database as db, telegram
 from .engine import engine
+
+_NEWS_PATH = os.path.join(os.path.dirname(__file__), "..", "docs", "data", "news.json")
 
 HELP = (
     "🤖 <b>Perintah Bot 4LockCuanMudah</b>\n"
@@ -21,6 +25,9 @@ HELP = (
     "/pnl     - statistik menang/kalah\n"
     "/position- posisi terbuka\n"
     "/watch   - koin dipantau + entry/TP/SL\n"
+    "/coins   - daftar semua koin dipantau\n"
+    "/news    - jadwal berita + bias CPI\n"
+    "/history - riwayat trade terakhir\n"
     "/diag    - kenapa belum ada sinyal\n"
     "/help    - bantuan ini"
 )
@@ -109,6 +116,68 @@ def _watch() -> str:
     return "\n".join(lines)
 
 
+def _coins() -> str:
+    wl = config.WATCHLIST
+    syms = ", ".join(s.replace("USDT", "") for s in wl)
+    return f"📋 <b>{len(wl)} koin dipantau</b> (lolos backtest):\n{syms}"
+
+
+def _history() -> str:
+    rows = [t for t in db.recent_trades(60) if t.get("status") == "RESOLVED"]
+    if not rows:
+        return "📜 Belum ada trade yang selesai."
+    lines = ["📜 <b>10 trade terakhir</b>"]
+    for t in rows[:10]:
+        r = t.get("r_multiple") or 0.0
+        oc = t.get("outcome", "?")
+        emo = "✅" if oc == "WIN" else "❌" if oc == "LOSS" else "➖"
+        day = (t.get("resolved_ts") or "")[:10]
+        lines.append(f"{emo} {t['symbol']} {t['direction']} · {r:+.2f}R · {day}")
+    return "\n".join(lines)
+
+
+def _news() -> str:
+    try:
+        with open(_NEWS_PATH, encoding="utf-8") as f:
+            d = json.load(f)
+    except Exception:
+        return "📅 Data berita belum tersedia."
+    now = datetime.now(timezone.utc)
+    cpi = d.get("cpi") or {}
+    lines = ["📅 <b>Makro &amp; Berita</b>"]
+    if cpi:
+        lines.append(
+            f"Bias CPI: <b>{cpi.get('bias')}</b> "
+            f"(YoY {cpi.get('prev_yoy')}%→{cpi.get('yoy')}%, {cpi.get('direction')}) · {cpi.get('asof')}")
+        lines.append("→ SHORT " + ("🔒 terkunci (jangan lawan makro)"
+                     if cpi.get("bias") == "BULLISH" else "🔓 boleh"))
+    upcoming = []
+    for e in d.get("events", []):
+        if e.get("impact") != "High":
+            continue
+        try:
+            t = datetime.fromisoformat(e["ts"])
+            if t.tzinfo is None:
+                t = t.replace(tzinfo=timezone.utc)
+        except Exception:
+            continue
+        if t >= now - timedelta(minutes=30):
+            upcoming.append((t, e))
+    upcoming.sort(key=lambda x: x[0])
+    if not upcoming:
+        lines.append("\nTidak ada rilis high-impact terjadwal terdekat.")
+    else:
+        lines.append("\n<b>High-impact berikutnya (WIB):</b>")
+        for t, e in upcoming[:6]:
+            wib = (t + timedelta(hours=7)).strftime("%d %b %H:%M")
+            mins = (t - now).total_seconds() / 60
+            when = ("sekarang" if mins < 0 else
+                    f"{int(mins)}m lagi" if mins < 90 else f"{mins/60:.1f}j lagi")
+            emo = {"RISK_ON": "🟢", "RISK_OFF": "🔴"}.get(e.get("bias"), "⚪")
+            lines.append(f"{emo} {wib} · {e.get('country')} {e.get('title')} ({when})")
+    return "\n".join(lines)
+
+
 def _balance() -> str:
     if os.getenv("EXEC_ENABLED", "0") == "1":
         return "💰 Mode EKSEKUSI aktif. (Saldo bursa akan tampil saat terhubung.)"
@@ -126,8 +195,14 @@ async def _dispatch(cmd: str) -> str | None:
         return _pnl()
     if cmd == "/position":
         return _position()
-    if cmd in ("/watch", "/koin", "/coins"):
+    if cmd in ("/watch", "/koin"):
         return _watch()
+    if cmd in ("/coins", "/list"):
+        return _coins()
+    if cmd in ("/news", "/berita"):
+        return _news()
+    if cmd in ("/history", "/riwayat"):
+        return _history()
     if cmd == "/diag":
         return _diag()
     if cmd == "/balance":
