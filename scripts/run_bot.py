@@ -22,7 +22,7 @@ async def main():
     print(f"[run_bot] NestSMC headless — scan tiap {config.SCAN_INTERVAL_SEC}s. "
           f"Ctrl-C untuk berhenti.")
     if telegram.enabled():
-        await telegram.send("🤖 <b>NestSMC aktif</b> (Termux) — memantau pasar & siap kirim sinyal.")
+        await telegram.send("🤖 <b>NestSMC aktif</b> — memantau pasar &amp; siap kirim sinyal.")
     try:
         await run_loop()
     finally:
