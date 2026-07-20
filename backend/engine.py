@@ -15,8 +15,8 @@ import asyncio
 import json
 from datetime import datetime, timezone
 
-from . import (config, data_feed, database as db, learning, market_filter, risk,
-               strategy_smc, telegram)
+from . import (config, data_feed, database as db, learning, market_filter, phoenix,
+               risk, strategy_smc, telegram)
 
 _BAR_SEC = {"15m": 900, "1h": 3600, "4h": 14400, "1d": 86400}
 
@@ -29,9 +29,10 @@ class Engine:
         self.last_scan: str | None = None
         self.scanning = False
         self.error: str | None = None
-        self.paused = False    # /pause via Telegram: keep scanning + alerting,
-        #                        but do NOT open new positions.
+        self.paused = False    # reserved; bot runs realtime (no pause command)
         self.prices: dict[str, float] = {}   # last price per symbol (for user-trade tracking)
+        self.watch: list[dict] = []          # prospective per-coin plans (for /watch)
+        self._watch_next: list[dict] = []
 
     # ------------------------------------------------------------------ scan
     async def scan(self):
@@ -53,6 +54,7 @@ class Engine:
             # but the SMC SHORT is a per-symbol bearish setup that is valid in any
             # BTC regime (including NEUTRAL) — so we must scan there too.
             results: list[dict] = []
+            self._watch_next = []
             for sym in config.WATCHLIST:
                 try:
                     sig = await self._eval_symbol(sym)
@@ -64,6 +66,8 @@ class Engine:
             order = {"ENTRY": 0, "ARMED": 1, "WATCHING": 2}
             results.sort(key=lambda s: (order.get(s["state"], 3), -s["confidence"]))
             self.signals = results
+            self._watch_next.sort(key=lambda w: -(w.get("confidence") or 0))
+            self.watch = self._watch_next
             self.last_scan = datetime.now(timezone.utc).isoformat()
             self.error = None
         except Exception as exc:
@@ -82,6 +86,10 @@ class Engine:
         # record latest price for every scanned symbol (used to track the
         # trades a user manually marks as taken, even if no signal fires)
         self.prices[symbol] = float(ltf["close"].iloc[-1])
+
+        # prospective watch entry (gate-bypassed) so /watch + dashboard can show
+        # coins with entry/SL/TP even while the macro gate is locked.
+        self._collect_watch(symbol, htf, dtf, ltf)
 
         sig = strategy_smc.evaluate(symbol, htf, dtf, ltf, self.regime)
         if sig is None:
@@ -121,6 +129,33 @@ class Engine:
             sig["gate"] = f"Dihindari oleh pembelajaran: {verdict['reason']}"
 
         return sig
+
+    def _collect_watch(self, symbol, htf, dtf, ltf):
+        """Compute the prospective plan for a symbol (direction from 3-TF align,
+        then the matching machine) regardless of the macro gate, plus its learning
+        score. Appended to _watch_next for the /watch command + dashboard."""
+        try:
+            d = strategy_smc._direction(htf, dtf, ltf)
+            if d == "short":
+                sig = strategy_smc.evaluate_smc_machine(symbol, htf, dtf, ltf, self.regime)
+            elif d == "long":
+                sig = phoenix.evaluate_long(symbol, htf, dtf, ltf, self.regime)
+            else:
+                return
+            if not sig or not sig.get("plan"):
+                return
+            v = learning.evaluate(sig.get("features", {}))
+            p = sig["plan"]
+            self._watch_next.append({
+                "symbol": symbol, "direction": sig.get("direction"),
+                "state": sig.get("state"), "score": sig.get("score"),
+                "confidence": round(v.get("confidence", 0.0), 4),
+                "allowed": v.get("allowed", True),
+                "entry": p["entry"], "sl": p["sl"], "tp1": p["tp1"],
+                "tp2": p["tp2"], "rr": p["rr"],
+            })
+        except Exception as exc:
+            print(f"[engine] watch {symbol}: {exc}")
 
     async def _maybe_reconcile(self):
         """When live trading, advance/clean up real positions each scan (SL->BE

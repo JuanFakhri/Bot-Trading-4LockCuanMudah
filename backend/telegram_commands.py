@@ -20,6 +20,7 @@ HELP = (
     "/balance - mode &amp; saldo\n"
     "/pnl     - statistik menang/kalah\n"
     "/position- posisi terbuka\n"
+    "/watch   - koin dipantau + entry/TP/SL\n"
     "/diag    - kenapa belum ada sinyal\n"
     "/help    - bantuan ini"
 )
@@ -87,6 +88,27 @@ def _diag() -> str:
     )
 
 
+def _watch() -> str:
+    rows = [w for w in (engine.watch or [])
+            if w.get("allowed") is not False and (w.get("confidence") or 0) > 0.40]
+    rows.sort(key=lambda w: -(w.get("confidence") or 0))
+    if not rows:
+        return "👀 Belum ada koin selaras untuk dipantau saat ini."
+    _, _, long_open, short_open = _gates()
+    head = f"👀 <b>Koin Dipantau</b> ({len(rows)}) — skor belajar &gt;40%"
+    if not (long_open or short_open):
+        head += "\n⚠️ Gerbang makro <b>TERKUNCI</b> — daftar prospektif, bot belum entry."
+    lines = [head]
+    for w in rows[:15]:
+        conf = round((w.get("confidence") or 0) * 100)
+        lines.append(
+            f"\n<b>{w['symbol']}</b> {w['direction']} · 🧠 {conf}% · skor {w.get('score')}\n"
+            f"E {w['entry']} · <b>SL</b> {w['sl']} · TP1 {w['tp1']} · TP2 {w['tp2']} (RR {w['rr']})")
+    if len(rows) > 15:
+        lines.append(f"\n… dan {len(rows) - 15} koin lain.")
+    return "\n".join(lines)
+
+
 def _balance() -> str:
     if os.getenv("EXEC_ENABLED", "0") == "1":
         return "💰 Mode EKSEKUSI aktif. (Saldo bursa akan tampil saat terhubung.)"
@@ -104,6 +126,8 @@ async def _dispatch(cmd: str) -> str | None:
         return _pnl()
     if cmd == "/position":
         return _position()
+    if cmd in ("/watch", "/koin", "/coins"):
+        return _watch()
     if cmd == "/diag":
         return _diag()
     if cmd == "/balance":
