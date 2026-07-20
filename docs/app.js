@@ -162,6 +162,18 @@ loadNews();
 setInterval(loadNews, 10 * 60 * 1000);     // refresh feed tiap 10 menit
 setInterval(renderNewsAlert, 30 * 1000);   // update hitung mundur tiap 30 detik
 
+// Setup sheet: prospective per-coin plans (learning score >40%), used to fill the
+// WATCHING strip when the live scan is empty because a macro gate is locked.
+let setupSheet = null;
+async function loadSetupSheet() {
+  try {
+    const r = await fetch("data/setup_sheet.json", { cache: "no-store" });
+    if (r.ok) { setupSheet = await r.json(); if (lastSnap) renderSignals(lastSnap.signals || []); }
+  } catch (e) {}
+}
+loadSetupSheet();
+setInterval(loadSetupSheet, 5 * 60 * 1000);   // refresh sheet tiap 5 menit
+
 /* ============ TABS: Live / Backtest ============ */
 let lastBacktest = null;
 document.querySelectorAll(".tab").forEach(t => {
@@ -791,30 +803,47 @@ function renderSignals(list) {
   renderWatching(list || [], shown);
 }
 
-// WATCHING (heads-up): coins the bot is monitoring but that have NOT cleared
-// the recommendation bar yet — shown as a compact strip so you can see what's
-// closest to firing. ARMED ranks above WATCHING; within each, higher score /
-// confidence first. We exclude anything already shown as a full card above.
+// WATCHING (heads-up): coins the bot is monitoring but that have NOT cleared the
+// recommendation bar yet. Inclusion is gated by the LEARNING score (confidence
+// from the self-learning brain) > 40% — NOT the machine Setup Score. So the strip
+// lists what the brain rates highest, ranked by that learning score. We exclude
+// anything already shown as a full card above.
+const WATCH_MIN_CONF = 0.40;          // skor pembelajaran (belajar) > 40%
 function renderWatching(list, shown) {
   const box = $("watching");
   const el = $("watching-list");
   if (!box || !el) return;
   const shownSet = new Set(shown.map(s => s.symbol));
-  const cand = list
+  // 1) live, gate-passed candidates from the scan (real — bot can act on these)
+  let cand = list
     .filter(s => !shownSet.has(s.symbol))
     .filter(s => s.state === "ARMED" || s.state === "WATCHING")
-    // only genuine heads-up: not blocked by the brain, and actually has a score
-    .filter(s => s.allowed !== false && (s.score != null || s.state === "ARMED"))
-    .sort((a, b) => {
-      const rank = x => (x.state === "ARMED" ? 0 : 1);
-      return rank(a) - rank(b)
-        || (b.score || 0) - (a.score || 0)
-        || (b.confidence || 0) - (a.confidence || 0);
-    })
-    .slice(0, 12);
+    .filter(s => s.allowed !== false && (s.confidence || 0) > WATCH_MIN_CONF)
+    .sort((a, b) => (b.confidence || 0) - (a.confidence || 0)
+        || (a.state === "ARMED" ? -1 : 1));
+  // 2) fallback: when the live scan is empty (macro gate locked), show the
+  //    PROSPECTIVE setup-sheet rows (learning score >40%) with a warning.
+  let prospective = false;
+  if (cand.length === 0 && setupSheet && Array.isArray(setupSheet.rows)) {
+    cand = setupSheet.rows
+      .filter(s => !shownSet.has(s.symbol) && s.allowed !== false && (s.confidence || 0) > WATCH_MIN_CONF)
+      .sort((a, b) => (b.confidence || 0) - (a.confidence || 0));
+    prospective = cand.length > 0;
+  }
+  cand = cand.slice(0, 12);
   box.classList.toggle("hidden", cand.length === 0);
   if (!cand.length) { el.innerHTML = ""; return; }
-  el.innerHTML = cand.map(watchRowHTML).join("");
+  let warn = "";
+  if (prospective) {
+    const reg = setupSheet.regime || "NEUTRAL", cpi = setupSheet.cpi_bias || "NETRAL";
+    const which = [];
+    if (!setupSheet.short_gate_open) which.push(`SHORT (CPI ${cpi})`);
+    if (!setupSheet.long_gate_open) which.push(`LONG (regime ${reg})`);
+    warn = `<div class="watch-warn">⚠️ Gerbang makro <b>TERKUNCI</b>${
+      which.length ? " — " + which.join(" · ") : ""}. Daftar ini <b>prospektif</b>
+      (skor belajar &gt;40%) — bot <b>belum entry</b> sampai gerbang terbuka.</div>`;
+  }
+  el.innerHTML = warn + cand.map(watchRowHTML).join("");
 }
 
 function watchRowHTML(s) {
@@ -827,14 +856,26 @@ function watchRowHTML(s) {
   const checks = (s.checklist || []).concat(s.trigger || []);
   const miss = checks.find(c => !c.ok);
   const missTxt = miss ? miss.rule : "";
+  // levels: live signals carry them in .plan; setup-sheet rows carry them inline
+  const p = s.plan || s;
+  const lvls = (p && p.entry != null) ? `
+    <div class="wr-lvls">
+      <span>E ${fmt(p.entry)}</span>
+      <span class="lv-sl">SL ${fmt(p.sl)}</span>
+      <span class="lv-tp">TP1 ${fmt(p.tp1)}</span>
+      <span class="lv-tp">TP2 ${fmt(p.tp2)}</span>
+      ${p.rr != null ? `<span class="muted">RR ${p.rr}</span>` : ""}
+    </div>` : "";
   return `
   <div class="watch-row ${s.state.toLowerCase()}" data-symbol="${s.symbol}">
-    <span class="wr-sym">${s.symbol}</span>
-    <span class="badge ${dir}">${s.direction}</span>
-    <span class="badge state-${s.state.toLowerCase()}">${armed ? "⚡ " : ""}${s.state}</span>
-    ${s.score != null ? `<span class="wr-score" title="Skor Setup (entry ≥60)">Skor ${s.score}</span>` : ""}
-    <span class="wr-conf" title="Keyakinan (belajar)">${conf}%</span>
-    <span class="wr-near muted">${near}${missTxt ? ` · ${missTxt}` : ""}</span>
+    <div class="wr-top">
+      <span class="wr-sym">${s.symbol}</span>
+      <span class="badge ${dir}">${s.direction}</span>
+      <span class="badge state-${s.state.toLowerCase()}">${armed ? "⚡ " : ""}${s.state}</span>
+      <span class="wr-conf" title="Skor pembelajaran (belajar) — dasar daftar ini">🧠 ${conf}%</span>
+      ${s.score != null ? `<span class="wr-score muted" title="Skor Setup mesin (info)">mesin ${s.score}</span>` : ""}
+      <span class="wr-near muted">${near}${missTxt ? ` · ${missTxt}` : ""}</span>
+    </div>${lvls}
   </div>`;
 }
 
