@@ -1,0 +1,21 @@
+# NestSMC — layanan bot (notifikasi Telegram). Sesuaikan PATH jika bukan /root.
+#   sudo cp deploy/vps/nestsmc.service /etc/systemd/system/nestsmc.service
+#   (edit WorkingDirectory / paths bila repo bukan di /root/Bot-Trading-4LockCuanMudah)
+#   sudo systemctl daemon-reload && sudo systemctl enable --now nestsmc
+[Unit]
+Description=NestSMC trading bot (Telegram notifier)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/root/Bot-Trading-4LockCuanMudah
+EnvironmentFile=/root/Bot-Trading-4LockCuanMudah/deploy/vps/nestsmc.env
+ExecStart=/root/Bot-Trading-4LockCuanMudah/.venv/bin/python -m scripts.run_bot
+Restart=always
+RestartSec=10
+StandardOutput=append:/var/log/nestsmc.log
+StandardError=append:/var/log/nestsmc.log
+
+[Install]
+WantedBy=multi-user.target

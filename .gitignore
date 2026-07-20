@@ -16,3 +16,6 @@ deploy/.env
 
 # Windows launcher local secrets
 deploy/windows/nestsmc.env
+
+# VPS launcher local secrets
+deploy/vps/nestsmc.env
