@@ -18,20 +18,23 @@ FRONTEND_DIR = os.path.join(os.path.dirname(__file__), "..", "frontend")
 _clients: set[WebSocket] = set()
 _loop_task: asyncio.Task | None = None
 _broadcast_task: asyncio.Task | None = None
+_cmd_task: asyncio.Task | None = None
 
 
 @app.on_event("startup")
 async def _startup():
-    global _loop_task, _broadcast_task
+    global _loop_task, _broadcast_task, _cmd_task
     _loop_task = asyncio.create_task(run_loop())
     _broadcast_task = asyncio.create_task(_broadcaster())
     if telegram.enabled():
+        from . import telegram_commands
+        _cmd_task = asyncio.create_task(telegram_commands.poll_commands())
         await telegram.send("🤖 <b>NestSMC aktif</b> — memantau pasar & siap kirim sinyal.")
 
 
 @app.on_event("shutdown")
 async def _shutdown():
-    for t in (_loop_task, _broadcast_task):
+    for t in (_loop_task, _broadcast_task, _cmd_task):
         if t:
             t.cancel()
     await data_feed.close()

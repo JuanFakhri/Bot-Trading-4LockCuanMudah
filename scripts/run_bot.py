@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import asyncio
 
-from backend import config, data_feed, telegram
+from backend import config, data_feed, telegram, telegram_commands
 from backend.engine import run_loop
 
 
@@ -24,7 +24,8 @@ async def main():
     if telegram.enabled():
         await telegram.send("🤖 <b>NestSMC aktif</b> — memantau pasar &amp; siap kirim sinyal.")
     try:
-        await run_loop()
+        # scan loop + Telegram command listener run together
+        await asyncio.gather(run_loop(), telegram_commands.poll_commands())
     finally:
         await data_feed.close()
         await telegram.close()

@@ -29,6 +29,8 @@ class Engine:
         self.last_scan: str | None = None
         self.scanning = False
         self.error: str | None = None
+        self.paused = False    # /pause via Telegram: keep scanning + alerting,
+        #                        but do NOT open new positions.
         self.prices: dict[str, float] = {}   # last price per symbol (for user-trade tracking)
 
     # ------------------------------------------------------------------ scan
@@ -97,7 +99,9 @@ class Engine:
         # Decide whether to open a paper trade.
         sig["actionable"] = False
         sig["gate"] = ""
-        if sig["state"] == "ENTRY" and plan and plan["rr_ok"] and verdict["allowed"] \
+        if self.paused and sig["state"] == "ENTRY":
+            sig["gate"] = "Bot di-pause (tidak buka posisi baru)"
+        elif sig["state"] == "ENTRY" and plan and plan["rr_ok"] and verdict["allowed"] \
                 and sig["confidence"] >= config.CONFIDENCE_FLOOR:
             today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
             ok, why = self.guard.can_enter(symbol, today, datetime.now(timezone.utc).timestamp())
