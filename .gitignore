@@ -13,3 +13,6 @@ data/*.db-journal
 deploy/.env
 *.env
 !deploy/.env.example
+
+# Windows launcher local secrets
+deploy/windows/nestsmc.env
