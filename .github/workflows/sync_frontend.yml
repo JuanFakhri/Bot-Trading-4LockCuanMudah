@@ -1,0 +1,55 @@
+name: Sync frontend -> docs (GitHub Pages)
+
+# GitHub Pages serves docs/, but the app source lives in frontend/. This mirrors
+# frontend/{app.js,index.html,style.css} into docs/ on every change and bumps the
+# service-worker cache version so the PWA picks up the new shell. Prevents the
+# "edited frontend but the dashboard is stale" trap.
+on:
+  push:
+    branches: [main]
+    paths:
+      - frontend/app.js
+      - frontend/index.html
+      - frontend/style.css
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-frontend
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Mirror frontend -> docs
+        run: |
+          cp frontend/app.js       docs/app.js
+          cp frontend/index.html   docs/index.html
+          cp frontend/style.css    docs/style.css
+
+      - name: Bump service-worker cache version
+        run: |
+          ver=$(grep -oE 'nestsmc-v[0-9]+' docs/sw.js | grep -oE '[0-9]+' | head -1)
+          if [ -n "$ver" ]; then
+            next=$((ver + 1))
+            sed -i "s/nestsmc-v${ver}/nestsmc-v${next}/" docs/sw.js
+            echo "cache: v${ver} -> v${next}"
+          fi
+
+      - name: Commit if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet -- docs/; then
+            echo "docs already in sync — nothing to commit"
+          else
+            git add docs/app.js docs/index.html docs/style.css docs/sw.js
+            git commit -m "chore: sync frontend -> docs (auto) [skip ci]"
+            git push
+          fi
