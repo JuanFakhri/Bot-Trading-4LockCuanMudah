@@ -1,7 +1,7 @@
 """Telegram COMMAND handler — makes the bot reply to /status, /pnl, etc.
 
 Long-polls getUpdates and answers commands sent from the configured owner chat
-(TELEGRAM_CHAT_ID). Read-only over the bot state except /pause, /resume, /stop.
+(TELEGRAM_CHAT_ID). Info-only (bot stays running 24/7 — no pause/stop commands).
 Runs alongside the scan loop (run_bot / main). No-op unless telegram is enabled.
 
 Security: only the owner chat is obeyed; messages from anyone else are ignored.
@@ -21,9 +21,6 @@ HELP = (
     "/pnl     - statistik menang/kalah\n"
     "/position- posisi terbuka\n"
     "/diag    - kenapa belum ada sinyal\n"
-    "/pause   - stop buka posisi baru\n"
-    "/resume  - lanjutkan\n"
-    "/stop    - hentikan bot\n"
     "/help    - bantuan ini"
 )
 
@@ -49,7 +46,7 @@ def _status() -> str:
         f"Gerbang LONG: {'🔓 buka' if long_open else '🔒 kunci'} · "
         f"SHORT: {'🔓 buka' if short_open else '🔒 kunci'}\n"
         f"Sinyal aktif: <b>{n}</b> (ENTRY: {entries}) · Posisi terbuka: <b>{st['open']}</b>\n"
-        f"Status: {'⏸ DI-PAUSE' if engine.paused else '▶️ jalan'}\n"
+        f"Status: ▶️ jalan (realtime)\n"
         f"Scan terakhir (UTC): {scan}\n"
         f"Koin dipantau: {len(config.WATCHLIST)}"
     )
@@ -111,14 +108,6 @@ async def _dispatch(cmd: str) -> str | None:
         return _diag()
     if cmd == "/balance":
         return _balance()
-    if cmd == "/pause":
-        engine.paused = True
-        return "⏸ Bot <b>di-pause</b> — tidak akan buka posisi baru (tetap memantau)."
-    if cmd == "/resume":
-        engine.paused = False
-        return "▶️ Bot <b>dilanjutkan</b> — siap buka posisi lagi."
-    if cmd == "/stop":
-        return "__STOP__"
     return None
 
 
@@ -146,11 +135,7 @@ async def poll_commands():
                 if chat != str(telegram.CHAT_ID):     # only obey the owner
                     continue
                 reply = await _dispatch(text)
-                if reply == "__STOP__":
-                    await telegram.send("🛑 Bot dihentikan. (Proses keluar.)")
-                    await asyncio.sleep(0.5)
-                    os._exit(0)
-                elif reply:
+                if reply:
                     await telegram.send(reply)
         except Exception as exc:
             print(f"[telegram-cmd] poll error: {exc}")
