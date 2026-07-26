@@ -72,9 +72,6 @@ def backtest_symbol_smc(symbol, htf, dtf, ltf, usdtd_daily, btcd_dir_daily,
     short_align = str(params.get("short_align", "triple"))
     short_vol_mult = float(params.get("short_vol_mult", config.SMC_VOL_MULT))
     short_adx_min = float(params.get("short_adx_min", 25))
-    # research knobs: drop a market-filter score component to A/B its value.
-    drop_btcd = bool(params.get("drop_btcd", False))     # remove "BTC.D + arah BTC" (5 pts)
-    drop_usdtd = bool(params.get("drop_usdtd", False))   # remove USDT.D component (5 pts)
 
     if ltf is None or len(ltf) < 250 or len(htf) < config.EMA_SLOW + 30:
         return []
@@ -247,8 +244,7 @@ def backtest_symbol_smc(symbol, htf, dtf, ltf, usdtd_daily, btcd_dir_daily,
         score = (W["ema"] * ema_ok + W["rsi"] * rsi_ok + W["adx"] * adx_ok
                  + W["fib"] * in_fib + W["sweep"] * sweep + W["choch"] * choch
                  + W["bos"] * bos + W["fvg"] * fvg + W["ob"] * ob
-                 + W["btcd"] * (btcd_ok and not drop_btcd)
-                 + W["usdtd"] * (usdtd_ok and not drop_usdtd))
+                 + W["btcd"] * btcd_ok + W["usdtd"] * usdtd_ok)
         if not vol_ok or not atr_exp:   # volume spike + volatility expansion (hard)
             continue
         # strengthen long: require a genuine sweep-reclaim + structure break
