@@ -31,52 +31,6 @@ def _align(series: pd.Series, idx: pd.Index) -> np.ndarray:
     return series.reindex(idx, method="ffill").to_numpy()
 
 
-def _daily_value_area(ltf, bins: int = 24, va_pct: float = 0.70):
-    """Volume-profile Value Area (port of the Leviathan idea) per DAILY session,
-    from 1H bars. Returns (vah_arr, val_arr) aligned to ltf, holding the PRIOR
-    day's VAH/VAL for each bar (nan until the first full prior day)."""
-    idx = ltf.index
-    h = ltf["high"].to_numpy(); l = ltf["low"].to_numpy()
-    c = ltf["close"].to_numpy(); v = ltf["volume"].to_numpy()
-    day_key = (idx.year.astype(np.int64) * 10000 + idx.month * 100 + idx.day).to_numpy()
-    n = len(idx)
-    groups: dict[int, list] = {}
-    for k in range(n):
-        groups.setdefault(int(day_key[k]), []).append(k)
-    days = sorted(groups)
-    day_va: dict[int, tuple] = {}
-    for day in days:
-        ks = groups[day]
-        lo = min(l[k] for k in ks); hi = max(h[k] for k in ks)
-        if hi <= lo:
-            day_va[day] = (hi, lo); continue
-        vol = np.zeros(bins)
-        span = hi - lo
-        for k in ks:
-            bi = int((c[k] - lo) / span * bins)
-            bi = 0 if bi < 0 else bins - 1 if bi >= bins else bi
-            vol[bi] += v[k]
-        edges = np.linspace(lo, hi, bins + 1)
-        poc = int(vol.argmax())
-        target = vol.sum() * va_pct
-        loi = hii = poc; acc = vol[poc]
-        while acc < target and (loi > 0 or hii < bins - 1):
-            up = vol[hii + 1] if hii < bins - 1 else -1.0
-            dn = vol[loi - 1] if loi > 0 else -1.0
-            if up >= dn:
-                hii += 1; acc += vol[hii]
-            else:
-                loi -= 1; acc += vol[loi]
-        day_va[day] = (edges[hii + 1], edges[loi])   # (VAH, VAL)
-    prev = {days[i]: days[i - 1] for i in range(1, len(days))}
-    vah = np.full(n, np.nan); val = np.full(n, np.nan)
-    for k in range(n):
-        p = prev.get(int(day_key[k]))
-        if p is not None:
-            vah[k], val[k] = day_va[p]
-    return vah, val
-
-
 def backtest_symbol_smc(symbol, htf, dtf, ltf, usdtd_daily, btcd_dir_daily,
                         params=None) -> list[dict]:
     params = params or {}
@@ -118,14 +72,6 @@ def backtest_symbol_smc(symbol, htf, dtf, ltf, usdtd_daily, btcd_dir_daily,
     short_align = str(params.get("short_align", "triple"))
     short_vol_mult = float(params.get("short_vol_mult", config.SMC_VOL_MULT))
     short_adx_min = float(params.get("short_adx_min", 25))
-    # ---- Value-Area confluence (Volume Profile, port of Leviathan) + skip-Friday
-    # (research knobs, all default OFF so the live backtest is byte-identical). VA
-    # of the PRIOR session (daily) is computed from 1H bars; a SHORT gets confluence
-    # when entry sits near the prior VAH, a LONG near the prior VAL.
-    va_bonus = float(params.get("va_bonus", 0.0))     # add score points when confluent
-    va_hard = bool(params.get("va_hard", False))       # require confluence to fire
-    va_tol_atr = float(params.get("va_tol_atr", 0.5))  # "near" = within N*ATR of VAH/VAL
-    skip_friday = bool(params.get("skip_friday", False))
 
     if ltf is None or len(ltf) < 250 or len(htf) < config.EMA_SLOW + 30:
         return []
@@ -147,12 +93,6 @@ def backtest_symbol_smc(symbol, htf, dtf, ltf, usdtd_daily, btcd_dir_daily,
     ts = ltf.index
     n = len(ltf)
     pl_ = config.PIVOT_LEN
-
-    # value-area arrays (only computed when a VA knob is on; else zeros)
-    if va_bonus or va_hard:
-        va_vah, va_val = _daily_value_area(ltf)
-    else:
-        va_vah = va_val = np.full(n, np.nan)
 
     # ---- higher-TF trend (aligned to 1H, last closed bar) ----
     d_bull = _align((indicators.ema(dtf["close"], config.EMA_FAST)
@@ -300,23 +240,11 @@ def backtest_symbol_smc(symbol, htf, dtf, ltf, usdtd_daily, btcd_dir_daily,
         _adx_min = short_adx_min if machine == "short" else 25
         adx_ok = adx_1[i] > _adx_min                            # #3
 
-        # ---- Value-Area confluence (research knob) + skip-Friday (research knob) ----
-        if skip_friday and ts[i].weekday() == 4:       # 4 = Friday (UTC)
-            continue
-        va_ok = False
-        _va = va_vah[i] if machine == "short" else va_val[i]
-        if not np.isnan(_va):
-            va_ok = abs(c[i] - _va) <= va_tol_atr * atr_1[i]
-        if va_hard and not va_ok:
-            continue
-
         # ---- Setup Score (#15) ----
         score = (W["ema"] * ema_ok + W["rsi"] * rsi_ok + W["adx"] * adx_ok
                  + W["fib"] * in_fib + W["sweep"] * sweep + W["choch"] * choch
                  + W["bos"] * bos + W["fvg"] * fvg + W["ob"] * ob
                  + W["btcd"] * btcd_ok + W["usdtd"] * usdtd_ok)
-        if va_bonus:
-            score += va_bonus * va_ok
         if not vol_ok or not atr_exp:   # volume spike + volatility expansion (hard)
             continue
         # strengthen long: require a genuine sweep-reclaim + structure break
