@@ -244,7 +244,7 @@ def backtest_symbol_smc(symbol, htf, dtf, ltf, usdtd_daily, btcd_dir_daily,
         score = (W["ema"] * ema_ok + W["rsi"] * rsi_ok + W["adx"] * adx_ok
                  + W["fib"] * in_fib + W["sweep"] * sweep + W["choch"] * choch
                  + W["bos"] * bos + W["fvg"] * fvg + W["ob"] * ob
-                 + W["btcd"] * btcd_ok + W["usdtd"] * usdtd_ok)
+                 + W["usdtd"] * usdtd_ok)   # BTC.D dibuang (ablation-validated)
         if not vol_ok or not atr_exp:   # volume spike + volatility expansion (hard)
             continue
         # strengthen long: require a genuine sweep-reclaim + structure break

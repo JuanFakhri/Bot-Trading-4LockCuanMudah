@@ -165,7 +165,7 @@ def evaluate_smc_machine(symbol: str, htf: pd.DataFrame, dtf: pd.DataFrame,
     score = (W["ema"] * ema_ok + W["rsi"] * rsi_ok + W["adx"] * adx_ok
              + W["fib"] * in_fib + W["sweep"] * sweep + W["choch"] * choch
              + W["bos"] * bos + W["fvg"] * fvg + W["ob"] * ob
-             + W["btcd"] * btcd_ok + W["usdtd"] * usdtd_ok)
+             + W["usdtd"] * usdtd_ok)   # BTC.D dibuang: ablation win 59.2->60.6%, OOS 66->70%, PF 1.53->1.65, DD ~separuh
     score = int(score)
     score_th = float(config.SMC_SHORT_SCORE_TH)   # short machine gate (sweep: 50)
 
