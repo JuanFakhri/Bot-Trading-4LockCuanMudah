@@ -83,6 +83,12 @@ def backtest_symbol_smc(symbol, htf, dtf, ltf, usdtd_daily, btcd_dir_daily,
     # (choch) -> FVG retrace — inside the premium/discount array and kill zone.
     # This measures ICT's OWN win-rate as a standalone strategy.
     ict_pure = bool(params.get("ict_pure", False))
+    # ICT "SMT divergence" filter (research only). Compare this coin to a
+    # correlated reference (BTC, or ETH for BTC itself): when the two DISAGREE on
+    # making a fresh higher-high (bearish SMT) / lower-low (bullish SMT), smart
+    # money is likely distributing/accumulating. Confirms SHORTs on bearish SMT
+    # and LONGs on bullish SMT. Needs smt_ref_high/low series; default OFF.
+    smt_filter = bool(params.get("smt_filter", False))
 
     if ltf is None or len(ltf) < 250 or len(htf) < config.EMA_SLOW + 30:
         return []
@@ -134,6 +140,28 @@ def backtest_symbol_smc(symbol, htf, dtf, ltf, usdtd_daily, btcd_dir_daily,
         in_session = np.isin(hours, np.asarray(list(kz_hours), dtype=int))
     else:
         in_session = ((hours >= 7) & (hours < 22))
+
+    # ---- SMT divergence vs a correlated reference (research filter) ----
+    smt_bear = smt_bull = None
+    if smt_filter and params.get("smt_ref_high") is not None:
+        _W = 10                                     # swing window for HH/LL check
+        rh = _align(params["smt_ref_high"], ts)
+        rl = _align(params["smt_ref_low"], ts)
+
+        def _hh(arr):                               # making a fresh higher-high?
+            s = pd.Series(arr).rolling(_W, min_periods=_W).max()
+            return (s > s.shift(_W)).to_numpy()
+
+        def _ll(arr):                               # making a fresh lower-low?
+            s = pd.Series(arr).rolling(_W, min_periods=_W).min()
+            return (s < s.shift(_W)).to_numpy()
+
+        # bearish SMT = coin & reference DISAGREE on the higher-high (a top tell);
+        # bullish SMT = they disagree on the lower-low (a bottom tell).
+        smt_bear = _hh(h) != _hh(rh)
+        smt_bull = _ll(l) != _ll(rl)
+    else:
+        smt_filter = False
 
     # ---- running swings for SMC ----
     swH = swL = np.nan
@@ -329,6 +357,13 @@ def backtest_symbol_smc(symbol, htf, dtf, ltf, usdtd_daily, btcd_dir_daily,
                 continue
             th = long_score_th if machine == "long" else score_th   # asymmetric long gate
             if score < th:
+                continue
+
+        # ---- SMT divergence confirmation (research filter) ----
+        if smt_filter:
+            if machine == "short" and not smt_bear[i]:
+                continue
+            if machine == "long" and not smt_bull[i]:
                 continue
 
         # ---- build trade: SL beyond swing +/-1 ATR (cap 6%), risk 1% ----
