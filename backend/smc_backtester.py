@@ -141,6 +141,14 @@ def backtest_symbol_smc(symbol, htf, dtf, ltf, usdtd_daily, btcd_dir_daily,
     # last FVG bounds (bullish gap: low[i] > high[i-2]; bearish: high[i] < low[i-2])
     fvg_bull_lo = fvg_bull_hi = np.nan
     fvg_bear_lo = fvg_bear_hi = np.nan
+    # ICT sequential-setup state (pure-ICT research mode only). ICT is a SEQUENCE
+    # across bars — liquidity sweep, THEN a market-structure-shift, THEN a retrace
+    # into the resulting FVG — so we arm each stage and fire on the retrace.
+    ICT_WIN = 10                       # bars allowed between each ICT stage
+    s_sweep_bar = s_mss_bar = -1       # short seq: last sweep / MSS bar index
+    s_fvg_lo = s_fvg_hi = np.nan       # short seq: bear-FVG entry zone
+    l_sweep_bar = l_mss_bar = -1       # long seq
+    l_fvg_lo = l_fvg_hi = np.nan
 
     trades: list[dict] = []
     pos = None
@@ -164,6 +172,29 @@ def backtest_symbol_smc(symbol, htf, dtf, ltf, usdtd_daily, btcd_dir_daily,
                 fvg_bull_lo, fvg_bull_hi = h[i - 2], l[i]
             if h[i] < l[i - 2]:
                 fvg_bear_lo, fvg_bear_hi = h[i], l[i - 2]
+
+        # ---- ICT sequential setup tracker (every bar; pure-ICT mode only) ----
+        if ict_pure:
+            # SHORT sequence: sweep of a swing-high -> MSS down -> bear FVG.
+            sw_s = (not np.isnan(highest[i])) and h[i] > highest[i] and c[i] < highest[i]
+            mss_s = (not np.isnan(swL)) and c[i] < swL and c[i - 1] >= swL
+            if sw_s:
+                s_sweep_bar = i
+            if mss_s and 0 <= i - s_sweep_bar <= ICT_WIN:
+                s_mss_bar = i
+                s_fvg_lo, s_fvg_hi = fvg_bear_lo, fvg_bear_hi
+            elif s_mss_bar >= 0 and np.isnan(s_fvg_hi) and not np.isnan(fvg_bear_lo):
+                s_fvg_lo, s_fvg_hi = fvg_bear_lo, fvg_bear_hi   # FVG formed just after MSS
+            # LONG sequence: sweep of a swing-low -> MSS up -> bull FVG.
+            sw_l = (not np.isnan(lowest[i])) and l[i] < lowest[i] and c[i] > lowest[i]
+            mss_l = (not np.isnan(swH)) and c[i] > swH and c[i - 1] <= swH
+            if sw_l:
+                l_sweep_bar = i
+            if mss_l and 0 <= i - l_sweep_bar <= ICT_WIN:
+                l_mss_bar = i
+                l_fvg_lo, l_fvg_hi = fvg_bull_lo, fvg_bull_hi
+            elif l_mss_bar >= 0 and np.isnan(l_fvg_hi) and not np.isnan(fvg_bull_lo):
+                l_fvg_lo, l_fvg_hi = fvg_bull_lo, fvg_bull_hi
 
         # ---- manage open position ----
         if pos is not None:
@@ -271,10 +302,25 @@ def backtest_symbol_smc(symbol, htf, dtf, ltf, usdtd_daily, btcd_dir_daily,
                  + W["bos"] * bos + W["fvg"] * fvg + W["ob"] * ob
                  + W["usdtd"] * usdtd_ok)   # BTC.D dibuang (ablation-validated)
         if ict_pure:
-            # Canonical ICT: sweep of liquidity -> MSS (choch) -> FVG retrace.
-            # No score, no EMA/RSI/ADX/vol/ATR confluence — ICT's own edge only.
-            if not (sweep and choch and fvg):
+            # Canonical ICT fires on the RETRACE into the post-MSS FVG, within the
+            # window after the sweep->MSS sequence. No score / EMA / RSI / ADX / vol
+            # confluence — ICT's own edge only. Consume the setup once entered.
+            if machine == "short":
+                trig = (s_mss_bar >= 0 and 0 <= i - s_mss_bar <= ICT_WIN
+                        and not np.isnan(s_fvg_hi)
+                        and h[i] >= s_fvg_lo and c[i] <= s_fvg_hi)
+            else:
+                trig = (l_mss_bar >= 0 and 0 <= i - l_mss_bar <= ICT_WIN
+                        and not np.isnan(l_fvg_hi)
+                        and l[i] <= l_fvg_hi and c[i] >= l_fvg_lo)
+            if not trig:
                 continue
+            if machine == "short":
+                s_mss_bar = s_sweep_bar = -1
+                s_fvg_lo = s_fvg_hi = np.nan
+            else:
+                l_mss_bar = l_sweep_bar = -1
+                l_fvg_lo = l_fvg_hi = np.nan
         else:
             if not vol_ok or not atr_exp:   # volume spike + volatility expansion (hard)
                 continue
