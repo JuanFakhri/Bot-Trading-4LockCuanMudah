@@ -72,6 +72,11 @@ def backtest_symbol_smc(symbol, htf, dtf, ltf, usdtd_daily, btcd_dir_daily,
     short_align = str(params.get("short_align", "triple"))
     short_vol_mult = float(params.get("short_vol_mult", config.SMC_VOL_MULT))
     short_adx_min = float(params.get("short_adx_min", 25))
+    # ICT "Kill Zones" time filter (research only). Default None = keep the live
+    # 07-22 UTC session window. When a list of UTC hours is passed, ONLY those
+    # hours are tradeable — used to A/B test whether restricting entries to the
+    # London/NY kill zones (high-liquidity windows) beats the broad session.
+    kz_hours = params.get("kz_hours", None)
 
     if ltf is None or len(ltf) < 250 or len(htf) < config.EMA_SLOW + 30:
         return []
@@ -119,7 +124,10 @@ def backtest_symbol_smc(symbol, htf, dtf, ltf, usdtd_daily, btcd_dir_daily,
 
     # session (UTC hours): London ~07-16, New York ~13-22
     hours = ts.hour.to_numpy()
-    in_session = ((hours >= 7) & (hours < 22))
+    if kz_hours is not None:
+        in_session = np.isin(hours, np.asarray(list(kz_hours), dtype=int))
+    else:
+        in_session = ((hours >= 7) & (hours < 22))
 
     # ---- running swings for SMC ----
     swH = swL = np.nan
