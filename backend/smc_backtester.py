@@ -77,6 +77,12 @@ def backtest_symbol_smc(symbol, htf, dtf, ltf, usdtd_daily, btcd_dir_daily,
     # hours are tradeable — used to A/B test whether restricting entries to the
     # London/NY kill zones (high-liquidity windows) beats the broad session.
     kz_hours = params.get("kz_hours", None)
+    # PURE ICT model (research only): ignore our composite Setup Score and the
+    # non-ICT confluences (EMA/RSI/ADX/fib/USDT.D/vol/ATR). Take the trade ONLY
+    # on the canonical ICT sequence — liquidity SWEEP -> Market-Structure-Shift
+    # (choch) -> FVG retrace — inside the premium/discount array and kill zone.
+    # This measures ICT's OWN win-rate as a standalone strategy.
+    ict_pure = bool(params.get("ict_pure", False))
 
     if ltf is None or len(ltf) < 250 or len(htf) < config.EMA_SLOW + 30:
         return []
@@ -180,7 +186,18 @@ def backtest_symbol_smc(symbol, htf, dtf, ltf, usdtd_daily, btcd_dir_daily,
             short_ok = h4_bull[i] == 0 and h1_bull[i] == 0
         else:                                # "triple" — live behavior
             short_ok = d_bull[i] == 0 and h4_bull[i] == 0 and h1_bull[i] == 0
-        machine = "long" if long_ok else "short" if short_ok else None
+        if ict_pure:
+            # ICT direction comes from the setup, not our trend-alignment regime:
+            # evaluate whichever side this run allows (run short-only & long-only
+            # separately) so the ICT sweep->MSS->FVG sequence decides the trade.
+            if allow_short and not allow_long:
+                machine = "short"
+            elif allow_long and not allow_short:
+                machine = "long"
+            else:
+                machine = "long" if long_ok else "short" if short_ok else None
+        else:
+            machine = "long" if long_ok else "short" if short_ok else None
         if machine is None:
             continue
         if (machine == "long" and not allow_long) or (machine == "short" and not allow_short):
@@ -253,14 +270,20 @@ def backtest_symbol_smc(symbol, htf, dtf, ltf, usdtd_daily, btcd_dir_daily,
                  + W["fib"] * in_fib + W["sweep"] * sweep + W["choch"] * choch
                  + W["bos"] * bos + W["fvg"] * fvg + W["ob"] * ob
                  + W["usdtd"] * usdtd_ok)   # BTC.D dibuang (ablation-validated)
-        if not vol_ok or not atr_exp:   # volume spike + volatility expansion (hard)
-            continue
-        # strengthen long: require a genuine sweep-reclaim + structure break
-        if machine == "long" and long_reversal_hard and not (sweep and (choch or bos)):
-            continue
-        th = long_score_th if machine == "long" else score_th   # asymmetric long gate
-        if score < th:
-            continue
+        if ict_pure:
+            # Canonical ICT: sweep of liquidity -> MSS (choch) -> FVG retrace.
+            # No score, no EMA/RSI/ADX/vol/ATR confluence — ICT's own edge only.
+            if not (sweep and choch and fvg):
+                continue
+        else:
+            if not vol_ok or not atr_exp:   # volume spike + volatility expansion (hard)
+                continue
+            # strengthen long: require a genuine sweep-reclaim + structure break
+            if machine == "long" and long_reversal_hard and not (sweep and (choch or bos)):
+                continue
+            th = long_score_th if machine == "long" else score_th   # asymmetric long gate
+            if score < th:
+                continue
 
         # ---- build trade: SL beyond swing +/-1 ATR (cap 6%), risk 1% ----
         entry = c[i]
