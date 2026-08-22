@@ -14,12 +14,12 @@
 "confidence": 0.611,
 "features": "{\"machine\": \"long\", \"regime\": \"BULL\", \"fib_bucket\": \"breakout\", \"rsi_htf_bucket\": \"hi\", \"rsi_ltf_bucket\": \"na\", \"dow\": 5, \"usdtd_pos_bucket\": \"na\", \"score_bucket\": \"85+\", \"ad_rising\": true, \"sar_confirm\": null, \"engine\": \"breakout\"}",
 "plan": "{\"entry\": 8.65, \"sl\": 8.15900148, \"tp1\": 9.14099852, \"tp2\": 9.63199704, \"breakeven\": 8.662975, \"risk_per_unit\": 0.49099852, \"rr\": 2.0, \"rr_ok\": true, \"tp_source\": \"phoenix\", \"position_size\": 30.54999, \"risk_pct\": 0.015, \"sl_pct\": 0.0568}",
-"status": "OPEN",
+"status": "RESOLVED",
 "tp1_hit": 0,
-"outcome": null,
-"r_multiple": null,
-"exit_price": null,
-"resolved_ts": null
+"outcome": "LOSS",
+"r_multiple": -1.0,
+"exit_price": 8.15900148,
+"resolved_ts": "2026-08-22T05:16:34.274760+00:00"
 },
 {
 "id": 2,
@@ -56,12 +56,12 @@
 "confidence": 0.611,
 "features": "{\"machine\": \"long\", \"regime\": \"BULL\", \"fib_bucket\": \"breakout\", \"rsi_htf_bucket\": \"hi\", \"rsi_ltf_bucket\": \"na\", \"dow\": 5, \"usdtd_pos_bucket\": \"na\", \"score_bucket\": \"85+\", \"ad_rising\": true, \"sar_confirm\": null, \"engine\": \"breakout\"}",
 "plan": "{\"entry\": 1.075, \"sl\": 1.04576994, \"tp1\": 1.10423006, \"tp2\": 1.13346011, \"breakeven\": 1.0766125, \"risk_per_unit\": 0.02923006, \"rr\": 2.0, \"rr_ok\": true, \"tp_source\": \"phoenix\", \"position_size\": 513.170415, \"risk_pct\": 0.015, \"sl_pct\": 0.0272}",
-"status": "TP1",
+"status": "RESOLVED",
 "tp1_hit": 1,
-"outcome": null,
-"r_multiple": null,
-"exit_price": null,
-"resolved_ts": null
+"outcome": "WIN",
+"r_multiple": 0.528,
+"exit_price": 1.0766125,
+"resolved_ts": "2026-08-22T05:16:34.274760+00:00"
 },
 {
 "id": 4,
@@ -119,12 +119,12 @@
 "confidence": 0.611,
 "features": "{\"machine\": \"long\", \"regime\": \"BULL\", \"fib_bucket\": \"breakout\", \"rsi_htf_bucket\": \"hi\", \"rsi_ltf_bucket\": \"na\", \"dow\": 5, \"usdtd_pos_bucket\": \"na\", \"score_bucket\": \"85+\", \"ad_rising\": true, \"sar_confirm\": null, \"engine\": \"breakout\"}",
 "plan": "{\"entry\": 0.1449, \"sl\": 0.13425528, \"tp1\": 0.15554472, \"tp2\": 0.16618944, \"breakeven\": 0.14511735, \"risk_per_unit\": 0.01064472, \"rr\": 2.0, \"rr_ok\": true, \"tp_source\": \"phoenix\", \"position_size\": 1409.149063, \"risk_pct\": 0.015, \"sl_pct\": 0.0735}",
-"status": "TP1",
+"status": "RESOLVED",
 "tp1_hit": 1,
-"outcome": null,
-"r_multiple": null,
-"exit_price": null,
-"resolved_ts": null
+"outcome": "WIN",
+"r_multiple": 0.51,
+"exit_price": 0.14511735,
+"resolved_ts": "2026-08-22T05:16:34.274760+00:00"
 },
 {
 "id": 7,
@@ -781,10 +781,10 @@
 },
 {
 "signature": "L|fib=breakout|ad=True|dow=5",
-"wins": 10,
-"losses": 6,
-"sum_r": 2.2349999999999994,
-"updated_ts": "2026-08-16T03:55:46.574102+00:00"
+"wins": 12,
+"losses": 7,
+"sum_r": 2.272792192948221,
+"updated_ts": "2026-08-22T05:16:35.118595+00:00"
 },
 {
 "signature": "long|reg=BULL|fib=breakout|rH=na|rL=na|ud=na|ad=True|sar=None|dow=5",
@@ -932,6 +932,13 @@
 "losses": 1,
 "sum_r": 1.525,
 "updated_ts": "2026-08-16T03:55:47.628547+00:00"
+},
+{
+"signature": "long|reg=BULL|fib=breakout|rH=hi|rL=na|ud=na|ad=True|sar=None|dow=5",
+"wins": 2,
+"losses": 1,
+"sum_r": 0.037792192948221226,
+"updated_ts": "2026-08-22T05:16:35.118595+00:00"
 }
 ],
 "lessons": [
