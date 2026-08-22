@@ -1238,6 +1238,27 @@
 "r_multiple": null,
 "exit_price": null,
 "resolved_ts": null
+},
+{
+"id": 60,
+"symbol": "MANAUSDT",
+"direction": "LONG",
+"machine": "long",
+"created_ts": "2026-08-22T20:09:26.311453+00:00",
+"entry": 0.076,
+"sl": 0.07037492,
+"tp1": 0.08162508,
+"tp2": 0.08725016,
+"rr": 2.0,
+"confidence": 0.62,
+"features": "{\"machine\": \"long\", \"regime\": \"BULL\", \"fib_bucket\": \"golden\", \"rsi_htf_bucket\": \"hi\", \"rsi_ltf_bucket\": \"na\", \"dow\": 5, \"usdtd_pos_bucket\": \"na\", \"score_bucket\": \"70-85\", \"ad_rising\": true, \"sar_confirm\": null, \"engine\": \"fib\"}",
+"plan": "{\"entry\": 0.076, \"sl\": 0.07037492, \"tp1\": 0.08162508, \"tp2\": 0.08725016, \"breakeven\": 0.076114, \"risk_per_unit\": 0.00562508, \"rr\": 2.0, \"rr_ok\": true, \"tp_source\": \"phoenix\", \"position_size\": 2666.629377, \"risk_pct\": 0.015, \"sl_pct\": 0.074}",
+"status": "OPEN",
+"tp1_hit": 0,
+"outcome": null,
+"r_multiple": null,
+"exit_price": null,
+"resolved_ts": null
 }
 ],
 "pattern_stats": [
