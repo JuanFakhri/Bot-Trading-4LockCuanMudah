@@ -524,6 +524,27 @@
 "r_multiple": null,
 "exit_price": null,
 "resolved_ts": null
+},
+{
+"id": 26,
+"symbol": "MINAUSDT",
+"direction": "LONG",
+"machine": "long",
+"created_ts": "2026-08-22T07:59:54.965381+00:00",
+"entry": 0.0607,
+"sl": 0.05632686,
+"tp1": 0.06507314,
+"tp2": 0.06944628,
+"rr": 2.0,
+"confidence": 0.619,
+"features": "{\"machine\": \"long\", \"regime\": \"BULL\", \"fib_bucket\": \"breakout\", \"rsi_htf_bucket\": \"hi\", \"rsi_ltf_bucket\": \"na\", \"dow\": 5, \"usdtd_pos_bucket\": \"na\", \"score_bucket\": \"85+\", \"ad_rising\": true, \"sar_confirm\": null, \"engine\": \"breakout\"}",
+"plan": "{\"entry\": 0.0607, \"sl\": 0.05632686, \"tp1\": 0.06507314, \"tp2\": 0.06944628, \"breakeven\": 0.06079105, \"risk_per_unit\": 0.00437314, \"rr\": 2.0, \"rr_ok\": true, \"tp_source\": \"phoenix\", \"position_size\": 3430.03107, \"risk_pct\": 0.015, \"sl_pct\": 0.072}",
+"status": "OPEN",
+"tp1_hit": 0,
+"outcome": null,
+"r_multiple": null,
+"exit_price": null,
+"resolved_ts": null
 }
 ],
 "pattern_stats": [
