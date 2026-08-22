@@ -539,6 +539,27 @@
 "confidence": 0.619,
 "features": "{\"machine\": \"long\", \"regime\": \"BULL\", \"fib_bucket\": \"breakout\", \"rsi_htf_bucket\": \"hi\", \"rsi_ltf_bucket\": \"na\", \"dow\": 5, \"usdtd_pos_bucket\": \"na\", \"score_bucket\": \"85+\", \"ad_rising\": true, \"sar_confirm\": null, \"engine\": \"breakout\"}",
 "plan": "{\"entry\": 0.0607, \"sl\": 0.05632686, \"tp1\": 0.06507314, \"tp2\": 0.06944628, \"breakeven\": 0.06079105, \"risk_per_unit\": 0.00437314, \"rr\": 2.0, \"rr_ok\": true, \"tp_source\": \"phoenix\", \"position_size\": 3430.03107, \"risk_pct\": 0.015, \"sl_pct\": 0.072}",
+"status": "RESOLVED",
+"tp1_hit": 0,
+"outcome": "LOSS",
+"r_multiple": -1.0,
+"exit_price": 0.05632686,
+"resolved_ts": "2026-08-22T08:54:23.649718+00:00"
+},
+{
+"id": 27,
+"symbol": "CRVUSDT",
+"direction": "LONG",
+"machine": "long",
+"created_ts": "2026-08-22T08:54:41.718087+00:00",
+"entry": 0.3251,
+"sl": 0.25284052,
+"tp1": 0.39735948,
+"tp2": 0.46961896,
+"rr": 2.0,
+"confidence": 0.62,
+"features": "{\"machine\": \"long\", \"regime\": \"BULL\", \"fib_bucket\": \"golden\", \"rsi_htf_bucket\": \"hi\", \"rsi_ltf_bucket\": \"na\", \"dow\": 5, \"usdtd_pos_bucket\": \"na\", \"score_bucket\": \"70-85\", \"ad_rising\": true, \"sar_confirm\": null, \"engine\": \"fib\"}",
+"plan": "{\"entry\": 0.3251, \"sl\": 0.25284052, \"tp1\": 0.39735948, \"tp2\": 0.46961896, \"breakeven\": 0.32558765, \"risk_per_unit\": 0.07225948, \"rr\": 2.0, \"rr_ok\": true, \"tp_source\": \"phoenix\", \"position_size\": 207.585221, \"risk_pct\": 0.015, \"sl_pct\": 0.2223}",
 "status": "OPEN",
 "tp1_hit": 0,
 "outcome": null,
@@ -887,9 +908,9 @@
 {
 "signature": "L|fib=breakout|ad=True|dow=5",
 "wins": 12,
-"losses": 7,
-"sum_r": 2.272792192948221,
-"updated_ts": "2026-08-22T05:16:35.118595+00:00"
+"losses": 8,
+"sum_r": 1.2727921929482209,
+"updated_ts": "2026-08-22T08:54:27.144443+00:00"
 },
 {
 "signature": "long|reg=BULL|fib=breakout|rH=na|rL=na|ud=na|ad=True|sar=None|dow=5",
@@ -1041,9 +1062,9 @@
 {
 "signature": "long|reg=BULL|fib=breakout|rH=hi|rL=na|ud=na|ad=True|sar=None|dow=5",
 "wins": 2,
-"losses": 1,
-"sum_r": 0.037792192948221226,
-"updated_ts": "2026-08-22T05:16:35.118595+00:00"
+"losses": 2,
+"sum_r": -0.9622078070517788,
+"updated_ts": "2026-08-22T08:54:27.144443+00:00"
 }
 ],
 "lessons": [
