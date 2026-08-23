@@ -377,6 +377,27 @@
 "r_multiple": null,
 "exit_price": null,
 "resolved_ts": null
+},
+{
+"id": 19,
+"symbol": "TAOUSDT",
+"direction": "LONG",
+"machine": "long",
+"created_ts": "2026-08-23T07:53:54.682626+00:00",
+"entry": 220.7,
+"sl": 209.55856829,
+"tp1": 231.84143171,
+"tp2": 242.98286341,
+"rr": 2.0,
+"confidence": 0.62,
+"features": "{\"machine\": \"long\", \"regime\": \"BULL\", \"fib_bucket\": \"golden\", \"rsi_htf_bucket\": \"mid\", \"rsi_ltf_bucket\": \"na\", \"dow\": 6, \"usdtd_pos_bucket\": \"na\", \"score_bucket\": \"70-85\", \"ad_rising\": true, \"sar_confirm\": null, \"engine\": \"fib\"}",
+"plan": "{\"entry\": 220.7, \"sl\": 209.55856829, \"tp1\": 231.84143171, \"tp2\": 242.98286341, \"breakeven\": 221.03105, \"risk_per_unit\": 11.14143171, \"rr\": 2.0, \"rr_ok\": true, \"tp_source\": \"phoenix\", \"position_size\": 1.346326, \"risk_pct\": 0.015, \"sl_pct\": 0.0505}",
+"status": "OPEN",
+"tp1_hit": 0,
+"outcome": null,
+"r_multiple": null,
+"exit_price": null,
+"resolved_ts": null
 }
 ],
 "pattern_stats": [
