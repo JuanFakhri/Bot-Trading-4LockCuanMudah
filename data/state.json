@@ -986,6 +986,27 @@
 "r_multiple": null,
 "exit_price": null,
 "resolved_ts": null
+},
+{
+"id": 48,
+"symbol": "FLOWUSDT",
+"direction": "LONG",
+"machine": "long",
+"created_ts": "2026-08-23T10:47:12.109352+00:00",
+"entry": 0.02961,
+"sl": 0.02797813,
+"tp1": 0.03124187,
+"tp2": 0.03287374,
+"rr": 2.0,
+"confidence": 0.62,
+"features": "{\"machine\": \"long\", \"regime\": \"BULL\", \"fib_bucket\": \"golden\", \"rsi_htf_bucket\": \"lo\", \"rsi_ltf_bucket\": \"na\", \"dow\": 6, \"usdtd_pos_bucket\": \"na\", \"score_bucket\": \"70-85\", \"ad_rising\": true, \"sar_confirm\": null, \"engine\": \"fib\"}",
+"plan": "{\"entry\": 0.02961, \"sl\": 0.02797813, \"tp1\": 0.03124187, \"tp2\": 0.03287374, \"breakeven\": 0.02965442, \"risk_per_unit\": 0.00163187, \"rr\": 2.0, \"rr_ok\": true, \"tp_source\": \"phoenix\", \"position_size\": 9191.898298, \"risk_pct\": 0.015, \"sl_pct\": 0.0551}",
+"status": "OPEN",
+"tp1_hit": 0,
+"outcome": null,
+"r_multiple": null,
+"exit_price": null,
+"resolved_ts": null
 }
 ],
 "pattern_stats": [
