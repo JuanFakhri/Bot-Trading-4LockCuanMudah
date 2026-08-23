@@ -224,8 +224,8 @@
 "confidence": 0.62,
 "features": "{\"machine\": \"long\", \"regime\": \"BULL\", \"fib_bucket\": \"golden\", \"rsi_htf_bucket\": \"hi\", \"rsi_ltf_bucket\": \"na\", \"dow\": 6, \"usdtd_pos_bucket\": \"na\", \"score_bucket\": \"70-85\", \"ad_rising\": true, \"sar_confirm\": null, \"engine\": \"fib\"}",
 "plan": "{\"entry\": 0.0968, \"sl\": 0.08996474, \"tp1\": 0.10363526, \"tp2\": 0.11047052, \"breakeven\": 0.0969452, \"risk_per_unit\": 0.00683526, \"rr\": 2.0, \"rr_ok\": true, \"tp_source\": \"phoenix\", \"position_size\": 2194.502942, \"risk_pct\": 0.015, \"sl_pct\": 0.0706}",
-"status": "OPEN",
-"tp1_hit": 0,
+"status": "TP1",
+"tp1_hit": 1,
 "outcome": null,
 "r_multiple": null,
 "exit_price": null,
@@ -350,12 +350,12 @@
 "confidence": 0.62,
 "features": "{\"machine\": \"long\", \"regime\": \"BULL\", \"fib_bucket\": \"golden\", \"rsi_htf_bucket\": \"hi\", \"rsi_ltf_bucket\": \"na\", \"dow\": 6, \"usdtd_pos_bucket\": \"na\", \"score_bucket\": \"70-85\", \"ad_rising\": false, \"sar_confirm\": null, \"engine\": \"fib\"}",
 "plan": "{\"entry\": 1.627, \"sl\": 1.48249357, \"tp1\": 1.77150643, \"tp2\": 1.91601285, \"breakeven\": 1.6294405, \"risk_per_unit\": 0.14450643, \"rr\": 2.0, \"rr_ok\": true, \"tp_source\": \"phoenix\", \"position_size\": 103.801612, \"risk_pct\": 0.015, \"sl_pct\": 0.0888}",
-"status": "TP1",
+"status": "RESOLVED",
 "tp1_hit": 1,
-"outcome": null,
-"r_multiple": null,
-"exit_price": null,
-"resolved_ts": null
+"outcome": "WIN",
+"r_multiple": 1.5,
+"exit_price": 1.91601285,
+"resolved_ts": "2026-08-23T13:58:34.706029+00:00"
 },
 {
 "id": 18,
@@ -1611,6 +1611,20 @@
 "losses": 1,
 "sum_r": 1.525,
 "updated_ts": "2026-08-23T03:58:49.075580+00:00"
+},
+{
+"signature": "L|fib=golden|ad=False|dow=6",
+"wins": 1,
+"losses": 0,
+"sum_r": 1.499999965399463,
+"updated_ts": "2026-08-23T13:58:36.693548+00:00"
+},
+{
+"signature": "long|reg=BULL|fib=golden|rH=hi|rL=na|ud=na|ad=False|sar=None|dow=6",
+"wins": 1,
+"losses": 0,
+"sum_r": 1.499999965399463,
+"updated_ts": "2026-08-23T13:58:36.693548+00:00"
 }
 ],
 "lessons": [
