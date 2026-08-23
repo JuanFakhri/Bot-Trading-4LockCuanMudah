@@ -392,12 +392,12 @@
 "confidence": 0.62,
 "features": "{\"machine\": \"long\", \"regime\": \"BULL\", \"fib_bucket\": \"golden\", \"rsi_htf_bucket\": \"mid\", \"rsi_ltf_bucket\": \"na\", \"dow\": 6, \"usdtd_pos_bucket\": \"na\", \"score_bucket\": \"70-85\", \"ad_rising\": true, \"sar_confirm\": null, \"engine\": \"fib\"}",
 "plan": "{\"entry\": 220.7, \"sl\": 209.55856829, \"tp1\": 231.84143171, \"tp2\": 242.98286341, \"breakeven\": 221.03105, \"risk_per_unit\": 11.14143171, \"rr\": 2.0, \"rr_ok\": true, \"tp_source\": \"phoenix\", \"position_size\": 1.346326, \"risk_pct\": 0.015, \"sl_pct\": 0.0505}",
-"status": "TP1",
+"status": "RESOLVED",
 "tp1_hit": 1,
-"outcome": null,
-"r_multiple": null,
-"exit_price": null,
-"resolved_ts": null
+"outcome": "WIN",
+"r_multiple": 1.5,
+"exit_price": 242.98286341,
+"resolved_ts": "2026-08-23T20:08:30.390057+00:00"
 },
 {
 "id": 20,
@@ -686,8 +686,8 @@
 "confidence": 0.62,
 "features": "{\"machine\": \"long\", \"regime\": \"BULL\", \"fib_bucket\": \"golden\", \"rsi_htf_bucket\": \"hi\", \"rsi_ltf_bucket\": \"na\", \"dow\": 6, \"usdtd_pos_bucket\": \"na\", \"score_bucket\": \"70-85\", \"ad_rising\": false, \"sar_confirm\": null, \"engine\": \"fib\"}",
 "plan": "{\"entry\": 0.0554, \"sl\": 0.05107601, \"tp1\": 0.05972399, \"tp2\": 0.06404799, \"breakeven\": 0.0554831, \"risk_per_unit\": 0.00432399, \"rr\": 2.0, \"rr_ok\": true, \"tp_source\": \"phoenix\", \"position_size\": 3469.015089, \"risk_pct\": 0.015, \"sl_pct\": 0.0781}",
-"status": "OPEN",
-"tp1_hit": 0,
+"status": "TP1",
+"tp1_hit": 1,
 "outcome": null,
 "r_multiple": null,
 "exit_price": null,
@@ -1628,17 +1628,17 @@
 },
 {
 "signature": "L|fib=golden|ad=True|dow=6",
-"wins": 3,
+"wins": 4,
 "losses": 0,
-"sum_r": 4.499999726560471,
-"updated_ts": "2026-08-23T19:13:02.393594+00:00"
+"sum_r": 5.999999726111698,
+"updated_ts": "2026-08-23T20:08:32.354885+00:00"
 },
 {
 "signature": "long|reg=BULL|fib=golden|rH=mid|rL=na|ud=na|ad=True|sar=None|dow=6",
-"wins": 2,
+"wins": 3,
 "losses": 0,
-"sum_r": 2.9999997909324017,
-"updated_ts": "2026-08-23T19:13:02.393594+00:00"
+"sum_r": 4.499999790483629,
+"updated_ts": "2026-08-23T20:08:32.354885+00:00"
 },
 {
 "signature": "long|reg=BULL|fib=golden|rH=hi|rL=na|ud=na|ad=True|sar=None|dow=6",
