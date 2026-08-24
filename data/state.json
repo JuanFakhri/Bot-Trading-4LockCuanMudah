@@ -1364,6 +1364,27 @@
 "r_multiple": null,
 "exit_price": null,
 "resolved_ts": null
+},
+{
+"id": 66,
+"symbol": "INJUSDT",
+"direction": "LONG",
+"machine": "long",
+"created_ts": "2026-08-24T18:56:50.650289+00:00",
+"entry": 5.792,
+"sl": 5.04521774,
+"tp1": 6.53878226,
+"tp2": 7.28556453,
+"rr": 2.0,
+"confidence": 0.62,
+"features": "{\"machine\": \"long\", \"regime\": \"BULL\", \"fib_bucket\": \"golden\", \"rsi_htf_bucket\": \"hi\", \"rsi_ltf_bucket\": \"na\", \"dow\": 0, \"usdtd_pos_bucket\": \"na\", \"score_bucket\": \"70-85\", \"ad_rising\": false, \"sar_confirm\": null, \"engine\": \"fib\"}",
+"plan": "{\"entry\": 5.792, \"sl\": 5.04521774, \"tp1\": 6.53878226, \"tp2\": 7.28556453, \"breakeven\": 5.800688, \"risk_per_unit\": 0.74678226, \"rr\": 2.0, \"rr_ok\": true, \"tp_source\": \"phoenix\", \"position_size\": 20.086176, \"risk_pct\": 0.015, \"sl_pct\": 0.1289}",
+"status": "OPEN",
+"tp1_hit": 0,
+"outcome": null,
+"r_multiple": null,
+"exit_price": null,
+"resolved_ts": null
 }
 ],
 "pattern_stats": [
