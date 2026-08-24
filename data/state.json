@@ -1322,6 +1322,27 @@
 "r_multiple": null,
 "exit_price": null,
 "resolved_ts": null
+},
+{
+"id": 64,
+"symbol": "NEARUSDT",
+"direction": "LONG",
+"machine": "long",
+"created_ts": "2026-08-24T12:47:18.756520+00:00",
+"entry": 2.013,
+"sl": 1.75164867,
+"tp1": 2.27435133,
+"tp2": 2.53570266,
+"rr": 2.0,
+"confidence": 0.62,
+"features": "{\"machine\": \"long\", \"regime\": \"BULL\", \"fib_bucket\": \"golden\", \"rsi_htf_bucket\": \"hi\", \"rsi_ltf_bucket\": \"na\", \"dow\": 0, \"usdtd_pos_bucket\": \"na\", \"score_bucket\": \"70-85\", \"ad_rising\": true, \"sar_confirm\": null, \"engine\": \"fib\"}",
+"plan": "{\"entry\": 2.013, \"sl\": 1.75164867, \"tp1\": 2.27435133, \"tp2\": 2.53570266, \"breakeven\": 2.0160195, \"risk_per_unit\": 0.26135133, \"rr\": 2.0, \"rr_ok\": true, \"tp_source\": \"phoenix\", \"position_size\": 57.394007, \"risk_pct\": 0.015, \"sl_pct\": 0.1298}",
+"status": "OPEN",
+"tp1_hit": 0,
+"outcome": null,
+"r_multiple": null,
+"exit_price": null,
+"resolved_ts": null
 }
 ],
 "pattern_stats": [
