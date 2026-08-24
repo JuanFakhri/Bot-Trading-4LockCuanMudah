@@ -1217,6 +1217,27 @@
 "r_multiple": null,
 "exit_price": null,
 "resolved_ts": null
+},
+{
+"id": 59,
+"symbol": "FLOKIUSDT",
+"direction": "LONG",
+"machine": "long",
+"created_ts": "2026-08-24T07:17:39.706954+00:00",
+"entry": 2.732e-05,
+"sl": 2.591e-05,
+"tp1": 2.873e-05,
+"tp2": 3.014e-05,
+"rr": 2.0,
+"confidence": 0.62,
+"features": "{\"machine\": \"long\", \"regime\": \"BULL\", \"fib_bucket\": \"golden\", \"rsi_htf_bucket\": \"hi\", \"rsi_ltf_bucket\": \"na\", \"dow\": 0, \"usdtd_pos_bucket\": \"na\", \"score_bucket\": \"70-85\", \"ad_rising\": true, \"sar_confirm\": null, \"engine\": \"fib\"}",
+"plan": "{\"entry\": 2.732e-05, \"sl\": 2.591e-05, \"tp1\": 2.873e-05, \"tp2\": 3.014e-05, \"breakeven\": 2.736e-05, \"risk_per_unit\": 1.41e-06, \"rr\": 2.0, \"rr_ok\": true, \"tp_source\": \"phoenix\", \"position_size\": 10642983.589992, \"risk_pct\": 0.015, \"sl_pct\": 0.0516}",
+"status": "OPEN",
+"tp1_hit": 0,
+"outcome": null,
+"r_multiple": null,
+"exit_price": null,
+"resolved_ts": null
 }
 ],
 "pattern_stats": [
