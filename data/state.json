@@ -455,12 +455,12 @@
 "confidence": 0.62,
 "features": "{\"machine\": \"long\", \"regime\": \"BULL\", \"fib_bucket\": \"golden\", \"rsi_htf_bucket\": \"hi\", \"rsi_ltf_bucket\": \"na\", \"dow\": 6, \"usdtd_pos_bucket\": \"na\", \"score_bucket\": \"70-85\", \"ad_rising\": true, \"sar_confirm\": null, \"engine\": \"fib\"}",
 "plan": "{\"entry\": 0.0738, \"sl\": 0.0705432, \"tp1\": 0.0770568, \"tp2\": 0.08031359, \"breakeven\": 0.0739107, \"risk_per_unit\": 0.0032568, \"rr\": 2.0, \"rr_ok\": true, \"tp_source\": \"phoenix\", \"position_size\": 4605.753595, \"risk_pct\": 0.015, \"sl_pct\": 0.0441}",
-"status": "TP1",
+"status": "RESOLVED",
 "tp1_hit": 1,
-"outcome": null,
-"r_multiple": null,
-"exit_price": null,
-"resolved_ts": null
+"outcome": "WIN",
+"r_multiple": 0.517,
+"exit_price": 0.0739107,
+"resolved_ts": "2026-08-24T06:07:46.637559+00:00"
 },
 {
 "id": 23,
@@ -1733,10 +1733,10 @@
 },
 {
 "signature": "L|fib=golden|ad=True|dow=6",
-"wins": 7,
+"wins": 8,
 "losses": 0,
-"sum_r": 8.523008946016187,
-"updated_ts": "2026-08-24T02:10:52.584144+00:00"
+"sum_r": 9.040004156038293,
+"updated_ts": "2026-08-24T06:07:48.669885+00:00"
 },
 {
 "signature": "long|reg=BULL|fib=golden|rH=mid|rL=na|ud=na|ad=True|sar=None|dow=6",
@@ -1747,10 +1747,10 @@
 },
 {
 "signature": "long|reg=BULL|fib=golden|rH=hi|rL=na|ud=na|ad=True|sar=None|dow=6",
-"wins": 2,
+"wins": 3,
 "losses": 0,
-"sum_r": 2.011049659384976,
-"updated_ts": "2026-08-24T02:10:52.584144+00:00"
+"sum_r": 2.528044869407082,
+"updated_ts": "2026-08-24T06:07:48.669885+00:00"
 }
 ],
 "lessons": [
@@ -1900,12 +1900,12 @@
 },
 {
 "id": 32,
-"ts": "2026-08-24T02:10:52.584144+00:00",
+"ts": "2026-08-24T06:07:48.669885+00:00",
 "signature": "L|fib=golden|ad=True|dow=6",
 "kind": "FAVOR",
-"text": "✅ Diutamakan: sinyal LONG pola [fib golden, A/D naik, Min] menang 7/7 (100%). Diberi prioritas.",
+"text": "✅ Diutamakan: sinyal LONG pola [fib golden, A/D naik, Min] menang 8/8 (100%). Diberi prioritas.",
 "win_rate": 1.0,
-"samples": 7
+"samples": 8
 }
 ]
 }
