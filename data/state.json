@@ -476,12 +476,12 @@
 "confidence": 0.62,
 "features": "{\"machine\": \"long\", \"regime\": \"BULL\", \"fib_bucket\": \"golden\", \"rsi_htf_bucket\": \"hi\", \"rsi_ltf_bucket\": \"na\", \"dow\": 6, \"usdtd_pos_bucket\": \"na\", \"score_bucket\": \"70-85\", \"ad_rising\": true, \"sar_confirm\": null, \"engine\": \"fib\"}",
 "plan": "{\"entry\": 0.00718, \"sl\": 0.00667209, \"tp1\": 0.00768791, \"tp2\": 0.00819583, \"breakeven\": 0.00719077, \"risk_per_unit\": 0.00050791, \"rr\": 2.0, \"rr_ok\": true, \"tp_source\": \"phoenix\", \"position_size\": 29532.510234, \"risk_pct\": 0.015, \"sl_pct\": 0.0707}",
-"status": "OPEN",
-"tp1_hit": 0,
-"outcome": null,
-"r_multiple": null,
-"exit_price": null,
-"resolved_ts": null
+"status": "RESOLVED",
+"tp1_hit": 1,
+"outcome": "WIN",
+"r_multiple": 1.5,
+"exit_price": 0.00819583,
+"resolved_ts": "2026-08-25T08:26:57.947986+00:00"
 },
 {
 "id": 24,
@@ -1985,10 +1985,10 @@
 },
 {
 "signature": "L|fib=golden|ad=True|dow=6",
-"wins": 15,
+"wins": 16,
 "losses": 1,
-"sum_r": 13.613156716851215,
-"updated_ts": "2026-08-25T03:10:16.346397+00:00"
+"sum_r": 15.113166561114964,
+"updated_ts": "2026-08-25T08:27:00.262921+00:00"
 },
 {
 "signature": "long|reg=BULL|fib=golden|rH=mid|rL=na|ud=na|ad=True|sar=None|dow=6",
@@ -1999,10 +1999,10 @@
 },
 {
 "signature": "long|reg=BULL|fib=golden|rH=hi|rL=na|ud=na|ad=True|sar=None|dow=6",
-"wins": 6,
+"wins": 7,
 "losses": 0,
-"sum_r": 5.049252396939346,
-"updated_ts": "2026-08-25T03:10:16.346397+00:00"
+"sum_r": 6.5492622412030945,
+"updated_ts": "2026-08-25T08:27:00.262921+00:00"
 },
 {
 "signature": "L|fib=golden|ad=False|dow=1",
@@ -2166,12 +2166,12 @@
 },
 {
 "id": 32,
-"ts": "2026-08-25T03:10:16.346397+00:00",
+"ts": "2026-08-25T08:27:00.262921+00:00",
 "signature": "L|fib=golden|ad=True|dow=6",
 "kind": "FAVOR",
-"text": "✅ Diutamakan: sinyal LONG pola [fib golden, A/D naik, Min] menang 15/16 (94%). Diberi prioritas.",
-"win_rate": 0.938,
-"samples": 16
+"text": "✅ Diutamakan: sinyal LONG pola [fib golden, A/D naik, Min] menang 16/17 (94%). Diberi prioritas.",
+"win_rate": 0.941,
+"samples": 17
 }
 ]
 }
