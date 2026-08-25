@@ -1490,6 +1490,27 @@
 "r_multiple": null,
 "exit_price": null,
 "resolved_ts": null
+},
+{
+"id": 72,
+"symbol": "ORDIUSDT",
+"direction": "LONG",
+"machine": "long",
+"created_ts": "2026-08-25T18:55:05.371209+00:00",
+"entry": 4.254,
+"sl": 3.96953952,
+"tp1": 4.53846048,
+"tp2": 4.82292097,
+"rr": 2.0,
+"confidence": 0.62,
+"features": "{\"machine\": \"long\", \"regime\": \"BULL\", \"fib_bucket\": \"golden\", \"rsi_htf_bucket\": \"mid\", \"rsi_ltf_bucket\": \"na\", \"dow\": 1, \"usdtd_pos_bucket\": \"na\", \"score_bucket\": \"70-85\", \"ad_rising\": true, \"sar_confirm\": null, \"engine\": \"fib\"}",
+"plan": "{\"entry\": 4.254, \"sl\": 3.96953952, \"tp1\": 4.53846048, \"tp2\": 4.82292097, \"breakeven\": 4.260381, \"risk_per_unit\": 0.28446048, \"rr\": 2.0, \"rr_ok\": true, \"tp_source\": \"phoenix\", \"position_size\": 52.731402, \"risk_pct\": 0.015, \"sl_pct\": 0.0669}",
+"status": "OPEN",
+"tp1_hit": 0,
+"outcome": null,
+"r_multiple": null,
+"exit_price": null,
+"resolved_ts": null
 }
 ],
 "pattern_stats": [
