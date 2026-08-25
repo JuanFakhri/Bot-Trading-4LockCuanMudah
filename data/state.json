@@ -1406,6 +1406,27 @@
 "r_multiple": null,
 "exit_price": null,
 "resolved_ts": null
+},
+{
+"id": 68,
+"symbol": "SANDUSDT",
+"direction": "LONG",
+"machine": "long",
+"created_ts": "2026-08-25T04:29:43.363180+00:00",
+"entry": 0.0431,
+"sl": 0.04113841,
+"tp1": 0.04506159,
+"tp2": 0.04702319,
+"rr": 2.0,
+"confidence": 0.62,
+"features": "{\"machine\": \"long\", \"regime\": \"BULL\", \"fib_bucket\": \"golden\", \"rsi_htf_bucket\": \"lo\", \"rsi_ltf_bucket\": \"na\", \"dow\": 1, \"usdtd_pos_bucket\": \"na\", \"score_bucket\": \"70-85\", \"ad_rising\": true, \"sar_confirm\": null, \"engine\": \"fib\"}",
+"plan": "{\"entry\": 0.0431, \"sl\": 0.04113841, \"tp1\": 0.04506159, \"tp2\": 0.04702319, \"breakeven\": 0.04316465, \"risk_per_unit\": 0.00196159, \"rr\": 2.0, \"rr_ok\": true, \"tp_source\": \"phoenix\", \"position_size\": 7646.842929, \"risk_pct\": 0.015, \"sl_pct\": 0.0455}",
+"status": "OPEN",
+"tp1_hit": 0,
+"outcome": null,
+"r_multiple": null,
+"exit_price": null,
+"resolved_ts": null
 }
 ],
 "pattern_stats": [
