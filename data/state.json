@@ -1511,6 +1511,27 @@
 "r_multiple": null,
 "exit_price": null,
 "resolved_ts": null
+},
+{
+"id": 73,
+"symbol": "GRTUSDT",
+"direction": "LONG",
+"machine": "long",
+"created_ts": "2026-08-25T23:02:42.168734+00:00",
+"entry": 0.01789,
+"sl": 0.01701893,
+"tp1": 0.01876107,
+"tp2": 0.01963214,
+"rr": 2.0,
+"confidence": 0.25,
+"features": "{\"machine\": \"long\", \"regime\": \"BULL\", \"fib_bucket\": \"golden\", \"rsi_htf_bucket\": \"hi\", \"rsi_ltf_bucket\": \"na\", \"dow\": 1, \"usdtd_pos_bucket\": \"na\", \"score_bucket\": \"70-85\", \"ad_rising\": true, \"sar_confirm\": null, \"engine\": \"fib\"}",
+"plan": "{\"entry\": 0.01789, \"sl\": 0.01701893, \"tp1\": 0.01876107, \"tp2\": 0.01963214, \"breakeven\": 0.01791683, \"risk_per_unit\": 0.00087107, \"rr\": 2.0, \"rr_ok\": true, \"tp_source\": \"phoenix\", \"position_size\": 17220.183182, \"risk_pct\": 0.015, \"sl_pct\": 0.0487}",
+"status": "OPEN",
+"tp1_hit": 0,
+"outcome": null,
+"r_multiple": null,
+"exit_price": null,
+"resolved_ts": null
 }
 ],
 "pattern_stats": [
