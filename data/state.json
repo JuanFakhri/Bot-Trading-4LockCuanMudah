@@ -182,12 +182,12 @@
 "confidence": 0.62,
 "features": "{\"machine\": \"long\", \"regime\": \"BULL\", \"fib_bucket\": \"golden\", \"rsi_htf_bucket\": \"hi\", \"rsi_ltf_bucket\": \"na\", \"dow\": 6, \"usdtd_pos_bucket\": \"na\", \"score_bucket\": \"70-85\", \"ad_rising\": true, \"sar_confirm\": null, \"engine\": \"fib\"}",
 "plan": "{\"entry\": 688.94, \"sl\": 664.72731855, \"tp1\": 713.15268145, \"tp2\": 737.3653629, \"breakeven\": 689.97341, \"risk_per_unit\": 24.21268145, \"rr\": 2.0, \"rr_ok\": true, \"tp_source\": \"phoenix\", \"position_size\": 0.61951, \"risk_pct\": 0.015, \"sl_pct\": 0.0351}",
-"status": "TP1",
+"status": "RESOLVED",
 "tp1_hit": 1,
-"outcome": null,
-"r_multiple": null,
-"exit_price": null,
-"resolved_ts": null
+"outcome": "WIN",
+"r_multiple": 0.521,
+"exit_price": 689.97341,
+"resolved_ts": "2026-08-28T22:39:46.545779+00:00"
 },
 {
 "id": 10,
@@ -539,12 +539,12 @@
 "confidence": 0.62,
 "features": "{\"machine\": \"long\", \"regime\": \"BULL\", \"fib_bucket\": \"golden\", \"rsi_htf_bucket\": \"hi\", \"rsi_ltf_bucket\": \"na\", \"dow\": 6, \"usdtd_pos_bucket\": \"na\", \"score_bucket\": \"70-85\", \"ad_rising\": true, \"sar_confirm\": null, \"engine\": \"fib\"}",
 "plan": "{\"entry\": 0.1575, \"sl\": 0.14377988, \"tp1\": 0.17122012, \"tp2\": 0.18494025, \"breakeven\": 0.15773625, \"risk_per_unit\": 0.01372012, \"rr\": 2.0, \"rr_ok\": true, \"tp_source\": \"phoenix\", \"position_size\": 1093.284598, \"risk_pct\": 0.015, \"sl_pct\": 0.0871}",
-"status": "TP1",
+"status": "RESOLVED",
 "tp1_hit": 1,
-"outcome": null,
-"r_multiple": null,
-"exit_price": null,
-"resolved_ts": null
+"outcome": "WIN",
+"r_multiple": 0.509,
+"exit_price": 0.15773625,
+"resolved_ts": "2026-08-28T22:39:46.545779+00:00"
 },
 {
 "id": 27,
@@ -854,12 +854,12 @@
 "confidence": 0.62,
 "features": "{\"machine\": \"long\", \"regime\": \"BULL\", \"fib_bucket\": \"golden\", \"rsi_htf_bucket\": \"mid\", \"rsi_ltf_bucket\": \"na\", \"dow\": 6, \"usdtd_pos_bucket\": \"na\", \"score_bucket\": \"70-85\", \"ad_rising\": true, \"sar_confirm\": null, \"engine\": \"fib\"}",
 "plan": "{\"entry\": 0.0919, \"sl\": 0.08644234, \"tp1\": 0.09735766, \"tp2\": 0.10281533, \"breakeven\": 0.09203785, \"risk_per_unit\": 0.00545766, \"rr\": 2.0, \"rr_ok\": true, \"tp_source\": \"phoenix\", \"position_size\": 2748.428596, \"risk_pct\": 0.015, \"sl_pct\": 0.0594}",
-"status": "OPEN",
+"status": "RESOLVED",
 "tp1_hit": 0,
-"outcome": null,
-"r_multiple": null,
-"exit_price": null,
-"resolved_ts": null
+"outcome": "LOSS",
+"r_multiple": -1.0,
+"exit_price": 0.08644234,
+"resolved_ts": "2026-08-28T22:39:46.545779+00:00"
 },
 {
 "id": 42,
@@ -980,12 +980,12 @@
 "confidence": 0.62,
 "features": "{\"machine\": \"long\", \"regime\": \"BULL\", \"fib_bucket\": \"golden\", \"rsi_htf_bucket\": \"mid\", \"rsi_ltf_bucket\": \"na\", \"dow\": 6, \"usdtd_pos_bucket\": \"na\", \"score_bucket\": \"70-85\", \"ad_rising\": true, \"sar_confirm\": null, \"engine\": \"fib\"}",
 "plan": "{\"entry\": 2.118, \"sl\": 1.97717577, \"tp1\": 2.25882423, \"tp2\": 2.39964845, \"breakeven\": 2.121177, \"risk_per_unit\": 0.14082423, \"rr\": 2.0, \"rr_ok\": true, \"tp_source\": \"phoenix\", \"position_size\": 106.515763, \"risk_pct\": 0.015, \"sl_pct\": 0.0665}",
-"status": "TP1",
+"status": "RESOLVED",
 "tp1_hit": 1,
-"outcome": null,
-"r_multiple": null,
-"exit_price": null,
-"resolved_ts": null
+"outcome": "WIN",
+"r_multiple": 0.511,
+"exit_price": 2.121177,
+"resolved_ts": "2026-08-28T22:39:46.545779+00:00"
 },
 {
 "id": 48,
@@ -1673,12 +1673,12 @@
 "confidence": 0.62,
 "features": "{\"machine\": \"long\", \"regime\": \"BULL\", \"fib_bucket\": \"golden\", \"rsi_htf_bucket\": \"lo\", \"rsi_ltf_bucket\": \"na\", \"dow\": 2, \"usdtd_pos_bucket\": \"na\", \"score_bucket\": \"70-85\", \"ad_rising\": true, \"sar_confirm\": null, \"engine\": \"fib\"}",
 "plan": "{\"entry\": 0.942, \"sl\": 0.91246635, \"tp1\": 0.97153365, \"tp2\": 1.00106729, \"breakeven\": 0.943413, \"risk_per_unit\": 0.02953365, \"rr\": 2.0, \"rr_ok\": true, \"tp_source\": \"phoenix\", \"position_size\": 507.895277, \"risk_pct\": 0.015, \"sl_pct\": 0.0314}",
-"status": "OPEN",
+"status": "RESOLVED",
 "tp1_hit": 0,
-"outcome": null,
-"r_multiple": null,
-"exit_price": null,
-"resolved_ts": null
+"outcome": "LOSS",
+"r_multiple": -1.0,
+"exit_price": 0.91246635,
+"resolved_ts": "2026-08-28T22:39:46.545779+00:00"
 },
 {
 "id": 81,
@@ -1778,12 +1778,12 @@
 "confidence": 0.25,
 "features": "{\"machine\": \"long\", \"regime\": \"BULL\", \"fib_bucket\": \"golden\", \"rsi_htf_bucket\": \"lo\", \"rsi_ltf_bucket\": \"na\", \"dow\": 2, \"usdtd_pos_bucket\": \"na\", \"score_bucket\": \"70-85\", \"ad_rising\": true, \"sar_confirm\": null, \"engine\": \"fib\"}",
 "plan": "{\"entry\": 0.571, \"sl\": 0.54259965, \"tp1\": 0.59940035, \"tp2\": 0.62780071, \"breakeven\": 0.5718565, \"risk_per_unit\": 0.02840035, \"rr\": 2.0, \"rr_ok\": true, \"tp_source\": \"phoenix\", \"position_size\": 528.162421, \"risk_pct\": 0.015, \"sl_pct\": 0.0497}",
-"status": "OPEN",
+"status": "RESOLVED",
 "tp1_hit": 0,
-"outcome": null,
-"r_multiple": null,
-"exit_price": null,
-"resolved_ts": null
+"outcome": "LOSS",
+"r_multiple": -1.0,
+"exit_price": 0.54259965,
+"resolved_ts": "2026-08-28T22:39:46.545779+00:00"
 },
 {
 "id": 86,
@@ -1841,12 +1841,12 @@
 "confidence": 0.25,
 "features": "{\"machine\": \"long\", \"regime\": \"BULL\", \"fib_bucket\": \"golden\", \"rsi_htf_bucket\": \"hi\", \"rsi_ltf_bucket\": \"na\", \"dow\": 2, \"usdtd_pos_bucket\": \"na\", \"score_bucket\": \"70-85\", \"ad_rising\": true, \"sar_confirm\": null, \"engine\": \"fib\"}",
 "plan": "{\"entry\": 0.01795, \"sl\": 0.016672, \"tp1\": 0.019228, \"tp2\": 0.020506, \"breakeven\": 0.01797693, \"risk_per_unit\": 0.001278, \"rr\": 2.0, \"rr_ok\": true, \"tp_source\": \"phoenix\", \"position_size\": 11737.072428, \"risk_pct\": 0.015, \"sl_pct\": 0.0712}",
-"status": "OPEN",
+"status": "RESOLVED",
 "tp1_hit": 0,
-"outcome": null,
-"r_multiple": null,
-"exit_price": null,
-"resolved_ts": null
+"outcome": "LOSS",
+"r_multiple": -1.0,
+"exit_price": 0.016672,
+"resolved_ts": "2026-08-28T22:39:46.545779+00:00"
 },
 {
 "id": 89,
@@ -1883,12 +1883,12 @@
 "confidence": 0.25,
 "features": "{\"machine\": \"long\", \"regime\": \"BULL\", \"fib_bucket\": \"golden\", \"rsi_htf_bucket\": \"hi\", \"rsi_ltf_bucket\": \"na\", \"dow\": 2, \"usdtd_pos_bucket\": \"na\", \"score_bucket\": \"70-85\", \"ad_rising\": true, \"sar_confirm\": null, \"engine\": \"fib\"}",
 "plan": "{\"entry\": 0.11973, \"sl\": 0.11405957, \"tp1\": 0.12540043, \"tp2\": 0.13107085, \"breakeven\": 0.1199096, \"risk_per_unit\": 0.00567043, \"rr\": 2.0, \"rr_ok\": true, \"tp_source\": \"phoenix\", \"position_size\": 2645.303891, \"risk_pct\": 0.015, \"sl_pct\": 0.0474}",
-"status": "OPEN",
+"status": "RESOLVED",
 "tp1_hit": 0,
-"outcome": null,
-"r_multiple": null,
-"exit_price": null,
-"resolved_ts": null
+"outcome": "LOSS",
+"r_multiple": -1.0,
+"exit_price": 0.11405957,
+"resolved_ts": "2026-08-28T22:39:46.545779+00:00"
 },
 {
 "id": 91,
@@ -1946,12 +1946,12 @@
 "confidence": 0.62,
 "features": "{\"machine\": \"long\", \"regime\": \"BULL\", \"fib_bucket\": \"golden\", \"rsi_htf_bucket\": \"hi\", \"rsi_ltf_bucket\": \"na\", \"dow\": 4, \"usdtd_pos_bucket\": \"na\", \"score_bucket\": \"70-85\", \"ad_rising\": true, \"sar_confirm\": null, \"engine\": \"fib\"}",
 "plan": "{\"entry\": 0.1318, \"sl\": 0.12778342, \"tp1\": 0.13581658, \"tp2\": 0.13983315, \"breakeven\": 0.1319977, \"risk_per_unit\": 0.00401658, \"rr\": 2.0, \"rr_ok\": true, \"tp_source\": \"phoenix\", \"position_size\": 3734.522782, \"risk_pct\": 0.015, \"sl_pct\": 0.0305}",
-"status": "OPEN",
+"status": "RESOLVED",
 "tp1_hit": 0,
-"outcome": null,
-"r_multiple": null,
-"exit_price": null,
-"resolved_ts": null
+"outcome": "LOSS",
+"r_multiple": -1.0,
+"exit_price": 0.12778342,
+"resolved_ts": "2026-08-28T22:39:46.545779+00:00"
 },
 {
 "id": 94,
@@ -1967,12 +1967,12 @@
 "confidence": 0.62,
 "features": "{\"machine\": \"long\", \"regime\": \"BULL\", \"fib_bucket\": \"golden\", \"rsi_htf_bucket\": \"mid\", \"rsi_ltf_bucket\": \"na\", \"dow\": 4, \"usdtd_pos_bucket\": \"na\", \"score_bucket\": \"70-85\", \"ad_rising\": true, \"sar_confirm\": null, \"engine\": \"fib\"}",
 "plan": "{\"entry\": 0.3811, \"sl\": 0.36169801, \"tp1\": 0.40050199, \"tp2\": 0.41990398, \"breakeven\": 0.38167165, \"risk_per_unit\": 0.01940199, \"rr\": 2.0, \"rr_ok\": true, \"tp_source\": \"phoenix\", \"position_size\": 773.116515, \"risk_pct\": 0.015, \"sl_pct\": 0.0509}",
-"status": "OPEN",
+"status": "RESOLVED",
 "tp1_hit": 0,
-"outcome": null,
-"r_multiple": null,
-"exit_price": null,
-"resolved_ts": null
+"outcome": "LOSS",
+"r_multiple": -1.0,
+"exit_price": 0.36169801,
+"resolved_ts": "2026-08-28T22:39:46.545779+00:00"
 }
 ],
 "pattern_stats": [
@@ -2489,24 +2489,24 @@
 },
 {
 "signature": "L|fib=golden|ad=True|dow=6",
-"wins": 21,
-"losses": 5,
-"sum_r": 13.676380762092778,
-"updated_ts": "2026-08-26T16:41:48.877772+00:00"
+"wins": 24,
+"losses": 6,
+"sum_r": 14.217610663147898,
+"updated_ts": "2026-08-28T22:39:48.657231+00:00"
 },
 {
 "signature": "long|reg=BULL|fib=golden|rH=mid|rL=na|ud=na|ad=True|sar=None|dow=6",
-"wins": 13,
-"losses": 2,
-"sum_r": 9.606782631498863,
-"updated_ts": "2026-08-26T13:30:31.550414+00:00"
+"wins": 14,
+"losses": 3,
+"sum_r": 9.118062650569446,
+"updated_ts": "2026-08-28T22:39:48.657231+00:00"
 },
 {
 "signature": "long|reg=BULL|fib=golden|rH=hi|rL=na|ud=na|ad=True|sar=None|dow=6",
-"wins": 8,
+"wins": 10,
 "losses": 3,
-"sum_r": 4.069598130593919,
-"updated_ts": "2026-08-26T16:41:48.877772+00:00"
+"sum_r": 5.099548012578457,
+"updated_ts": "2026-08-28T22:39:47.959142+00:00"
 },
 {
 "signature": "L|fib=golden|ad=False|dow=1",
@@ -2609,23 +2609,23 @@
 {
 "signature": "L|fib=golden|ad=True|dow=2",
 "wins": 0,
-"losses": 3,
-"sum_r": -3.0,
-"updated_ts": "2026-08-28T12:43:39.068429+00:00"
+"losses": 7,
+"sum_r": -7.0,
+"updated_ts": "2026-08-28T22:39:52.048296+00:00"
 },
 {
 "signature": "long|reg=BULL|fib=golden|rH=lo|rL=na|ud=na|ad=True|sar=None|dow=2",
 "wins": 0,
-"losses": 2,
-"sum_r": -2.0,
-"updated_ts": "2026-08-28T12:43:39.068429+00:00"
+"losses": 4,
+"sum_r": -4.0,
+"updated_ts": "2026-08-28T22:39:50.970878+00:00"
 },
 {
 "signature": "long|reg=BULL|fib=golden|rH=hi|rL=na|ud=na|ad=True|sar=None|dow=2",
 "wins": 0,
-"losses": 1,
-"sum_r": -1.0,
-"updated_ts": "2026-08-26T20:17:24.094900+00:00"
+"losses": 3,
+"sum_r": -3.0,
+"updated_ts": "2026-08-28T22:39:52.048296+00:00"
 },
 {
 "signature": "L|fib=golden|ad=True|dow=3",
@@ -2640,6 +2640,27 @@
 "losses": 1,
 "sum_r": -1.0,
 "updated_ts": "2026-08-28T12:43:40.782525+00:00"
+},
+{
+"signature": "L|fib=golden|ad=True|dow=4",
+"wins": 0,
+"losses": 2,
+"sum_r": -2.0,
+"updated_ts": "2026-08-28T22:39:52.658733+00:00"
+},
+{
+"signature": "long|reg=BULL|fib=golden|rH=hi|rL=na|ud=na|ad=True|sar=None|dow=4",
+"wins": 0,
+"losses": 1,
+"sum_r": -1.0,
+"updated_ts": "2026-08-28T22:39:52.540808+00:00"
+},
+{
+"signature": "long|reg=BULL|fib=golden|rH=mid|rL=na|ud=na|ad=True|sar=None|dow=4",
+"wins": 0,
+"losses": 1,
+"sum_r": -1.0,
+"updated_ts": "2026-08-28T22:39:52.658733+00:00"
 }
 ],
 "lessons": [
@@ -2789,12 +2810,12 @@
 },
 {
 "id": 32,
-"ts": "2026-08-26T16:41:48.877772+00:00",
+"ts": "2026-08-28T22:39:48.657231+00:00",
 "signature": "L|fib=golden|ad=True|dow=6",
 "kind": "FAVOR",
-"text": "✅ Diutamakan: sinyal LONG pola [fib golden, A/D naik, Min] menang 21/26 (81%). Diberi prioritas.",
-"win_rate": 0.808,
-"samples": 26
+"text": "✅ Diutamakan: sinyal LONG pola [fib golden, A/D naik, Min] menang 24/30 (80%). Diberi prioritas.",
+"win_rate": 0.8,
+"samples": 30
 },
 {
 "id": 33,
@@ -2813,6 +2834,15 @@
 "text": "❌ Diblokir: sinyal LONG pola [fib golden, A/D naik, Sen] hanya menang 1/5 (20%). Pola ini dihindari.",
 "win_rate": 0.2,
 "samples": 5
+},
+{
+"id": 35,
+"ts": "2026-08-28T22:39:52.048296+00:00",
+"signature": "L|fib=golden|ad=True|dow=2",
+"kind": "BLOCK",
+"text": "❌ Diblokir: sinyal LONG pola [fib golden, A/D naik, Rab] hanya menang 0/7 (0%). Pola ini dihindari.",
+"win_rate": 0.0,
+"samples": 7
 }
 ]
 }
