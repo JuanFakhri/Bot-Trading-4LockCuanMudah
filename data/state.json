@@ -56,8 +56,8 @@
 "confidence": 0.62,
 "features": "{\"machine\": \"long\", \"regime\": \"BULL\", \"fib_bucket\": \"golden\", \"rsi_htf_bucket\": \"lo\", \"rsi_ltf_bucket\": \"na\", \"dow\": 6, \"usdtd_pos_bucket\": \"na\", \"score_bucket\": \"70-85\", \"ad_rising\": false, \"sar_confirm\": null, \"engine\": \"fib\"}",
 "plan": "{\"entry\": 2.323, \"sl\": 2.15173008, \"tp1\": 2.49426992, \"tp2\": 2.66553984, \"breakeven\": 2.3264845, \"risk_per_unit\": 0.17126992, \"rr\": 2.0, \"rr_ok\": true, \"tp_source\": \"phoenix\", \"position_size\": 87.581054, \"risk_pct\": 0.015, \"sl_pct\": 0.0737}",
-"status": "OPEN",
-"tp1_hit": 0,
+"status": "TP1",
+"tp1_hit": 1,
 "outcome": null,
 "r_multiple": null,
 "exit_price": null,
@@ -1379,12 +1379,12 @@
 "confidence": 0.62,
 "features": "{\"machine\": \"long\", \"regime\": \"BULL\", \"fib_bucket\": \"golden\", \"rsi_htf_bucket\": \"hi\", \"rsi_ltf_bucket\": \"na\", \"dow\": 0, \"usdtd_pos_bucket\": \"na\", \"score_bucket\": \"70-85\", \"ad_rising\": false, \"sar_confirm\": null, \"engine\": \"fib\"}",
 "plan": "{\"entry\": 5.792, \"sl\": 5.04521774, \"tp1\": 6.53878226, \"tp2\": 7.28556453, \"breakeven\": 5.800688, \"risk_per_unit\": 0.74678226, \"rr\": 2.0, \"rr_ok\": true, \"tp_source\": \"phoenix\", \"position_size\": 20.086176, \"risk_pct\": 0.015, \"sl_pct\": 0.1289}",
-"status": "OPEN",
+"status": "RESOLVED",
 "tp1_hit": 0,
-"outcome": null,
-"r_multiple": null,
-"exit_price": null,
-"resolved_ts": null
+"outcome": "LOSS",
+"r_multiple": -1.0,
+"exit_price": 5.04521774,
+"resolved_ts": "2026-08-29T10:31:04.016450+00:00"
 },
 {
 "id": 67,
@@ -2567,9 +2567,9 @@
 {
 "signature": "L|fib=golden|ad=False|dow=0",
 "wins": 0,
-"losses": 1,
-"sum_r": -1.0,
-"updated_ts": "2026-08-26T09:36:25.598013+00:00"
+"losses": 2,
+"sum_r": -2.0,
+"updated_ts": "2026-08-29T10:31:06.909066+00:00"
 },
 {
 "signature": "long|reg=BULL|fib=golden|rH=mid|rL=na|ud=na|ad=False|sar=None|dow=0",
@@ -2661,6 +2661,13 @@
 "losses": 1,
 "sum_r": -1.0,
 "updated_ts": "2026-08-28T22:39:52.658733+00:00"
+},
+{
+"signature": "long|reg=BULL|fib=golden|rH=hi|rL=na|ud=na|ad=False|sar=None|dow=0",
+"wins": 0,
+"losses": 1,
+"sum_r": -1.0,
+"updated_ts": "2026-08-29T10:31:06.909066+00:00"
 }
 ],
 "lessons": [
