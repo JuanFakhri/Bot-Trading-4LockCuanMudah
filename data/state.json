@@ -2078,6 +2078,27 @@
 "r_multiple": null,
 "exit_price": null,
 "resolved_ts": null
+},
+{
+"id": 100,
+"symbol": "AXSUSDT",
+"direction": "LONG",
+"machine": "long",
+"created_ts": "2026-08-29T23:16:34.363837+00:00",
+"entry": 0.901,
+"sl": 0.88333408,
+"tp1": 0.91866592,
+"tp2": 0.93633183,
+"rr": 2.0,
+"confidence": 0.62,
+"features": "{\"machine\": \"long\", \"regime\": \"BULL\", \"fib_bucket\": \"golden\", \"rsi_htf_bucket\": \"lo\", \"rsi_ltf_bucket\": \"na\", \"dow\": 5, \"usdtd_pos_bucket\": \"na\", \"score_bucket\": \"70-85\", \"ad_rising\": true, \"sar_confirm\": null, \"engine\": \"fib\"}",
+"plan": "{\"entry\": 0.901, \"sl\": 0.88333408, \"tp1\": 0.91866592, \"tp2\": 0.93633183, \"breakeven\": 0.9023515, \"risk_per_unit\": 0.01766592, \"rr\": 2.0, \"rr_ok\": true, \"tp_source\": \"phoenix\", \"position_size\": 849.09263, \"risk_pct\": 0.015, \"sl_pct\": 0.0196}",
+"status": "OPEN",
+"tp1_hit": 0,
+"outcome": null,
+"r_multiple": null,
+"exit_price": null,
+"resolved_ts": null
 }
 ],
 "pattern_stats": [
