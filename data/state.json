@@ -608,6 +608,27 @@
 "r_multiple": null,
 "exit_price": null,
 "resolved_ts": null
+},
+{
+"id": 30,
+"symbol": "RUNEUSDT",
+"direction": "LONG",
+"machine": "long",
+"created_ts": "2026-08-30T19:32:25.248234+00:00",
+"entry": 0.476,
+"sl": 0.45289063,
+"tp1": 0.49910937,
+"tp2": 0.52221874,
+"rr": 2.0,
+"confidence": 0.667,
+"features": "{\"machine\": \"long\", \"regime\": \"BULL\", \"fib_bucket\": \"golden\", \"rsi_htf_bucket\": \"mid\", \"rsi_ltf_bucket\": \"na\", \"dow\": 6, \"usdtd_pos_bucket\": \"na\", \"score_bucket\": \"70-85\", \"ad_rising\": true, \"sar_confirm\": null, \"engine\": \"fib\"}",
+"plan": "{\"entry\": 0.476, \"sl\": 0.45289063, \"tp1\": 0.49910937, \"tp2\": 0.52221874, \"breakeven\": 0.476714, \"risk_per_unit\": 0.02310937, \"rr\": 2.0, \"rr_ok\": true, \"tp_source\": \"phoenix\", \"position_size\": 649.087396, \"risk_pct\": 0.015, \"sl_pct\": 0.0485}",
+"status": "OPEN",
+"tp1_hit": 0,
+"outcome": null,
+"r_multiple": null,
+"exit_price": null,
+"resolved_ts": null
 }
 ],
 "pattern_stats": [
