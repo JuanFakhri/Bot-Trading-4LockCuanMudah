@@ -350,12 +350,12 @@
 "confidence": 0.62,
 "features": "{\"machine\": \"long\", \"regime\": \"BULL\", \"fib_bucket\": \"golden\", \"rsi_htf_bucket\": \"lo\", \"rsi_ltf_bucket\": \"na\", \"dow\": 6, \"usdtd_pos_bucket\": \"na\", \"score_bucket\": \"70-85\", \"ad_rising\": true, \"sar_confirm\": null, \"engine\": \"fib\"}",
 "plan": "{\"entry\": 2.098, \"sl\": 2.05582775, \"tp1\": 2.14017225, \"tp2\": 2.1823445, \"breakeven\": 2.101147, \"risk_per_unit\": 0.04217225, \"rr\": 2.0, \"rr_ok\": true, \"tp_source\": \"phoenix\", \"position_size\": 355.684133, \"risk_pct\": 0.015, \"sl_pct\": 0.0201}",
-"status": "OPEN",
-"tp1_hit": 0,
-"outcome": null,
-"r_multiple": null,
-"exit_price": null,
-"resolved_ts": null
+"status": "RESOLVED",
+"tp1_hit": 1,
+"outcome": "WIN",
+"r_multiple": 1.5,
+"exit_price": 2.1823445,
+"resolved_ts": "2026-09-01T12:10:12.391180+00:00"
 },
 {
 "id": 18,
@@ -1404,17 +1404,17 @@
 },
 {
 "signature": "L|fib=golden|ad=True|dow=6",
-"wins": 3,
+"wins": 4,
 "losses": 20,
-"sum_r": -16.444444444444446,
-"updated_ts": "2026-08-31T23:21:26.125016+00:00"
+"sum_r": -14.944444444444436,
+"updated_ts": "2026-09-01T12:10:13.047845+00:00"
 },
 {
 "signature": "long|reg=BULL|fib=golden|rH=lo|rL=na|ud=na|ad=True|sar=None|dow=6",
-"wins": 3,
+"wins": 4,
 "losses": 9,
-"sum_r": -5.4444444444444455,
-"updated_ts": "2026-08-31T23:21:26.125016+00:00"
+"sum_r": -3.944444444444435,
+"updated_ts": "2026-09-01T12:10:13.047845+00:00"
 },
 {
 "signature": "long|reg=BULL|fib=golden|rH=mid|rL=na|ud=na|ad=True|sar=None|dow=6",
@@ -1608,12 +1608,12 @@
 },
 {
 "id": 34,
-"ts": "2026-08-31T23:21:26.125016+00:00",
+"ts": "2026-09-01T12:10:13.047845+00:00",
 "signature": "L|fib=golden|ad=True|dow=6",
 "kind": "BLOCK",
-"text": "❌ Diblokir: sinyal LONG pola [fib golden, A/D naik, Min] hanya menang 3/23 (13%). Pola ini dihindari.",
-"win_rate": 0.13,
-"samples": 23
+"text": "❌ Diblokir: sinyal LONG pola [fib golden, A/D naik, Min] hanya menang 4/24 (17%). Pola ini dihindari.",
+"win_rate": 0.167,
+"samples": 24
 }
 ]
 }
