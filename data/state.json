@@ -875,12 +875,12 @@
 "confidence": 0.62,
 "features": "{\"machine\": \"long\", \"regime\": \"BULL\", \"fib_bucket\": \"golden\", \"rsi_htf_bucket\": \"hi\", \"rsi_ltf_bucket\": \"na\", \"dow\": 1, \"usdtd_pos_bucket\": \"na\", \"score_bucket\": \"70-85\", \"ad_rising\": true, \"sar_confirm\": null, \"engine\": \"fib\"}",
 "plan": "{\"entry\": 1.777, \"sl\": 1.68896797, \"tp1\": 1.86503203, \"tp2\": 1.95306406, \"breakeven\": 1.7796655, \"risk_per_unit\": 0.08803203, \"rr\": 2.0, \"rr_ok\": true, \"tp_source\": \"phoenix\", \"position_size\": 170.392523, \"risk_pct\": 0.015, \"sl_pct\": 0.0495}",
-"status": "TP1",
+"status": "RESOLVED",
 "tp1_hit": 1,
-"outcome": null,
-"r_multiple": null,
-"exit_price": null,
-"resolved_ts": null
+"outcome": "WIN",
+"r_multiple": 1.5,
+"exit_price": 1.95306406,
+"resolved_ts": "2026-09-03T22:56:11.032426+00:00"
 },
 {
 "id": 43,
@@ -2223,10 +2223,10 @@
 },
 {
 "signature": "L|fib=golden|ad=True|dow=1",
-"wins": 5,
+"wins": 6,
 "losses": 2,
-"sum_r": 5.500012886422738,
-"updated_ts": "2026-09-03T20:58:03.083146+00:00"
+"sum_r": 7.0000128864227396,
+"updated_ts": "2026-09-03T22:56:12.197223+00:00"
 },
 {
 "signature": "long|reg=BULL|fib=golden|rH=lo|rL=na|ud=na|ad=True|sar=None|dow=1",
@@ -2297,6 +2297,13 @@
 "losses": 0,
 "sum_r": 1.4999981064335848,
 "updated_ts": "2026-09-03T18:02:28.274182+00:00"
+},
+{
+"signature": "long|reg=BULL|fib=golden|rH=hi|rL=na|ud=na|ad=True|sar=None|dow=1",
+"wins": 1,
+"losses": 0,
+"sum_r": 1.5000000000000013,
+"updated_ts": "2026-09-03T22:56:12.197223+00:00"
 }
 ],
 "lessons": [
@@ -2473,12 +2480,12 @@
 },
 {
 "id": 36,
-"ts": "2026-09-03T20:58:03.083146+00:00",
+"ts": "2026-09-03T22:56:12.197223+00:00",
 "signature": "L|fib=golden|ad=True|dow=1",
 "kind": "FAVOR",
-"text": "✅ Diutamakan: sinyal LONG pola [fib golden, A/D naik, Sel] menang 5/7 (71%). Diberi prioritas.",
-"win_rate": 0.714,
-"samples": 7
+"text": "✅ Diutamakan: sinyal LONG pola [fib golden, A/D naik, Sel] menang 6/8 (75%). Diberi prioritas.",
+"win_rate": 0.75,
+"samples": 8
 },
 {
 "id": 37,
