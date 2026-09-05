@@ -1736,8 +1736,8 @@
 "confidence": 0.62,
 "features": "{\"machine\": \"long\", \"regime\": \"BULL\", \"fib_bucket\": \"golden\", \"rsi_htf_bucket\": \"hi\", \"rsi_ltf_bucket\": \"na\", \"dow\": 4, \"usdtd_pos_bucket\": \"na\", \"score_bucket\": \"70-85\", \"ad_rising\": true, \"sar_confirm\": null, \"engine\": \"fib\"}",
 "plan": "{\"entry\": 2.689, \"sl\": 2.45963526, \"tp1\": 2.91836474, \"tp2\": 3.14772948, \"breakeven\": 2.6930335, \"risk_per_unit\": 0.22936474, \"rr\": 2.0, \"rr_ok\": true, \"tp_source\": \"phoenix\", \"position_size\": 65.398021, \"risk_pct\": 0.015, \"sl_pct\": 0.0853}",
-"status": "OPEN",
-"tp1_hit": 0,
+"status": "TP1",
+"tp1_hit": 1,
 "outcome": null,
 "r_multiple": null,
 "exit_price": null,
@@ -2030,12 +2030,12 @@
 "confidence": 0.62,
 "features": "{\"machine\": \"long\", \"regime\": \"BULL\", \"fib_bucket\": \"golden\", \"rsi_htf_bucket\": \"hi\", \"rsi_ltf_bucket\": \"na\", \"dow\": 4, \"usdtd_pos_bucket\": \"na\", \"score_bucket\": \"70-85\", \"ad_rising\": true, \"sar_confirm\": null, \"engine\": \"fib\"}",
 "plan": "{\"entry\": 0.04983, \"sl\": 0.04905578, \"tp1\": 0.05060422, \"tp2\": 0.05137845, \"breakeven\": 0.04990475, \"risk_per_unit\": 0.00077422, \"rr\": 2.0, \"rr_ok\": true, \"tp_source\": \"phoenix\", \"position_size\": 19374.218873, \"risk_pct\": 0.015, \"sl_pct\": 0.0155}",
-"status": "OPEN",
-"tp1_hit": 0,
-"outcome": null,
-"r_multiple": null,
-"exit_price": null,
-"resolved_ts": null
+"status": "RESOLVED",
+"tp1_hit": 1,
+"outcome": "WIN",
+"r_multiple": 1.5,
+"exit_price": 0.05137845,
+"resolved_ts": "2026-09-05T15:40:37.760492+00:00"
 },
 {
 "id": 98,
@@ -2913,6 +2913,20 @@
 "losses": 0,
 "sum_r": 0.5301626658674127,
 "updated_ts": "2026-09-04T17:06:28.378477+00:00"
+},
+{
+"signature": "L|fib=golden|ad=True|dow=4",
+"wins": 1,
+"losses": 0,
+"sum_r": 1.5000064581126822,
+"updated_ts": "2026-09-05T15:40:43.684504+00:00"
+},
+{
+"signature": "long|reg=BULL|fib=golden|rH=hi|rL=na|ud=na|ad=True|sar=None|dow=4",
+"wins": 1,
+"losses": 0,
+"sum_r": 1.5000064581126822,
+"updated_ts": "2026-09-05T15:40:43.684504+00:00"
 }
 ],
 "lessons": [
