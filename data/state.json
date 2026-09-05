@@ -2078,6 +2078,27 @@
 "r_multiple": null,
 "exit_price": null,
 "resolved_ts": null
+},
+{
+"id": 100,
+"symbol": "APTUSDT",
+"direction": "LONG",
+"machine": "long",
+"created_ts": "2026-09-05T01:14:00.815536+00:00",
+"entry": 0.584,
+"sl": 0.56144812,
+"tp1": 0.60655188,
+"tp2": 0.62910377,
+"rr": 2.0,
+"confidence": 0.62,
+"features": "{\"machine\": \"long\", \"regime\": \"BULL\", \"fib_bucket\": \"golden\", \"rsi_htf_bucket\": \"mid\", \"rsi_ltf_bucket\": \"na\", \"dow\": 5, \"usdtd_pos_bucket\": \"na\", \"score_bucket\": \"70-85\", \"ad_rising\": false, \"sar_confirm\": null, \"engine\": \"fib\"}",
+"plan": "{\"entry\": 0.584, \"sl\": 0.56144812, \"tp1\": 0.60655188, \"tp2\": 0.62910377, \"breakeven\": 0.584876, \"risk_per_unit\": 0.02255188, \"rr\": 2.0, \"rr_ok\": true, \"tp_source\": \"phoenix\", \"position_size\": 665.132937, \"risk_pct\": 0.015, \"sl_pct\": 0.0386}",
+"status": "OPEN",
+"tp1_hit": 0,
+"outcome": null,
+"r_multiple": null,
+"exit_price": null,
+"resolved_ts": null
 }
 ],
 "pattern_stats": [
