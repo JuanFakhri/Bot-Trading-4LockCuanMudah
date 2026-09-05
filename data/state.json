@@ -1484,12 +1484,12 @@
 "confidence": 0.62,
 "features": "{\"machine\": \"long\", \"regime\": \"BULL\", \"fib_bucket\": \"golden\", \"rsi_htf_bucket\": \"mid\", \"rsi_ltf_bucket\": \"na\", \"dow\": 3, \"usdtd_pos_bucket\": \"na\", \"score_bucket\": \"70-85\", \"ad_rising\": true, \"sar_confirm\": null, \"engine\": \"fib\"}",
 "plan": "{\"entry\": 0.367, \"sl\": 0.34763815, \"tp1\": 0.38636185, \"tp2\": 0.4057237, \"breakeven\": 0.3675505, \"risk_per_unit\": 0.01936185, \"rr\": 2.0, \"rr_ok\": true, \"tp_source\": \"phoenix\", \"position_size\": 774.71927, \"risk_pct\": 0.015, \"sl_pct\": 0.0528}",
-"status": "TP1",
+"status": "RESOLVED",
 "tp1_hit": 1,
-"outcome": null,
-"r_multiple": null,
-"exit_price": null,
-"resolved_ts": null
+"outcome": "WIN",
+"r_multiple": 1.5,
+"exit_price": 0.4057237,
+"resolved_ts": "2026-09-05T23:03:07.969692+00:00"
 },
 {
 "id": 72,
@@ -1547,8 +1547,8 @@
 "confidence": 0.62,
 "features": "{\"machine\": \"long\", \"regime\": \"BULL\", \"fib_bucket\": \"golden\", \"rsi_htf_bucket\": \"hi\", \"rsi_ltf_bucket\": \"na\", \"dow\": 3, \"usdtd_pos_bucket\": \"na\", \"score_bucket\": \"70-85\", \"ad_rising\": false, \"sar_confirm\": null, \"engine\": \"fib\"}",
 "plan": "{\"entry\": 0.0996, \"sl\": 0.0916131, \"tp1\": 0.1075869, \"tp2\": 0.1155738, \"breakeven\": 0.0997494, \"risk_per_unit\": 0.0079869, \"rr\": 2.0, \"rr_ok\": true, \"tp_source\": \"phoenix\", \"position_size\": 1878.075932, \"risk_pct\": 0.015, \"sl_pct\": 0.0802}",
-"status": "OPEN",
-"tp1_hit": 0,
+"status": "TP1",
+"tp1_hit": 1,
 "outcome": null,
 "r_multiple": null,
 "exit_price": null,
@@ -2937,10 +2937,10 @@
 },
 {
 "signature": "L|fib=golden|ad=True|dow=3",
-"wins": 3,
+"wins": 4,
 "losses": 0,
-"sum_r": 2.546611643373663,
-"updated_ts": "2026-09-04T17:06:28.378477+00:00"
+"sum_r": 4.046611643373663,
+"updated_ts": "2026-09-05T23:03:09.950197+00:00"
 },
 {
 "signature": "long|reg=BULL|fib=golden|rH=lo|rL=na|ud=na|ad=True|sar=None|dow=3",
@@ -2972,10 +2972,10 @@
 },
 {
 "signature": "long|reg=BULL|fib=golden|rH=mid|rL=na|ud=na|ad=True|sar=None|dow=3",
-"wins": 1,
+"wins": 2,
 "losses": 0,
-"sum_r": 0.5301626658674127,
-"updated_ts": "2026-09-04T17:06:28.378477+00:00"
+"sum_r": 2.0301626658674126,
+"updated_ts": "2026-09-05T23:03:09.950197+00:00"
 },
 {
 "signature": "L|fib=golden|ad=True|dow=4",
