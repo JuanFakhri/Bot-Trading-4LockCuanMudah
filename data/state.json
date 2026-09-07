@@ -98,8 +98,8 @@
 "confidence": 0.62,
 "features": "{\"machine\": \"long\", \"regime\": \"BULL\", \"fib_bucket\": \"golden\", \"rsi_htf_bucket\": \"hi\", \"rsi_ltf_bucket\": \"na\", \"dow\": 6, \"usdtd_pos_bucket\": \"na\", \"score_bucket\": \"70-85\", \"ad_rising\": true, \"sar_confirm\": null, \"engine\": \"fib\"}",
 "plan": "{\"entry\": 0.181, \"sl\": 0.17428238, \"tp1\": 0.18771762, \"tp2\": 0.19443524, \"breakeven\": 0.1812715, \"risk_per_unit\": 0.00671762, \"rr\": 2.0, \"rr_ok\": true, \"tp_source\": \"phoenix\", \"position_size\": 2232.933614, \"risk_pct\": 0.015, \"sl_pct\": 0.0371}",
-"status": "OPEN",
-"tp1_hit": 0,
+"status": "TP1",
+"tp1_hit": 1,
 "outcome": null,
 "r_multiple": null,
 "exit_price": null,
@@ -245,8 +245,8 @@
 "confidence": 0.62,
 "features": "{\"machine\": \"long\", \"regime\": \"BULL\", \"fib_bucket\": \"golden\", \"rsi_htf_bucket\": \"hi\", \"rsi_ltf_bucket\": \"na\", \"dow\": 6, \"usdtd_pos_bucket\": \"na\", \"score_bucket\": \"70-85\", \"ad_rising\": true, \"sar_confirm\": null, \"engine\": \"fib\"}",
 "plan": "{\"entry\": 0.3769, \"sl\": 0.36326765, \"tp1\": 0.39053235, \"tp2\": 0.4041647, \"breakeven\": 0.37746535, \"risk_per_unit\": 0.01363235, \"rr\": 2.0, \"rr_ok\": true, \"tp_source\": \"phoenix\", \"position_size\": 1100.323707, \"risk_pct\": 0.015, \"sl_pct\": 0.0362}",
-"status": "OPEN",
-"tp1_hit": 0,
+"status": "TP1",
+"tp1_hit": 1,
 "outcome": null,
 "r_multiple": null,
 "exit_price": null,
@@ -287,12 +287,12 @@
 "confidence": 0.62,
 "features": "{\"machine\": \"long\", \"regime\": \"BULL\", \"fib_bucket\": \"golden\", \"rsi_htf_bucket\": \"hi\", \"rsi_ltf_bucket\": \"na\", \"dow\": 6, \"usdtd_pos_bucket\": \"na\", \"score_bucket\": \"70-85\", \"ad_rising\": true, \"sar_confirm\": null, \"engine\": \"fib\"}",
 "plan": "{\"entry\": 3.32e-06, \"sl\": 3.15e-06, \"tp1\": 3.49e-06, \"tp2\": 3.66e-06, \"breakeven\": 3.32e-06, \"risk_per_unit\": 1.7e-07, \"rr\": 2.0, \"rr_ok\": true, \"tp_source\": \"phoenix\", \"position_size\": 88111334.373343, \"risk_pct\": 0.015, \"sl_pct\": 0.0513}",
-"status": "TP1",
+"status": "RESOLVED",
 "tp1_hit": 1,
-"outcome": null,
-"r_multiple": null,
-"exit_price": null,
-"resolved_ts": null
+"outcome": "WIN",
+"r_multiple": 0.5,
+"exit_price": 3.32e-06,
+"resolved_ts": "2026-09-07T00:58:22.764862+00:00"
 },
 {
 "id": 15,
@@ -818,6 +818,27 @@
 "r_multiple": null,
 "exit_price": null,
 "resolved_ts": null
+},
+{
+"id": 40,
+"symbol": "ORDIUSDT",
+"direction": "LONG",
+"machine": "long",
+"created_ts": "2026-09-07T00:58:43.437472+00:00",
+"entry": 4.267,
+"sl": 4.02704519,
+"tp1": 4.50695481,
+"tp2": 4.74690962,
+"rr": 2.0,
+"confidence": 0.62,
+"features": "{\"machine\": \"long\", \"regime\": \"BULL\", \"fib_bucket\": \"golden\", \"rsi_htf_bucket\": \"hi\", \"rsi_ltf_bucket\": \"na\", \"dow\": 0, \"usdtd_pos_bucket\": \"na\", \"score_bucket\": \"70-85\", \"ad_rising\": false, \"sar_confirm\": null, \"engine\": \"fib\"}",
+"plan": "{\"entry\": 4.267, \"sl\": 4.02704519, \"tp1\": 4.50695481, \"tp2\": 4.74690962, \"breakeven\": 4.2734005, \"risk_per_unit\": 0.23995481, \"rr\": 2.0, \"rr_ok\": true, \"tp_source\": \"phoenix\", \"position_size\": 62.51177, \"risk_pct\": 0.015, \"sl_pct\": 0.0562}",
+"status": "OPEN",
+"tp1_hit": 0,
+"outcome": null,
+"r_multiple": null,
+"exit_price": null,
+"resolved_ts": null
 }
 ],
 "pattern_stats": [
@@ -1317,6 +1338,20 @@
 "losses": 0,
 "sum_r": 1.5000000003797618,
 "updated_ts": "2026-09-06T21:41:45.427628+00:00"
+},
+{
+"signature": "L|fib=golden|ad=True|dow=6",
+"wins": 1,
+"losses": 0,
+"sum_r": 0.5,
+"updated_ts": "2026-09-07T00:58:24.238925+00:00"
+},
+{
+"signature": "long|reg=BULL|fib=golden|rH=hi|rL=na|ud=na|ad=True|sar=None|dow=6",
+"wins": 1,
+"losses": 0,
+"sum_r": 0.5,
+"updated_ts": "2026-09-07T00:58:24.238925+00:00"
 }
 ],
 "lessons": [
