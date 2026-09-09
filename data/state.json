@@ -203,12 +203,12 @@
 "confidence": 0.62,
 "features": "{\"machine\": \"long\", \"regime\": \"BULL\", \"fib_bucket\": \"golden\", \"rsi_htf_bucket\": \"hi\", \"rsi_ltf_bucket\": \"na\", \"dow\": 6, \"usdtd_pos_bucket\": \"na\", \"score_bucket\": \"70-85\", \"ad_rising\": true, \"sar_confirm\": null, \"engine\": \"fib\"}",
 "plan": "{\"entry\": 0.1773, \"sl\": 0.15741708, \"tp1\": 0.19718292, \"tp2\": 0.21706585, \"breakeven\": 0.17756595, \"risk_per_unit\": 0.01988292, \"rr\": 2.0, \"rr_ok\": true, \"tp_source\": \"phoenix\", \"position_size\": 754.416182, \"risk_pct\": 0.015, \"sl_pct\": 0.1121}",
-"status": "OPEN",
+"status": "RESOLVED",
 "tp1_hit": 0,
-"outcome": null,
-"r_multiple": null,
-"exit_price": null,
-"resolved_ts": null
+"outcome": "LOSS",
+"r_multiple": -1.0,
+"exit_price": 0.15741708,
+"resolved_ts": "2026-09-09T17:23:03.494101+00:00"
 },
 {
 "id": 11,
@@ -1169,12 +1169,12 @@
 "confidence": 0.62,
 "features": "{\"machine\": \"long\", \"regime\": \"BULL\", \"fib_bucket\": \"golden\", \"rsi_htf_bucket\": \"mid\", \"rsi_ltf_bucket\": \"na\", \"dow\": 2, \"usdtd_pos_bucket\": \"na\", \"score_bucket\": \"70-85\", \"ad_rising\": true, \"sar_confirm\": null, \"engine\": \"fib\"}",
 "plan": "{\"entry\": 2.334, \"sl\": 2.19605417, \"tp1\": 2.47194583, \"tp2\": 2.60989166, \"breakeven\": 2.337501, \"risk_per_unit\": 0.13794583, \"rr\": 2.0, \"rr_ok\": true, \"tp_source\": \"phoenix\", \"position_size\": 108.738337, \"risk_pct\": 0.015, \"sl_pct\": 0.0591}",
-"status": "TP1",
+"status": "RESOLVED",
 "tp1_hit": 1,
-"outcome": null,
-"r_multiple": null,
-"exit_price": null,
-"resolved_ts": null
+"outcome": "WIN",
+"r_multiple": 1.5,
+"exit_price": 2.60989166,
+"resolved_ts": "2026-09-09T17:23:03.494101+00:00"
 },
 {
 "id": 57,
@@ -1211,12 +1211,12 @@
 "confidence": 0.62,
 "features": "{\"machine\": \"long\", \"regime\": \"BULL\", \"fib_bucket\": \"golden\", \"rsi_htf_bucket\": \"hi\", \"rsi_ltf_bucket\": \"na\", \"dow\": 2, \"usdtd_pos_bucket\": \"na\", \"score_bucket\": \"70-85\", \"ad_rising\": true, \"sar_confirm\": null, \"engine\": \"fib\"}",
 "plan": "{\"entry\": 0.1714, \"sl\": 0.15892594, \"tp1\": 0.18387406, \"tp2\": 0.19634811, \"breakeven\": 0.1716571, \"risk_per_unit\": 0.01247406, \"rr\": 2.0, \"rr_ok\": true, \"tp_source\": \"phoenix\", \"position_size\": 1202.495823, \"risk_pct\": 0.015, \"sl_pct\": 0.0728}",
-"status": "OPEN",
+"status": "RESOLVED",
 "tp1_hit": 0,
-"outcome": null,
-"r_multiple": null,
-"exit_price": null,
-"resolved_ts": null
+"outcome": "LOSS",
+"r_multiple": -1.0,
+"exit_price": 0.15892594,
+"resolved_ts": "2026-09-09T17:23:03.494101+00:00"
 },
 {
 "id": 59,
@@ -1253,6 +1253,48 @@
 "confidence": 0.562,
 "features": "{\"machine\": \"long\", \"regime\": \"BULL\", \"fib_bucket\": \"breakout\", \"rsi_htf_bucket\": \"hi\", \"rsi_ltf_bucket\": \"na\", \"dow\": 2, \"usdtd_pos_bucket\": \"na\", \"score_bucket\": \"85+\", \"ad_rising\": true, \"sar_confirm\": null, \"engine\": \"breakout\"}",
 "plan": "{\"entry\": 0.0946, \"sl\": 0.07829863, \"tp1\": 0.11090137, \"tp2\": 0.12720275, \"breakeven\": 0.0947419, \"risk_per_unit\": 0.01630137, \"rr\": 2.0, \"rr_ok\": true, \"tp_source\": \"phoenix\", \"position_size\": 920.167809, \"risk_pct\": 0.015, \"sl_pct\": 0.1723}",
+"status": "OPEN",
+"tp1_hit": 0,
+"outcome": null,
+"r_multiple": null,
+"exit_price": null,
+"resolved_ts": null
+},
+{
+"id": 61,
+"symbol": "SOLUSDT",
+"direction": "LONG",
+"machine": "long",
+"created_ts": "2026-09-09T17:23:10.094921+00:00",
+"entry": 103.56,
+"sl": 102.05643857,
+"tp1": 105.06356143,
+"tp2": 106.56712287,
+"rr": 2.0,
+"confidence": 0.5,
+"features": "{\"machine\": \"long\", \"regime\": \"BULL\", \"fib_bucket\": \"golden\", \"rsi_htf_bucket\": \"mid\", \"rsi_ltf_bucket\": \"na\", \"dow\": 2, \"usdtd_pos_bucket\": \"na\", \"score_bucket\": \"70-85\", \"ad_rising\": true, \"sar_confirm\": null, \"engine\": \"fib\"}",
+"plan": "{\"entry\": 103.56, \"sl\": 102.05643857, \"tp1\": 105.06356143, \"tp2\": 106.56712287, \"breakeven\": 103.71534, \"risk_per_unit\": 1.50356143, \"rr\": 2.0, \"rr_ok\": true, \"tp_source\": \"phoenix\", \"position_size\": 9.976313, \"risk_pct\": 0.015, \"sl_pct\": 0.0145}",
+"status": "OPEN",
+"tp1_hit": 0,
+"outcome": null,
+"r_multiple": null,
+"exit_price": null,
+"resolved_ts": null
+},
+{
+"id": 62,
+"symbol": "ICPUSDT",
+"direction": "LONG",
+"machine": "long",
+"created_ts": "2026-09-09T17:23:17.765955+00:00",
+"entry": 2.884,
+"sl": 2.77617788,
+"tp1": 2.99182212,
+"tp2": 3.09964423,
+"rr": 2.0,
+"confidence": 0.5,
+"features": "{\"machine\": \"long\", \"regime\": \"BULL\", \"fib_bucket\": \"golden\", \"rsi_htf_bucket\": \"mid\", \"rsi_ltf_bucket\": \"na\", \"dow\": 2, \"usdtd_pos_bucket\": \"na\", \"score_bucket\": \"70-85\", \"ad_rising\": true, \"sar_confirm\": null, \"engine\": \"fib\"}",
+"plan": "{\"entry\": 2.884, \"sl\": 2.77617788, \"tp1\": 2.99182212, \"tp2\": 3.09964423, \"breakeven\": 2.888326, \"risk_per_unit\": 0.10782212, \"rr\": 2.0, \"rr_ok\": true, \"tp_source\": \"phoenix\", \"position_size\": 139.118026, \"risk_pct\": 0.015, \"sl_pct\": 0.0374}",
 "status": "OPEN",
 "tp1_hit": 0,
 "outcome": null,
@@ -1762,16 +1804,16 @@
 {
 "signature": "L|fib=golden|ad=True|dow=6",
 "wins": 9,
-"losses": 6,
-"sum_r": 3.570614533532827,
-"updated_ts": "2026-09-09T05:13:39.838299+00:00"
+"losses": 7,
+"sum_r": 2.570614533532827,
+"updated_ts": "2026-09-09T17:23:04.212852+00:00"
 },
 {
 "signature": "long|reg=BULL|fib=golden|rH=hi|rL=na|ud=na|ad=True|sar=None|dow=6",
 "wins": 8,
-"losses": 5,
-"sum_r": 3.0706145335328308,
-"updated_ts": "2026-09-09T05:13:39.838299+00:00"
+"losses": 6,
+"sum_r": 2.0706145335328308,
+"updated_ts": "2026-09-09T17:23:04.212852+00:00"
 },
 {
 "signature": "long|reg=BULL|fib=golden|rH=mid|rL=na|ud=na|ad=True|sar=None|dow=6",
@@ -1842,6 +1884,27 @@
 "losses": 1,
 "sum_r": -1.0,
 "updated_ts": "2026-09-09T13:55:35.546460+00:00"
+},
+{
+"signature": "L|fib=golden|ad=True|dow=2",
+"wins": 1,
+"losses": 1,
+"sum_r": 0.5,
+"updated_ts": "2026-09-09T17:23:08.807380+00:00"
+},
+{
+"signature": "long|reg=BULL|fib=golden|rH=mid|rL=na|ud=na|ad=True|sar=None|dow=2",
+"wins": 1,
+"losses": 0,
+"sum_r": 1.5,
+"updated_ts": "2026-09-09T17:23:08.517704+00:00"
+},
+{
+"signature": "long|reg=BULL|fib=golden|rH=hi|rL=na|ud=na|ad=True|sar=None|dow=2",
+"wins": 0,
+"losses": 1,
+"sum_r": -1.0,
+"updated_ts": "2026-09-09T17:23:08.807380+00:00"
 }
 ],
 "lessons": [
