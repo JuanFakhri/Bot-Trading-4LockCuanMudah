@@ -917,12 +917,12 @@
 "confidence": 0.62,
 "features": "{\"machine\": \"long\", \"regime\": \"BULL\", \"fib_bucket\": \"golden\", \"rsi_htf_bucket\": \"hi\", \"rsi_ltf_bucket\": \"na\", \"dow\": 0, \"usdtd_pos_bucket\": \"na\", \"score_bucket\": \"70-85\", \"ad_rising\": true, \"sar_confirm\": null, \"engine\": \"fib\"}",
 "plan": "{\"entry\": 0.2381, \"sl\": 0.23148751, \"tp1\": 0.24471249, \"tp2\": 0.25132499, \"breakeven\": 0.23845715, \"risk_per_unit\": 0.00661249, \"rr\": 2.0, \"rr_ok\": true, \"tp_source\": \"phoenix\", \"position_size\": 2268.432891, \"risk_pct\": 0.015, \"sl_pct\": 0.0278}",
-"status": "TP1",
+"status": "RESOLVED",
 "tp1_hit": 1,
-"outcome": null,
-"r_multiple": null,
-"exit_price": null,
-"resolved_ts": null
+"outcome": "WIN",
+"r_multiple": 1.5,
+"exit_price": 0.25132499,
+"resolved_ts": "2026-09-09T00:35:49.549656+00:00"
 },
 {
 "id": 45,
@@ -1148,6 +1148,48 @@
 "confidence": 0.62,
 "features": "{\"machine\": \"long\", \"regime\": \"BULL\", \"fib_bucket\": \"golden\", \"rsi_htf_bucket\": \"mid\", \"rsi_ltf_bucket\": \"na\", \"dow\": 1, \"usdtd_pos_bucket\": \"na\", \"score_bucket\": \"70-85\", \"ad_rising\": false, \"sar_confirm\": null, \"engine\": \"fib\"}",
 "plan": "{\"entry\": 0.3792, \"sl\": 0.36333054, \"tp1\": 0.39506946, \"tp2\": 0.41093893, \"breakeven\": 0.3797688, \"risk_per_unit\": 0.01586946, \"rr\": 2.0, \"rr_ok\": true, \"tp_source\": \"phoenix\", \"position_size\": 945.211566, \"risk_pct\": 0.015, \"sl_pct\": 0.0418}",
+"status": "OPEN",
+"tp1_hit": 0,
+"outcome": null,
+"r_multiple": null,
+"exit_price": null,
+"resolved_ts": null
+},
+{
+"id": 56,
+"symbol": "NEARUSDT",
+"direction": "LONG",
+"machine": "long",
+"created_ts": "2026-09-09T00:36:01.750185+00:00",
+"entry": 2.334,
+"sl": 2.19605417,
+"tp1": 2.47194583,
+"tp2": 2.60989166,
+"rr": 2.0,
+"confidence": 0.62,
+"features": "{\"machine\": \"long\", \"regime\": \"BULL\", \"fib_bucket\": \"golden\", \"rsi_htf_bucket\": \"mid\", \"rsi_ltf_bucket\": \"na\", \"dow\": 2, \"usdtd_pos_bucket\": \"na\", \"score_bucket\": \"70-85\", \"ad_rising\": true, \"sar_confirm\": null, \"engine\": \"fib\"}",
+"plan": "{\"entry\": 2.334, \"sl\": 2.19605417, \"tp1\": 2.47194583, \"tp2\": 2.60989166, \"breakeven\": 2.337501, \"risk_per_unit\": 0.13794583, \"rr\": 2.0, \"rr_ok\": true, \"tp_source\": \"phoenix\", \"position_size\": 108.738337, \"risk_pct\": 0.015, \"sl_pct\": 0.0591}",
+"status": "OPEN",
+"tp1_hit": 0,
+"outcome": null,
+"r_multiple": null,
+"exit_price": null,
+"resolved_ts": null
+},
+{
+"id": 57,
+"symbol": "INJUSDT",
+"direction": "LONG",
+"machine": "long",
+"created_ts": "2026-09-09T00:36:04.024075+00:00",
+"entry": 6.464,
+"sl": 6.0434586,
+"tp1": 6.8845414,
+"tp2": 7.3050828,
+"rr": 2.0,
+"confidence": 0.62,
+"features": "{\"machine\": \"long\", \"regime\": \"BULL\", \"fib_bucket\": \"golden\", \"rsi_htf_bucket\": \"hi\", \"rsi_ltf_bucket\": \"na\", \"dow\": 2, \"usdtd_pos_bucket\": \"na\", \"score_bucket\": \"70-85\", \"ad_rising\": true, \"sar_confirm\": null, \"engine\": \"fib\"}",
+"plan": "{\"entry\": 6.464, \"sl\": 6.0434586, \"tp1\": 6.8845414, \"tp2\": 7.3050828, \"breakeven\": 6.473696, \"risk_per_unit\": 0.4205414, \"rr\": 2.0, \"rr_ok\": true, \"tp_source\": \"phoenix\", \"position_size\": 35.668308, \"risk_pct\": 0.015, \"sl_pct\": 0.0651}",
 "status": "OPEN",
 "tp1_hit": 0,
 "outcome": null,
@@ -1677,10 +1719,10 @@
 },
 {
 "signature": "L|fib=golden|ad=True|dow=0",
-"wins": 1,
+"wins": 2,
 "losses": 0,
-"sum_r": 1.5000021609753826,
-"updated_ts": "2026-09-08T17:37:39.580509+00:00"
+"sum_r": 3.000002917120195,
+"updated_ts": "2026-09-09T00:35:54.320402+00:00"
 },
 {
 "signature": "long|reg=BULL|fib=golden|rH=mid|rL=na|ud=na|ad=True|sar=None|dow=0",
@@ -1702,6 +1744,13 @@
 "losses": 1,
 "sum_r": -1.0,
 "updated_ts": "2026-09-08T22:40:57.275179+00:00"
+},
+{
+"signature": "long|reg=BULL|fib=golden|rH=hi|rL=na|ud=na|ad=True|sar=None|dow=0",
+"wins": 1,
+"losses": 0,
+"sum_r": 1.5000007561448125,
+"updated_ts": "2026-09-09T00:35:54.320402+00:00"
 }
 ],
 "lessons": [
